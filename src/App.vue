@@ -78,6 +78,16 @@ const isActive = (path) => {
           </Button>
 
           <Button icon="pi pi-user" label="Demo User" text />
+
+          <RouterLink to="/login" class="login-link">
+            <Button
+              label="Login"
+              icon="pi pi-sign-in"
+              severity="secondary"
+              outlined
+              size="small"
+            />
+          </RouterLink>
         </div>
       </header>
 
@@ -163,7 +173,12 @@ const isActive = (path) => {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
   position: relative;
+}
+
+.login-link {
+  text-decoration: none;
 }
 
 .notification-badge {
