@@ -13,6 +13,8 @@ interface GroceryItem {
   location: string
   status: GroceryStatus
   favorite: boolean
+  inShoppingList: boolean
+  bought: boolean
 }
 
 const STORAGE_KEY = 'smart-grocery-items'
@@ -39,6 +41,18 @@ export const useGroceryStore = defineStore('groceryStore', {
 
     favoriteItems: (state) => {
       return state.items.filter((item) => item.favorite)
+    },
+
+    shoppingListItems: (state) => {
+      return state.items.filter((item) => item.inShoppingList)
+    },
+
+    openShoppingItems: (state) => {
+      return state.items.filter((item) => item.inShoppingList && !item.bought)
+    },
+
+    boughtShoppingItems: (state) => {
+      return state.items.filter((item) => item.inShoppingList && item.bought)
     }
   },
 
@@ -47,9 +61,20 @@ export const useGroceryStore = defineStore('groceryStore', {
       const savedItems = localStorage.getItem(STORAGE_KEY)
 
       if (savedItems) {
-        this.items = JSON.parse(savedItems) as GroceryItem[]
+        const parsed = JSON.parse(savedItems) as Omit<GroceryItem, 'inShoppingList' | 'bought'>[]
+        this.items = parsed.map((item) => ({
+          ...item,
+          inShoppingList: (item as GroceryItem).inShoppingList ?? true,
+          bought: (item as GroceryItem).bought ?? false
+        }))
       } else {
-        this.items = groceryItems as GroceryItem[]
+        this.items = (groceryItems as Omit<GroceryItem, 'inShoppingList' | 'bought'>[]).map(
+          (item) => ({
+            ...item,
+            inShoppingList: true,
+            bought: false
+          })
+        )
         this.saveItems()
       }
     },
@@ -58,10 +83,12 @@ export const useGroceryStore = defineStore('groceryStore', {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items))
     },
 
-    addItem(newItem: Omit<GroceryItem, 'id'>) {
+    addItem(newItem: Omit<GroceryItem, 'id' | 'inShoppingList' | 'bought'>) {
       this.items.push({
         id: Date.now(),
-        ...newItem
+        ...newItem,
+        inShoppingList: true,
+        bought: false
       })
 
       this.saveItems()
@@ -88,6 +115,34 @@ export const useGroceryStore = defineStore('groceryStore', {
         item.quantity = quantity
         this.saveItems()
       }
+    },
+
+    toggleBought(id: number) {
+      const item = this.items.find((item) => item.id === id)
+
+      if (item) {
+        item.bought = !item.bought
+        this.saveItems()
+      }
+    },
+
+    toggleInShoppingList(id: number) {
+      const item = this.items.find((item) => item.id === id)
+
+      if (item) {
+        item.inShoppingList = !item.inShoppingList
+        this.saveItems()
+      }
+    },
+
+    clearBoughtItems() {
+      this.items.forEach((item) => {
+        if (item.inShoppingList && item.bought) {
+          item.inShoppingList = false
+          item.bought = false
+        }
+      })
+      this.saveItems()
     }
   }
 })
