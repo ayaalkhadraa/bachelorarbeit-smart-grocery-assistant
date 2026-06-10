@@ -6,12 +6,43 @@ import InputText from 'primevue/inputtext'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import Tag from 'primevue/tag'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
 
 import { useGroceryStore } from '@/stores/groceryStore'
 
 const groceryStore = useGroceryStore()
 
 const searchTerm = ref('')
+const showAddDialog = ref(false)
+
+const categories = [
+  'Obst',
+  'Gemüse',
+  'Milchprodukte',
+  'Getränke',
+  'Backwaren',
+  'Sonstiges'
+]
+
+const locations = [
+  'Kühlschrank',
+  'Küche',
+  'Vorratsschrank',
+  'Gefrierfach'
+]
+
+const newItem = ref({
+  name: '',
+  category: 'Sonstiges',
+  quantity: 1,
+  unit: 'Stück',
+  expiryDate: '',
+  location: 'Küche',
+  status: 'fresh',
+  favorite: false
+})
 
 const filteredItems = computed(() => {
   return groceryStore.items.filter((item) => {
@@ -35,6 +66,31 @@ const getStatusSeverity = (status) => {
   if (status === 'critical') return 'danger'
   return 'secondary'
 }
+const resetNewItem = () => {
+  newItem.value = {
+    name: '',
+    category: 'Sonstiges',
+    quantity: 1,
+    unit: 'Stück',
+    expiryDate: '',
+    location: 'Küche',
+    status: 'fresh',
+    favorite: false
+  }
+}
+
+const addNewItem = () => {
+  if (!newItem.value.name.trim()) {
+    return
+  }
+
+  groceryStore.addItem({
+    ...newItem.value
+  })
+
+  resetNewItem()
+  showAddDialog.value = false
+}
 </script>
 
 <template>
@@ -45,7 +101,11 @@ const getStatusSeverity = (status) => {
         <p>Alle gespeicherten Lebensmittel im Überblick.</p>
       </div>
 
-      <Button label="Neues Produkt" icon="pi pi-plus" />
+      <Button
+  label="Neues Produkt"
+  icon="pi pi-plus"
+  @click="showAddDialog = true"
+/>
     </section>
 
     <section class="search-section">
@@ -128,6 +188,70 @@ const getStatusSeverity = (status) => {
     <p v-if="filteredItems.length === 0" class="empty-message">
       Keine Lebensmittel gefunden.
     </p>
+
+    <Dialog
+      v-model:visible="showAddDialog"
+      modal
+      header="Neues Produkt hinzufügen"
+      :style="{ width: '32rem' }"
+      :breakpoints="{ '640px': '95vw' }"
+    >
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="new-name">Name</label>
+          <InputText id="new-name" v-model="newItem.name" placeholder="z. B. Milch" />
+        </div>
+
+        <div class="form-field">
+          <label for="new-category">Kategorie</label>
+          <Dropdown
+            id="new-category"
+            v-model="newItem.category"
+            :options="categories"
+            placeholder="Kategorie wählen"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="new-quantity">Menge</label>
+          <InputNumber id="new-quantity" v-model="newItem.quantity" :min="0" />
+        </div>
+
+        <div class="form-field">
+          <label for="new-unit">Einheit</label>
+          <InputText id="new-unit" v-model="newItem.unit" placeholder="z. B. Stück" />
+        </div>
+
+        <div class="form-field">
+          <label for="new-expiry">Ablaufdatum</label>
+          <InputText id="new-expiry" v-model="newItem.expiryDate" placeholder="YYYY-MM-DD" />
+        </div>
+
+        <div class="form-field">
+          <label for="new-location">Ort</label>
+          <Dropdown
+            id="new-location"
+            v-model="newItem.location"
+            :options="locations"
+            placeholder="Ort wählen"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          label="Abbrechen"
+          severity="secondary"
+          outlined
+          @click="showAddDialog = false"
+        />
+        <Button
+          label="Speichern"
+          icon="pi pi-check"
+          @click="addNewItem"
+        />
+      </template>
+    </Dialog>
   </main>
 </template>
 
@@ -222,5 +346,31 @@ const getStatusSeverity = (status) => {
   .items-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-field :deep(input),
+.form-field :deep(.p-inputtext),
+.form-field :deep(.p-dropdown),
+.form-field :deep(.p-inputnumber),
+.form-field :deep(.p-inputnumber-input) {
+  width: 100%;
 }
 </style>
