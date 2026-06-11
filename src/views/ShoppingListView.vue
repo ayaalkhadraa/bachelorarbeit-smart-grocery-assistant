@@ -5,18 +5,57 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import DatePicker from 'primevue/datepicker'
+import Message from 'primevue/message'
 import { useGroceryStore } from '@/stores/groceryStore'
+import type { GroceryItem } from '@/stores/groceryStore'
 
 const groceryStore = useGroceryStore()
 
 const filter = ref<'open' | 'bought' | 'all'>('open')
 const showAddArticleDialog = ref(false)
 
+const selectedBoughtItem = ref<GroceryItem | null>(null)
+const showBoughtDialog = ref(false)
+const boughtQuantity = ref(1)
+const boughtExpiryDate = ref<Date | null>(null)
+
 const visibleItems = computed(() => {
   if (filter.value === 'open') return groceryStore.openShoppingItems
   if (filter.value === 'bought') return groceryStore.boughtShoppingItems
   return groceryStore.shoppingListItems
 })
+
+function openBoughtDialog(item: GroceryItem) {
+  selectedBoughtItem.value = item
+  boughtQuantity.value = 1
+  boughtExpiryDate.value = null
+  showBoughtDialog.value = true
+}
+
+function closeBoughtDialog() {
+  showBoughtDialog.value = false
+  selectedBoughtItem.value = null
+  boughtQuantity.value = 1
+  boughtExpiryDate.value = null
+}
+
+function confirmOnlyMarkBought() {
+  if (!selectedBoughtItem.value) return
+  groceryStore.toggleBought(selectedBoughtItem.value.id)
+  closeBoughtDialog()
+}
+
+function confirmAddToInventory() {
+  if (!selectedBoughtItem.value || !boughtExpiryDate.value) return
+  groceryStore.markShoppingItemAsPurchased(
+    selectedBoughtItem.value.id,
+    boughtQuantity.value,
+    boughtExpiryDate.value
+  )
+  closeBoughtDialog()
+}
 </script>
 
 <template>
@@ -92,7 +131,7 @@ const visibleItems = computed(() => {
             <Checkbox
               :binary="true"
               :modelValue="item.bought"
-              @update:modelValue="groceryStore.toggleBought(item.id)"
+              @update:modelValue="openBoughtDialog(item)"
             />
             <div class="item-info">
               <div class="item-name">{{ item.name }}</div>
@@ -159,6 +198,94 @@ const visibleItems = computed(() => {
           />
         </div>
       </div>
+    </Dialog>
+
+    <!-- Dialog: Produkt gekauft -->
+    <Dialog
+      v-model:visible="showBoughtDialog"
+      modal
+      header="Produkt gekauft"
+      :style="{ width: '38rem' }"
+      :breakpoints="{ '640px': '95vw' }"
+      @hide="closeBoughtDialog"
+    >
+      <div class="bought-dialog-content">
+        <p class="bought-dialog-subtitle">
+          Möchtest du den Artikel in deinen Vorrat übernehmen oder nur als erledigt markieren?
+        </p>
+
+        <div v-if="selectedBoughtItem" class="bought-dialog-item-info">
+          <div class="bought-dialog-item-name">{{ selectedBoughtItem.name }}</div>
+          <div class="bought-dialog-item-meta">
+            <span v-if="selectedBoughtItem.category">{{ selectedBoughtItem.category }}</span>
+            <span v-if="selectedBoughtItem.status">
+              &middot;
+              <span
+                :class="{
+                  'status-fresh': selectedBoughtItem.status === 'fresh',
+                  'status-soon': selectedBoughtItem.status === 'soon',
+                  'status-critical': selectedBoughtItem.status === 'critical'
+                }"
+              >
+                {{
+                  selectedBoughtItem.status === 'fresh'
+                    ? 'Frisch'
+                    : selectedBoughtItem.status === 'soon'
+                      ? 'Läuft bald ab'
+                      : 'Abgelaufen'
+                }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div class="bought-dialog-form">
+          <div class="bought-dialog-field">
+            <label class="bought-dialog-label">Menge</label>
+            <InputNumber
+              v-model="boughtQuantity"
+              :min="1"
+              showButtons
+              class="bought-dialog-input"
+            />
+          </div>
+          <div class="bought-dialog-field">
+            <label class="bought-dialog-label">Neues Ablaufdatum</label>
+            <DatePicker
+              v-model="boughtExpiryDate"
+              dateFormat="dd.mm.yy"
+              showIcon
+              class="bought-dialog-input"
+            />
+          </div>
+        </div>
+
+        <Message severity="info" :closable="false" class="bought-dialog-message">
+          Wenn du den Artikel in den Vorrat übernimmst, werden Menge, Ablaufdatum und Status im
+          Inventar aktualisiert.
+        </Message>
+      </div>
+
+      <template #footer>
+        <Button
+          label="Abbrechen"
+          text
+          @click="closeBoughtDialog"
+        />
+        <Button
+          label="Nur als erledigt markieren"
+          severity="secondary"
+          outlined
+          icon="pi pi-check"
+          @click="confirmOnlyMarkBought"
+        />
+        <Button
+          label="In Vorrat übernehmen"
+          icon="pi pi-box"
+          :disabled="!boughtExpiryDate"
+          @click="confirmAddToInventory"
+        />
+      </template>
     </Dialog>
   </main>
 </template>
@@ -346,6 +473,68 @@ const visibleItems = computed(() => {
 .dialog-item-name {
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+/* Dialog: bought item */
+.bought-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bought-dialog-subtitle {
+  margin: 0;
+  color: var(--p-text-muted-color, #6c757d);
+}
+
+.bought-dialog-item-info {
+  padding: 0.75rem 1rem;
+  background: var(--p-surface-50, #f9fafb);
+  border-radius: 6px;
+  border: 1px solid var(--p-surface-border, #e5e7eb);
+}
+
+.bought-dialog-item-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.bought-dialog-item-meta {
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color, #6c757d);
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.status-fresh { color: #22c55e; font-weight: 600; }
+.status-soon  { color: #f59e0b; font-weight: 600; }
+.status-critical { color: #ef4444; font-weight: 600; }
+
+.bought-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bought-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bought-dialog-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.bought-dialog-input {
+  width: 100%;
+}
+
+.bought-dialog-message {
+  margin: 0;
 }
 
 .dialog-item-meta {

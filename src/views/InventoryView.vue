@@ -14,12 +14,27 @@ import Message from 'primevue/message'
 import Divider from 'primevue/divider'
 
 import { useGroceryStore } from '@/stores/groceryStore'
+import type { GroceryItem } from '@/stores/groceryStore'
 
 const groceryStore = useGroceryStore()
 
 const searchTerm = ref('')
 const showAddDialog = ref(false)
 const showScanMessage = ref(false)
+
+const showEditDialog = ref(false)
+const editingItem = ref<GroceryItem | null>(null)
+
+const editForm = ref({
+  id: 0 as number,
+  name: '' as string,
+  category: 'Sonstiges' as string,
+  quantity: 1 as number,
+  unit: 'Stück' as string,
+  expiryDate: null as Date | null,
+  location: 'Küche' as string,
+  barcode: '' as string
+})
 
 const categories = [
   'Obst',
@@ -124,6 +139,44 @@ const addNewItem = () => {
   resetNewItem()
   showAddDialog.value = false
 }
+
+function openEditDialog(item: GroceryItem) {
+  editingItem.value = item
+  editForm.value = {
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    quantity: item.quantity,
+    unit: item.unit,
+    expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
+    location: item.location,
+    barcode: item.barcode ?? ''
+  }
+  showEditDialog.value = true
+}
+
+function closeEditDialog() {
+  showEditDialog.value = false
+  editingItem.value = null
+}
+
+function saveEditedItem() {
+  if (!editingItem.value || !editForm.value.name.trim() || !editForm.value.expiryDate) return
+
+  groceryStore.updateItem({
+    ...editingItem.value,
+    name: editForm.value.name,
+    category: editForm.value.category,
+    quantity: editForm.value.quantity,
+    unit: editForm.value.unit,
+    expiryDate: editForm.value.expiryDate.toISOString().split('T')[0],
+    location: editForm.value.location,
+    barcode: editForm.value.barcode,
+    status: editingItem.value.status
+  })
+
+  closeEditDialog()
+}
 </script>
 
 <template>
@@ -205,6 +258,14 @@ const addNewItem = () => {
               severity="secondary"
               outlined
               @click="groceryStore.updateQuantity(item.id, item.quantity + 1)"
+            />
+
+            <Button
+              icon="pi pi-pencil"
+              severity="secondary"
+              outlined
+              aria-label="Bearbeiten"
+              @click="openEditDialog(item)"
             />
 
             <Button
@@ -366,6 +427,121 @@ const addNewItem = () => {
           icon="pi pi-check"
           @click="addNewItem"
         />
+      </template>
+    </Dialog>
+
+    <!-- Edit Dialog -->
+    <Dialog
+      v-model:visible="showEditDialog"
+      modal
+      header="Produkt bearbeiten"
+      :style="{ width: '32rem' }"
+      :breakpoints="{ '640px': '90vw' }"
+      @hide="closeEditDialog"
+    >
+      <div class="edit-product-form">
+        <div class="form-grid">
+
+          <!-- Produktdaten -->
+          <div class="form-section">
+            <p class="form-section-title">Produktdaten</p>
+            <div class="form-field">
+              <label for="edit-name">Name</label>
+              <InputText id="edit-name" v-model="editForm.name" placeholder="z. B. Milch" />
+            </div>
+            <div class="form-field">
+              <label for="edit-category">Kategorie</label>
+              <Dropdown
+                id="edit-category"
+                v-model="editForm.category"
+                :options="categories"
+                placeholder="Kategorie wählen"
+              />
+            </div>
+          </div>
+
+          <Divider />
+
+          <!-- Menge & Ablaufdatum -->
+          <div class="form-section">
+            <p class="form-section-title">Menge &amp; Ablaufdatum</p>
+            <div class="form-field">
+              <label for="edit-quantity">Menge</label>
+              <InputNumber
+                id="edit-quantity"
+                v-model="editForm.quantity"
+                :min="0"
+                showButtons
+                buttonLayout="horizontal"
+                decrementButtonIcon="pi pi-minus"
+                incrementButtonIcon="pi pi-plus"
+              />
+            </div>
+            <div class="form-field">
+              <label for="edit-unit">Einheit</label>
+              <InputText id="edit-unit" v-model="editForm.unit" placeholder="z. B. Stück" />
+            </div>
+            <div class="form-field">
+              <label for="edit-expiry">Ablaufdatum</label>
+              <DatePicker
+                id="edit-expiry"
+                v-model="editForm.expiryDate"
+                showIcon
+                dateFormat="dd.mm.yy"
+                placeholder="Ablaufdatum auswählen"
+              />
+            </div>
+          </div>
+
+          <Divider />
+
+          <!-- Lagerort -->
+          <div class="form-section">
+            <p class="form-section-title">Lagerort</p>
+            <div class="form-field">
+              <label for="edit-location">Ort</label>
+              <Dropdown
+                id="edit-location"
+                v-model="editForm.location"
+                :options="locations"
+                placeholder="Ort wählen"
+              />
+            </div>
+          </div>
+
+          <Divider />
+
+          <!-- Barcode -->
+          <div class="form-section">
+            <p class="form-section-title">Barcode</p>
+            <div class="form-field">
+              <label for="edit-barcode">Barcode</label>
+              <InputText id="edit-barcode" v-model="editForm.barcode" placeholder="Barcode eingeben" />
+            </div>
+          </div>
+
+        </div>
+
+        <Message severity="info" class="edit-info-message">
+          Beim Speichern wird der Status anhand des Ablaufdatums neu berechnet.
+        </Message>
+      </div>
+
+      <template #footer>
+        <div class="dialog-actions">
+          <Button
+            label="Abbrechen"
+            severity="secondary"
+            outlined
+            @click="closeEditDialog"
+          />
+          <Button
+            label="Änderungen speichern"
+            icon="pi pi-check"
+            :disabled="!editForm.name.trim() || !editForm.expiryDate"
+            @click="saveEditedItem"
+          />
+        </div>
       </template>
     </Dialog>
   </main>
@@ -536,5 +712,23 @@ const addNewItem = () => {
   .barcode-row :deep(.p-inputtext) {
     width: 100%;
   }
+}
+
+/* Edit dialog */
+.edit-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-info-message {
+  margin-top: 0.5rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
 }
 </style>
