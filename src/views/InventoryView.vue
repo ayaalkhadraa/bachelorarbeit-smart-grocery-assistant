@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
@@ -9,6 +9,9 @@ import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
 import InputNumber from 'primevue/inputnumber'
+import DatePicker from 'primevue/datepicker'
+import Message from 'primevue/message'
+import Divider from 'primevue/divider'
 
 import { useGroceryStore } from '@/stores/groceryStore'
 
@@ -16,6 +19,7 @@ const groceryStore = useGroceryStore()
 
 const searchTerm = ref('')
 const showAddDialog = ref(false)
+const showScanMessage = ref(false)
 
 const categories = [
   'Obst',
@@ -34,15 +38,27 @@ const locations = [
 ]
 
 const newItem = ref({
-  name: '',
-  category: 'Sonstiges',
-  quantity: 1,
-  unit: 'Stück',
-  expiryDate: '',
-  location: 'Küche',
-  status: 'fresh',
-  favorite: false
+  name: '' as string,
+  category: 'Sonstiges' as string,
+  quantity: 1 as number,
+  unit: 'Stück' as string,
+  expiryDate: null as Date | null,
+  location: 'Küche' as string,
+  status: 'fresh' as 'fresh' | 'soon' | 'critical',
+  favorite: false as boolean,
+  barcode: '' as string
 })
+
+const formatDateForStorage = (value: Date | string | null | undefined): string => {
+  if (!value) return ''
+  if (value instanceof Date) {
+    const y = value.getFullYear()
+    const m = String(value.getMonth() + 1).padStart(2, '0')
+    const d = String(value.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  return value
+}
 
 const filteredItems = computed(() => {
   return groceryStore.items.filter((item) => {
@@ -53,39 +69,56 @@ const filteredItems = computed(() => {
   })
 })
 
-const getStatusLabel = (status) => {
+const getStatusLabel = (status: string) => {
   if (status === 'fresh') return 'Frisch'
   if (status === 'soon') return 'Läuft bald ab'
-  if (status === 'critical') return 'Kritisch'
+  if (status === 'critical') return 'Abgelaufen'
   return 'Unbekannt'
 }
 
-const getStatusSeverity = (status) => {
+const getStatusSeverity = (status: string) => {
   if (status === 'fresh') return 'success'
   if (status === 'soon') return 'warning'
   if (status === 'critical') return 'danger'
   return 'secondary'
 }
+
 const resetNewItem = () => {
   newItem.value = {
     name: '',
     category: 'Sonstiges',
     quantity: 1,
     unit: 'Stück',
-    expiryDate: '',
+    expiryDate: null,
     location: 'Küche',
     status: 'fresh',
-    favorite: false
+    favorite: false,
+    barcode: ''
   }
+  showScanMessage.value = false
+}
+
+const simulateBarcodeScan = () => {
+  newItem.value.barcode = '4008400401620'
+  if (!newItem.value.name.trim()) {
+    newItem.value.name = 'Gescanntes Produkt'
+  }
+  showScanMessage.value = true
 }
 
 const addNewItem = () => {
-  if (!newItem.value.name.trim()) {
-    return
-  }
+  if (!newItem.value.name.trim()) return
 
   groceryStore.addItem({
-    ...newItem.value
+    name: newItem.value.name,
+    category: newItem.value.category,
+    quantity: newItem.value.quantity,
+    unit: newItem.value.unit,
+    expiryDate: formatDateForStorage(newItem.value.expiryDate),
+    location: newItem.value.location,
+    status: newItem.value.status,
+    favorite: newItem.value.favorite,
+    barcode: newItem.value.barcode
   })
 
   resetNewItem()
@@ -180,6 +213,32 @@ const addNewItem = () => {
               outlined
               @click="groceryStore.deleteItem(item.id)"
             />
+
+            <template v-if="!item.inShoppingList">
+              <Button
+                label="Zur Liste"
+                icon="pi pi-shopping-cart"
+                severity="success"
+                outlined
+                @click="groceryStore.addToShoppingList(item.id)"
+              />
+            </template>
+
+            <template v-else>
+              <Button
+                label="In Liste"
+                icon="pi pi-check"
+                severity="success"
+                disabled
+              />
+              <Button
+                label="Entfernen"
+                icon="pi pi-times"
+                severity="secondary"
+                text
+                @click="groceryStore.removeFromShoppingList(item.id)"
+              />
+            </template>
           </div>
         </template>
       </Card>
@@ -197,45 +256,102 @@ const addNewItem = () => {
       :breakpoints="{ '640px': '95vw' }"
     >
       <div class="form-grid">
-        <div class="form-field">
-          <label for="new-name">Name</label>
-          <InputText id="new-name" v-model="newItem.name" placeholder="z. B. Milch" />
+
+        <!-- 1. Produktdaten -->
+        <div class="form-section">
+          <p class="form-section-title">Produktdaten</p>
+          <div class="form-field">
+            <label for="new-name">Name</label>
+            <InputText id="new-name" v-model="newItem.name" placeholder="z. B. Milch" />
+          </div>
+          <div class="form-field">
+            <label for="new-category">Kategorie</label>
+            <Dropdown
+              id="new-category"
+              v-model="newItem.category"
+              :options="categories"
+              placeholder="Kategorie wählen"
+            />
+          </div>
         </div>
 
-        <div class="form-field">
-          <label for="new-category">Kategorie</label>
-          <Dropdown
-            id="new-category"
-            v-model="newItem.category"
-            :options="categories"
-            placeholder="Kategorie wählen"
-          />
+        <Divider />
+
+        <!-- 2. Menge und Ablaufdatum -->
+        <div class="form-section">
+          <p class="form-section-title">Menge &amp; Ablaufdatum</p>
+          <div class="form-field">
+            <label for="new-quantity">Menge</label>
+            <InputNumber
+              id="new-quantity"
+              v-model="newItem.quantity"
+              :min="1"
+              showButtons
+              buttonLayout="horizontal"
+              decrementButtonIcon="pi pi-minus"
+              incrementButtonIcon="pi pi-plus"
+            />
+          </div>
+          <div class="form-field">
+            <label for="new-unit">Einheit</label>
+            <InputText id="new-unit" v-model="newItem.unit" placeholder="z. B. Stück" />
+          </div>
+          <div class="form-field">
+            <label for="new-expiry">Ablaufdatum</label>
+            <DatePicker
+              id="new-expiry"
+              v-model="newItem.expiryDate"
+              showIcon
+              dateFormat="yy-mm-dd"
+              placeholder="Ablaufdatum auswählen"
+            />
+          </div>
         </div>
 
-        <div class="form-field">
-          <label for="new-quantity">Menge</label>
-          <InputNumber id="new-quantity" v-model="newItem.quantity" :min="0" />
+        <Divider />
+
+        <!-- 3. Barcode -->
+        <div class="form-section">
+          <p class="form-section-title">Barcode</p>
+          <div class="form-field">
+            <label for="new-barcode">Barcode</label>
+            <div class="barcode-row">
+              <InputText
+                id="new-barcode"
+                v-model="newItem.barcode"
+                placeholder="Barcode manuell eingeben"
+              />
+              <Button
+                icon="pi pi-barcode"
+                label="Scannen"
+                severity="secondary"
+                outlined
+                @click="simulateBarcodeScan"
+              />
+            </div>
+          </div>
+          <Message v-if="showScanMessage" severity="info" class="scan-message">
+            Der Barcode-Scan wird im Web-Prototyp simuliert. In der mobilen Variante kann er
+            später über Capacitor umgesetzt werden.
+          </Message>
         </div>
 
-        <div class="form-field">
-          <label for="new-unit">Einheit</label>
-          <InputText id="new-unit" v-model="newItem.unit" placeholder="z. B. Stück" />
+        <Divider />
+
+        <!-- 4. Lagerort -->
+        <div class="form-section">
+          <p class="form-section-title">Lagerort</p>
+          <div class="form-field">
+            <label for="new-location">Ort</label>
+            <Dropdown
+              id="new-location"
+              v-model="newItem.location"
+              :options="locations"
+              placeholder="Ort wählen"
+            />
+          </div>
         </div>
 
-        <div class="form-field">
-          <label for="new-expiry">Ablaufdatum</label>
-          <InputText id="new-expiry" v-model="newItem.expiryDate" placeholder="YYYY-MM-DD" />
-        </div>
-
-        <div class="form-field">
-          <label for="new-location">Ort</label>
-          <Dropdown
-            id="new-location"
-            v-model="newItem.location"
-            :options="locations"
-            placeholder="Ort wählen"
-          />
-        </div>
       </div>
 
       <template #footer>
@@ -321,6 +437,7 @@ const addNewItem = () => {
 
 .card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
 }
@@ -351,7 +468,23 @@ const addNewItem = () => {
 .form-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.form-section-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--sg-muted, #6b7280);
 }
 
 .form-field {
@@ -363,14 +496,45 @@ const addNewItem = () => {
 .form-field label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--sg-text, #374151);
 }
 
+/* Full-width inputs */
 .form-field :deep(input),
 .form-field :deep(.p-inputtext),
 .form-field :deep(.p-dropdown),
+.form-field :deep(.p-select),
+.form-field :deep(.p-datepicker),
+.form-field :deep(.p-datepicker-input),
 .form-field :deep(.p-inputnumber),
 .form-field :deep(.p-inputnumber-input) {
   width: 100%;
+}
+
+/* Barcode row: input + button side by side */
+.barcode-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.barcode-row :deep(.p-inputtext) {
+  flex: 1;
+  width: auto;
+}
+
+.scan-message {
+  margin-top: 0.25rem;
+}
+
+/* Mobile: stack barcode row */
+@media (max-width: 640px) {
+  .barcode-row {
+    flex-direction: column;
+  }
+
+  .barcode-row :deep(.p-inputtext) {
+    width: 100%;
+  }
 }
 </style>

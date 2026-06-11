@@ -1,12 +1,43 @@
-* {
+/* ── Design Tokens ───────────────────────────────────────── */
+:root {
+  /* Colors */
+  --sg-primary:      #2F855A;
+  --sg-primary-soft: #E6F4EA;
+  --sg-secondary:    #F6AD55;
+  --sg-background:   #F7FAF8;
+  --sg-surface:      #FFFFFF;
+  --sg-text:         #1F2933;
+  --sg-muted:        #6B7280;
+  --sg-border:       #E5E7EB;
+  --sg-success:      #2F855A;
+  --sg-warning:      #D97706;
+  --sg-danger:       #DC2626;
+  --sg-info:         #2563EB;
+
+  /* Spacing / Radius */
+  --sg-radius-sm: 10px;
+  --sg-radius-md: 14px;
+  --sg-radius-lg: 18px;
+
+  /* Shadows */
+  --sg-shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.05);
+  --sg-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+/* ── Base Reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f8fafc;
-  color: #1f2937;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--sg-background);
+  color: var(--sg-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {

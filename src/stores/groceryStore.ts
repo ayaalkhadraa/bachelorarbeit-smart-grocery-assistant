@@ -15,6 +15,7 @@ interface GroceryItem {
   favorite: boolean
   inShoppingList: boolean
   bought: boolean
+  barcode?: string
 }
 
 const STORAGE_KEY = 'smart-grocery-items'
@@ -53,6 +54,10 @@ export const useGroceryStore = defineStore('groceryStore', {
 
     boughtShoppingItems: (state) => {
       return state.items.filter((item) => item.inShoppingList && item.bought)
+    },
+
+    availableForShoppingList: (state) => {
+      return state.items.filter((item) => !item.inShoppingList)
     }
   },
 
@@ -65,14 +70,16 @@ export const useGroceryStore = defineStore('groceryStore', {
         this.items = parsed.map((item) => ({
           ...item,
           inShoppingList: (item as GroceryItem).inShoppingList ?? true,
-          bought: (item as GroceryItem).bought ?? false
+          bought: (item as GroceryItem).bought ?? false,
+          barcode: (item as GroceryItem).barcode ?? undefined
         }))
       } else {
         this.items = (groceryItems as Omit<GroceryItem, 'inShoppingList' | 'bought'>[]).map(
           (item) => ({
             ...item,
             inShoppingList: true,
-            bought: false
+            bought: false,
+            barcode: (item as GroceryItem).barcode ?? undefined
           })
         )
         this.saveItems()
@@ -83,7 +90,7 @@ export const useGroceryStore = defineStore('groceryStore', {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items))
     },
 
-    addItem(newItem: Omit<GroceryItem, 'id' | 'inShoppingList' | 'bought'>) {
+    addItem(newItem: Omit<GroceryItem, 'id' | 'inShoppingList' | 'bought'> & { barcode?: string }) {
       this.items.push({
         id: Date.now(),
         ...newItem,
@@ -143,6 +150,26 @@ export const useGroceryStore = defineStore('groceryStore', {
         }
       })
       this.saveItems()
+    },
+
+    addToShoppingList(id: number) {
+      const item = this.items.find((item) => item.id === id)
+
+      if (item) {
+        item.inShoppingList = true
+        item.bought = false
+        this.saveItems()
+      }
+    },
+
+    removeFromShoppingList(id: number) {
+      const item = this.items.find((item) => item.id === id)
+
+      if (item) {
+        item.inShoppingList = false
+        item.bought = false
+        this.saveItems()
+      }
     }
   }
 })

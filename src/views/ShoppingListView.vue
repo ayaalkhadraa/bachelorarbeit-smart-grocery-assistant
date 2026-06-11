@@ -4,11 +4,13 @@ import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Checkbox from 'primevue/checkbox'
+import Dialog from 'primevue/dialog'
 import { useGroceryStore } from '@/stores/groceryStore'
 
 const groceryStore = useGroceryStore()
 
 const filter = ref<'open' | 'bought' | 'all'>('open')
+const showAddArticleDialog = ref(false)
 
 const visibleItems = computed(() => {
   if (filter.value === 'open') return groceryStore.openShoppingItems
@@ -25,6 +27,11 @@ const visibleItems = computed(() => {
         <p>Produkte, die für den nächsten Einkauf vorgesehen sind.</p>
       </div>
       <div class="shopping-actions">
+        <Button
+          label="Artikel hinzufügen"
+          icon="pi pi-plus"
+          @click="showAddArticleDialog = true"
+        />
         <Button
           label="Erledigte entfernen"
           icon="pi pi-trash"
@@ -117,6 +124,42 @@ const visibleItems = computed(() => {
       <i class="pi pi-shopping-cart empty-state-icon" />
       <p>Keine Produkte in dieser Ansicht vorhanden.</p>
     </div>
+
+    <Dialog
+      v-model:visible="showAddArticleDialog"
+      modal
+      header="Artikel zur Einkaufsliste hinzufügen"
+      :style="{ width: '36rem' }"
+      :breakpoints="{ '640px': '95vw' }"
+    >
+      <div
+        v-if="groceryStore.availableForShoppingList.length === 0"
+        class="empty-state"
+      >
+        <i class="pi pi-check-circle empty-state-icon" />
+        <p>Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
+      </div>
+
+      <div v-else class="dialog-list">
+        <div
+          v-for="item in groceryStore.availableForShoppingList"
+          :key="item.id"
+          class="dialog-item"
+        >
+          <div class="dialog-item-info">
+            <span class="dialog-item-name">{{ item.name }}</span>
+            <span class="dialog-item-meta">{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</span>
+          </div>
+          <Button
+            label="Hinzufügen"
+            icon="pi pi-plus"
+            severity="success"
+            outlined
+            @click="groceryStore.addToShoppingList(item.id)"
+          />
+        </div>
+      </div>
+    </Dialog>
   </main>
 </template>
 
@@ -147,6 +190,10 @@ const visibleItems = computed(() => {
 
 .shopping-actions {
   flex-shrink: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .stats-grid {
@@ -246,6 +293,7 @@ const visibleItems = computed(() => {
 
   .shopping-actions {
     width: 100%;
+    flex-direction: column;
   }
 
   .shopping-actions .p-button {
@@ -265,6 +313,54 @@ const visibleItems = computed(() => {
     flex-wrap: wrap;
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* Dialog: available items list */
+.dialog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dialog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--p-surface-border, #e5e7eb);
+}
+
+.dialog-item:last-child {
+  border-bottom: none;
+}
+
+.dialog-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.dialog-item-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.dialog-item-meta {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color, #6c757d);
+}
+
+@media (max-width: 640px) {
+  .dialog-item {
+    flex-wrap: wrap;
+  }
+
+  .dialog-item .p-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

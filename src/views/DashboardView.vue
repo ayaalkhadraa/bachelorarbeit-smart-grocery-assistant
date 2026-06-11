@@ -50,7 +50,7 @@ const expiringItems = [
         <template #content>
           <div class="stat-number">{{ groceryStore.criticalItems.length }}</div>
           <div class="stat-label">
-            <Tag value="Kritisch" severity="danger" />
+            <Tag value="Abgelaufen" severity="danger" />
           </div>
         </template>
       </Card>
@@ -95,7 +95,7 @@ const expiringItems = [
                 </span>
                 <Tag
                   v-if="item.status === 'critical'"
-                  value="Kritisch"
+                  value="Abgelaufen"
                   severity="danger"
                 />
                 <Tag v-else value="Bald" severity="warning" />
