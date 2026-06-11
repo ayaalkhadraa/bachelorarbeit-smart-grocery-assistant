@@ -154,9 +154,6 @@ function loginWithFingerprint(): void {
         class="start-button"
         @click="showAccess"
       />
-      <p class="prototype-note">
-        Hilft dir dabei, Lebensmittel bewusster zu nutzen und unnötige Einkäufe zu vermeiden.
-      </p>
     </div>
 
     <!-- ═══ ACCESS / LOGIN / REGISTER ═══ -->
