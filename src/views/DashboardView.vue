@@ -19,6 +19,13 @@ const expiringItems = [
   ...groceryStore.criticalItems,
   ...groceryStore.soonExpiringItems
 ]
+
+const shoppingWeather = {
+  temperature: 12,
+  condition: 'Regen',
+  icon: 'pi pi-cloud-rain',
+  hint: 'Es regnet heute. Nimm einen Regenschirm mit, wenn du einkaufen gehst.'
+}
 </script>
 
 <template>
@@ -110,6 +117,30 @@ const expiringItems = [
             </ul>
           </template>
           <p v-else class="empty-text">Keine bald ablaufenden Produkte.</p>
+        </template>
+      </Card>
+    </section>
+
+    <!-- Einkaufswetter -->
+    <section class="weather-section">
+      <Card class="weather-card">
+        <template #title>
+          <div class="weather-title">
+            <i class="pi pi-sun" />
+            Wetter
+          </div>
+        </template>
+        <template #content>
+          <div class="weather-body">
+            <div class="weather-main">
+              <i :class="shoppingWeather.icon" class="weather-icon" />
+              <div class="weather-info">
+                <span class="weather-temp">{{ shoppingWeather.temperature }}°C</span>
+                <span class="weather-condition">{{ shoppingWeather.condition }}</span>
+              </div>
+            </div>
+            <p class="weather-hint">{{ shoppingWeather.hint }}</p>
+          </div>
         </template>
       </Card>
     </section>
@@ -305,6 +336,67 @@ const expiringItems = [
   .stats-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Weather Section ─────────────────────────────────── */
+.weather-section {
+  margin-bottom: 1.5rem;
+}
+
+.weather-card {
+  width: 100%;
+}
+
+.weather-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.weather-icon {
+  font-size: 2.5rem;
+  color: #4b9cd3;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.weather-temp {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.weather-condition {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.weather-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #374151;
+  background-color: var(--p-surface-100, #f3f4f6);
+  border-left: 3px solid #4b9cd3;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.5;
 }
 
 /* ── Map Section ─────────────────────────────────────── */
