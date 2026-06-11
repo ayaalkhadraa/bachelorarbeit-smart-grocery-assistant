@@ -25,7 +25,6 @@ const expiringItems = [
   <main class="dashboard-page">
     <section class="dashboard-header">
       <h1>Dashboard</h1>
-      <p>Überblick über dein Inventar, bald ablaufende Produkte und Favoriten.</p>
     </section>
 
     <section class="stats-grid">

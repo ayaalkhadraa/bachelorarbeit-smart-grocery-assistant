@@ -2,7 +2,8 @@
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
-import Badge from 'primevue/badge'
+import OverlayPanel from 'primevue/overlaypanel'
+import Tag from 'primevue/tag'
 import { useGroceryStore } from '@/stores/groceryStore'
 
 const route = useRoute()
@@ -62,6 +63,67 @@ const pageTitles: Record<string, string> = {
 const currentPageTitle = computed(() => pageTitles[route.path] ?? 'Smart Grocery')
 
 const isPublicRoute = computed(() => route.path === '/login')
+
+// ── Notifications ──────────────────────────────────────────
+
+interface AppNotification {
+  id: string
+  title: string
+  text: string
+  severity: 'danger' | 'warn' | 'info'
+  icon: string
+}
+
+const notificationPanel = ref()
+
+const notifications = computed<AppNotification[]>(() => {
+  const result: AppNotification[] = []
+
+  for (const item of groceryStore.criticalItems) {
+    result.push({
+      id: `critical-${item.id}`,
+      title: 'Produkt abgelaufen',
+      text: `${item.name} ist abgelaufen.`,
+      severity: 'danger',
+      icon: 'pi pi-exclamation-triangle',
+    })
+    if (result.length >= 5) return result
+  }
+
+  for (const item of groceryStore.soonExpiringItems) {
+    result.push({
+      id: `soon-${item.id}`,
+      title: 'Läuft bald ab',
+      text: `${item.name} läuft bald ab.`,
+      severity: 'warn',
+      icon: 'pi pi-clock',
+    })
+    if (result.length >= 5) return result
+  }
+
+  const openCount = groceryStore.openShoppingItems.length
+  if (openCount > 0 && result.length < 5) {
+    result.push({
+      id: 'shopping-open',
+      title: 'Einkaufsliste',
+      text: `Du hast ${openCount} offene Artikel auf deiner Einkaufsliste.`,
+      severity: 'info',
+      icon: 'pi pi-shopping-cart',
+    })
+  }
+
+  return result
+})
+
+const unreadNotificationCount = computed(() => notifications.value.length)
+
+function toggleNotifications(event: Event): void {
+  notificationPanel.value?.toggle(event)
+}
+
+function closeNotificationPanel(): void {
+  notificationPanel.value?.hide()
+}
 </script>
 
 <template>
@@ -101,9 +163,53 @@ const isPublicRoute = computed(() => route.path === '/login')
 
         <div class="header-actions">
           <div class="bell-wrapper">
-            <Button icon="pi pi-bell" text rounded aria-label="Benachrichtigungen" />
-            <Badge value="1" severity="danger" class="notification-badge" />
+            <Button
+              icon="pi pi-bell"
+              text
+              rounded
+              aria-label="Benachrichtigungen"
+              :badge="unreadNotificationCount > 0 ? String(unreadNotificationCount) : undefined"
+              badgeSeverity="danger"
+              @click="toggleNotifications"
+            />
           </div>
+
+          <OverlayPanel ref="notificationPanel" class="notification-panel">
+            <div class="notification-header">
+              <span class="notification-header-title">Benachrichtigungen</span>
+              <span class="notification-subtitle">Aktuelle Hinweise zu Vorrat und Einkaufsliste</span>
+            </div>
+
+            <div v-if="notifications.length === 0" class="notification-empty">
+              <i class="pi pi-check-circle"></i>
+              <span>Keine neuen Benachrichtigungen</span>
+            </div>
+
+            <ul v-else class="notification-list">
+              <li v-for="n in notifications" :key="n.id" class="notification-item">
+                <i :class="[n.icon, 'notification-icon', `notification-icon--${n.severity}`]"></i>
+                <div class="notification-content">
+                  <span class="notification-title">{{ n.title }}</span>
+                  <span class="notification-text">{{ n.text }}</span>
+                </div>
+                <Tag
+                  :value="n.severity === 'danger' ? 'Kritisch' : n.severity === 'warn' ? 'Bald' : 'Info'"
+                  :severity="n.severity"
+                  class="notification-tag"
+                />
+              </li>
+            </ul>
+
+            <div class="notification-footer">
+              <Button
+                label="Alle als gelesen markieren"
+                icon="pi pi-check"
+                text
+                size="small"
+                @click="closeNotificationPanel"
+              />
+            </div>
+          </OverlayPanel>
 
           <template v-if="currentUser">
             <Button icon="pi pi-user" :label="currentUser.name" text disabled />
@@ -279,13 +385,6 @@ const isPublicRoute = computed(() => route.path === '/login')
   align-items: center;
 }
 
-.notification-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  pointer-events: none;
-}
-
 .login-link {
   text-decoration: none;
 }
@@ -375,5 +474,116 @@ const isPublicRoute = computed(() => route.path === '/login')
     line-height: 1;
     text-align: center;
   }
+}
+
+/* ── Notification Panel ───────────────────────────────────── */
+:deep(.notification-panel) {
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  border-radius: var(--sg-radius-md);
+  overflow: hidden;
+}
+
+.notification-header {
+  padding: 0.85rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--sg-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notification-header-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sg-text);
+}
+
+.notification-subtitle {
+  font-size: 0.75rem;
+  color: var(--sg-muted);
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--sg-border);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-icon {
+  font-size: 1rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.notification-icon--danger {
+  color: var(--p-red-500, #ef4444);
+}
+
+.notification-icon--warn {
+  color: var(--p-orange-500, #f97316);
+}
+
+.notification-icon--info {
+  color: var(--p-blue-500, #3b82f6);
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notification-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sg-text);
+}
+
+.notification-text {
+  font-size: 0.8rem;
+  color: var(--sg-muted);
+  line-height: 1.4;
+}
+
+.notification-tag {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.notification-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  color: var(--sg-muted);
+  font-size: 0.85rem;
+}
+
+.notification-empty .pi {
+  font-size: 1.5rem;
+  color: var(--p-green-500, #22c55e);
+}
+
+.notification-footer {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--sg-border);
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
