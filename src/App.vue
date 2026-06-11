@@ -1,16 +1,42 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { computed, onMounted } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Badge from 'primevue/badge'
 import { useGroceryStore } from '@/stores/groceryStore'
 
 const route = useRoute()
+const router = useRouter()
 const groceryStore = useGroceryStore()
+
+const currentUser = ref<{ email: string; name: string; loginMethod?: string } | null>(null)
+
+function loadCurrentUser(): void {
+  try {
+    const raw = localStorage.getItem('smart-grocery-demo-user')
+    currentUser.value = raw ? JSON.parse(raw) : null
+  } catch {
+    currentUser.value = null
+  }
+}
+
+function logout(): void {
+  localStorage.removeItem('smart-grocery-demo-user')
+  currentUser.value = null
+  router.push('/login')
+}
 
 onMounted(() => {
   groceryStore.loadItems()
 })
+
+watch(
+  () => route.fullPath,
+  () => {
+    loadCurrentUser()
+  },
+  { immediate: true }
+)
 
 const navItems = [
   { path: '/',              label: 'Dashboard',    icon: 'pi pi-home' },
@@ -34,10 +60,16 @@ const pageTitles: Record<string, string> = {
 }
 
 const currentPageTitle = computed(() => pageTitles[route.path] ?? 'Smart Grocery')
+
+const isPublicRoute = computed(() => route.path === '/login')
 </script>
 
 <template>
-  <div class="app-layout">
+  <!-- Public layout: no navigation -->
+  <RouterView v-if="isPublicRoute" />
+
+  <!-- App layout: full navigation -->
+  <div v-else class="app-layout">
 
     <!-- ── Sidebar (Desktop) ────────────────────────────────── -->
     <aside class="sidebar">
@@ -73,9 +105,19 @@ const currentPageTitle = computed(() => pageTitles[route.path] ?? 'Smart Grocery
             <Badge value="1" severity="danger" class="notification-badge" />
           </div>
 
-          <Button icon="pi pi-user" label="Demo User" text />
+          <template v-if="currentUser">
+            <Button icon="pi pi-user" :label="currentUser.name" text disabled />
+            <Button
+              label="Logout"
+              icon="pi pi-sign-out"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="logout"
+            />
+          </template>
 
-          <RouterLink to="/login" class="login-link">
+          <RouterLink v-else to="/login" class="login-link">
             <Button
               label="Login"
               icon="pi pi-sign-in"

@@ -49,4 +49,22 @@ const router = createRouter({
   ]
 })
 
+function hasDemoUser(): boolean {
+  try {
+    return localStorage.getItem('smart-grocery-demo-user') !== null
+  } catch {
+    return false
+  }
+}
+
+router.beforeEach((to) => {
+  const isPublicRoute = to.path === '/login'
+
+  if (!isPublicRoute && !hasDemoUser()) {
+    return '/login'
+  }
+
+  return true
+})
+
 export default router
