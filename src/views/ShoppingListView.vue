@@ -59,13 +59,13 @@ function confirmAddToInventory() {
 </script>
 
 <template>
-  <main class="shopping-page">
-    <div class="shopping-header">
-      <div class="shopping-header-content">
-        <h1>Einkaufsliste</h1>
-        <p>Produkte, die für den nächsten Einkauf vorgesehen sind.</p>
+  <main class="max-w-[960px] mx-auto">
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
+      <div>
+        <h1 class="m-0 mb-1 text-[1.75rem] font-bold">Einkaufsliste</h1>
+        <p class="m-0 text-muted-color">Produkte, die für den nächsten Einkauf vorgesehen sind.</p>
       </div>
-      <div class="shopping-actions">
+      <div class="shrink-0 flex gap-2 flex-wrap items-center">
         <Button
           label="Artikel hinzufügen"
           icon="pi pi-plus"
@@ -82,28 +82,28 @@ function confirmAddToInventory() {
       </div>
     </div>
 
-    <div class="stats-grid">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <Card>
         <template #content>
-          <div class="stat-number">{{ groceryStore.openShoppingItems.length }}</div>
-          <div class="stat-label">Offen</div>
+          <div class="text-[2rem] font-bold leading-none mb-1">{{ groceryStore.openShoppingItems.length }}</div>
+          <div class="text-sm text-muted-color">Offen</div>
         </template>
       </Card>
       <Card>
         <template #content>
-          <div class="stat-number">{{ groceryStore.boughtShoppingItems.length }}</div>
-          <div class="stat-label">Erledigt</div>
+          <div class="text-[2rem] font-bold leading-none mb-1">{{ groceryStore.boughtShoppingItems.length }}</div>
+          <div class="text-sm text-muted-color">Erledigt</div>
         </template>
       </Card>
       <Card>
         <template #content>
-          <div class="stat-number">{{ groceryStore.shoppingListItems.length }}</div>
-          <div class="stat-label">Gesamt</div>
+          <div class="text-[2rem] font-bold leading-none mb-1">{{ groceryStore.shoppingListItems.length }}</div>
+          <div class="text-sm text-muted-color">Gesamt</div>
         </template>
       </Card>
     </div>
 
-    <div class="filter-bar">
+    <div class="flex gap-2 mb-5 flex-wrap">
       <Button
         label="Offen"
         :severity="filter === 'open' ? 'primary' : 'secondary'"
@@ -124,24 +124,24 @@ function confirmAddToInventory() {
       />
     </div>
 
-    <div v-if="visibleItems.length > 0" class="shopping-list">
-      <Card v-for="item in visibleItems" :key="item.id" class="shopping-item">
+    <div v-if="visibleItems.length > 0" class="flex flex-col gap-3">
+      <Card v-for="item in visibleItems" :key="item.id" class="w-full">
         <template #content>
-          <div class="item-main">
+          <div class="flex items-center gap-4">
             <Checkbox
               :binary="true"
               :modelValue="item.bought"
               @update:modelValue="openBoughtDialog(item)"
             />
-            <div class="item-info">
-              <div class="item-name">{{ item.name }}</div>
-              <div class="item-meta">
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-base truncate">{{ item.name }}</div>
+              <div class="flex flex-wrap gap-2 text-[0.8rem] text-muted-color mt-1">
                 <span class="item-category">{{ item.category }}</span>
                 <span class="item-quantity">{{ item.quantity }} {{ item.unit }}</span>
                 <span v-if="item.expiryDate" class="item-expiry">MHD: {{ item.expiryDate }}</span>
               </div>
             </div>
-            <div class="item-actions">
+            <div class="flex items-center gap-2 shrink-0">
               <Tag
                 :value="item.bought ? 'Erledigt' : 'Offen'"
                 :severity="item.bought ? 'success' : 'warn'"
@@ -159,8 +159,8 @@ function confirmAddToInventory() {
       </Card>
     </div>
 
-    <div v-else class="empty-state">
-      <i class="pi pi-shopping-cart empty-state-icon" />
+    <div v-else class="text-center py-12 px-4 text-muted-color">
+      <i class="pi pi-shopping-cart text-[3rem] mb-4 block" />
       <p>Keine Produkte in dieser Ansicht vorhanden.</p>
     </div>
 
@@ -173,21 +173,21 @@ function confirmAddToInventory() {
     >
       <div
         v-if="groceryStore.availableForShoppingList.length === 0"
-        class="empty-state"
+        class="text-center py-12 px-4 text-muted-color"
       >
-        <i class="pi pi-check-circle empty-state-icon" />
+        <i class="pi pi-check-circle text-[3rem] mb-4 block" />
         <p>Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
       </div>
 
-      <div v-else class="dialog-list">
+      <div v-else class="flex flex-col gap-3">
         <div
           v-for="item in groceryStore.availableForShoppingList"
           :key="item.id"
-          class="dialog-item"
+          class="flex items-center justify-between gap-4 py-2 border-b border-surface last:border-b-0"
         >
-          <div class="dialog-item-info">
-            <span class="dialog-item-name">{{ item.name }}</span>
-            <span class="dialog-item-meta">{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</span>
+          <div class="flex flex-col gap-[0.2rem] min-w-0">
+            <span class="font-semibold text-[0.95rem]">{{ item.name }}</span>
+            <span class="text-[0.8rem] text-muted-color">{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</span>
           </div>
           <Button
             label="Hinzufügen"
@@ -209,14 +209,14 @@ function confirmAddToInventory() {
       :breakpoints="{ '640px': '95vw' }"
       @hide="closeBoughtDialog"
     >
-      <div class="bought-dialog-content">
-        <p class="bought-dialog-subtitle">
+      <div class="flex flex-col gap-4">
+        <p class="m-0 text-muted-color">
           Möchtest du den Artikel in deinen Vorrat übernehmen oder nur als erledigt markieren?
         </p>
 
-        <div v-if="selectedBoughtItem" class="bought-dialog-item-info">
-          <div class="bought-dialog-item-name">{{ selectedBoughtItem.name }}</div>
-          <div class="bought-dialog-item-meta">
+        <div v-if="selectedBoughtItem" class="p-3 bg-surface-50 rounded-md border border-surface">
+          <div class="font-bold text-[1.05rem] mb-1">{{ selectedBoughtItem.name }}</div>
+          <div class="text-[0.85rem] text-muted-color flex gap-[0.35rem] items-center">
             <span v-if="selectedBoughtItem.category">{{ selectedBoughtItem.category }}</span>
             <span v-if="selectedBoughtItem.status">
               &middot;
@@ -239,28 +239,28 @@ function confirmAddToInventory() {
           </div>
         </div>
 
-        <div class="bought-dialog-form">
-          <div class="bought-dialog-field">
-            <label class="bought-dialog-label">Menge</label>
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-[0.35rem]">
+            <label class="text-sm font-semibold">Menge</label>
             <InputNumber
               v-model="boughtQuantity"
               :min="1"
               showButtons
-              class="bought-dialog-input"
+              class="w-full"
             />
           </div>
-          <div class="bought-dialog-field">
-            <label class="bought-dialog-label">Neues Ablaufdatum</label>
+          <div class="flex flex-col gap-[0.35rem]">
+            <label class="text-sm font-semibold">Neues Ablaufdatum</label>
             <DatePicker
               v-model="boughtExpiryDate"
               dateFormat="dd.mm.yy"
               showIcon
-              class="bought-dialog-input"
+              class="w-full"
             />
           </div>
         </div>
 
-        <Message severity="info" :closable="false" class="bought-dialog-message">
+        <Message severity="info" :closable="false" class="m-0">
           Wenn du den Artikel in den Vorrat übernimmst, werden Menge, Ablaufdatum und Status im
           Inventar aktualisiert.
         </Message>
@@ -291,149 +291,16 @@ function confirmAddToInventory() {
 </template>
 
 <style scoped>
-.shopping-page {
-  padding: 1.5rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
+/* ── Status colors for bought-dialog ────────────────────── */
+.status-fresh    { color: #22c55e; font-weight: 600; }
+.status-soon     { color: #f59e0b; font-weight: 600; }
+.status-critical { color: #ef4444; font-weight: 600; }
 
-.shopping-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.shopping-header-content h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.75rem;
-}
-
-.shopping-header-content p {
-  margin: 0;
-  color: var(--p-text-muted-color, #6c757d);
-}
-
-.shopping-actions {
-  flex-shrink: 0;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--p-text-muted-color, #6c757d);
-}
-
-.filter-bar {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.shopping-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.shopping-item {
-  width: 100%;
-}
-
-.item-main {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.item-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-name {
-  font-weight: 600;
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--p-text-muted-color, #6c757d);
-  margin-top: 0.25rem;
-}
-
-.item-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--p-text-muted-color, #6c757d);
-}
-
-.empty-state-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
+/* ── Mobile: full-width action buttons ───────────────────── */
 @media (max-width: 650px) {
-  .shopping-header {
-    flex-direction: column;
-  }
-
-  .shopping-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
   .shopping-actions .p-button {
     width: 100%;
     justify-content: center;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .item-main {
-    flex-wrap: wrap;
   }
 
   .item-actions {
@@ -443,111 +310,8 @@ function confirmAddToInventory() {
   }
 }
 
-/* Dialog: available items list */
-.dialog-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.dialog-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--p-surface-border, #e5e7eb);
-}
-
-.dialog-item:last-child {
-  border-bottom: none;
-}
-
-.dialog-item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.dialog-item-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-/* Dialog: bought item */
-.bought-dialog-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.bought-dialog-subtitle {
-  margin: 0;
-  color: var(--p-text-muted-color, #6c757d);
-}
-
-.bought-dialog-item-info {
-  padding: 0.75rem 1rem;
-  background: var(--p-surface-50, #f9fafb);
-  border-radius: 6px;
-  border: 1px solid var(--p-surface-border, #e5e7eb);
-}
-
-.bought-dialog-item-name {
-  font-weight: 700;
-  font-size: 1.05rem;
-  margin-bottom: 0.25rem;
-}
-
-.bought-dialog-item-meta {
-  font-size: 0.85rem;
-  color: var(--p-text-muted-color, #6c757d);
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
-}
-
-.status-fresh { color: #22c55e; font-weight: 600; }
-.status-soon  { color: #f59e0b; font-weight: 600; }
-.status-critical { color: #ef4444; font-weight: 600; }
-
-.bought-dialog-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.bought-dialog-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.bought-dialog-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.bought-dialog-input {
-  width: 100%;
-}
-
-.bought-dialog-message {
-  margin: 0;
-}
-
-.dialog-item-meta {
-  font-size: 0.8rem;
-  color: var(--p-text-muted-color, #6c757d);
-}
-
 @media (max-width: 640px) {
-  .dialog-item {
-    flex-wrap: wrap;
-  }
-
-  .dialog-item .p-button {
+  .dialog-item-btn .p-button {
     width: 100%;
     justify-content: center;
   }

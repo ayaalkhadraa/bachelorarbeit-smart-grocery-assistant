@@ -124,26 +124,26 @@ function loginWithFingerprint(): void {
   <main class="access-page">
 
     <!-- ═══ WELCOME MODE ═══ -->
-    <div v-if="mode === 'welcome'" class="welcome-full">
+    <div v-if="mode === 'welcome'" class="flex flex-col items-center text-center gap-4 max-w-[500px] w-full py-8 px-6">
       <div class="brand-badge">
         <i class="pi pi-leaf" />
       </div>
-      <h1 class="brand-title">FreshFlow</h1>
-      <p class="brand-subtitle">Smart Grocery Assistant</p>
-      <p class="brand-description">
+      <h1 class="text-[3rem] font-extrabold m-0 text-[#111827] tracking-tight leading-[1.1]">FreshFlow</h1>
+      <p class="text-[1.05rem] font-semibold text-[#16a34a] m-0">Smart Grocery Assistant</p>
+      <p class="text-[1rem] text-[#4b5563] m-0 leading-relaxed max-w-[420px]">
         Organisiere deinen Vorrat, plane Einkäufe einfacher und behalte Ablaufdaten sowie Reste im Blick.
       </p>
-      <ul class="feature-list">
-        <li class="feature-item">
-          <i class="pi pi-check-circle" />
+      <ul class="list-none mt-2 mb-1 p-0 flex flex-col gap-[0.7rem] self-stretch max-w-[360px] mx-auto">
+        <li class="flex items-center justify-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+          <i class="pi pi-check-circle text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
           <span>Lebensmittel im Blick behalten</span>
         </li>
-        <li class="feature-item">
-          <i class="pi pi-shopping-cart" />
+        <li class="flex items-center justify-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+          <i class="pi pi-shopping-cart text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
           <span>Einkaufsliste schneller planen</span>
         </li>
-        <li class="feature-item">
-          <i class="pi pi-clock" />
+        <li class="flex items-center justify-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+          <i class="pi pi-clock text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
           <span>Ablaufdaten rechtzeitig erkennen</span>
         </li>
       </ul>
@@ -151,59 +151,59 @@ function loginWithFingerprint(): void {
         label="Loslegen"
         icon="pi pi-arrow-right"
         iconPos="right"
-        class="start-button"
+        class="mt-2 px-9 py-3 text-[1.05rem] font-semibold"
         @click="showAccess"
       />
     </div>
 
     <!-- ═══ ACCESS / LOGIN / REGISTER ═══ -->
-    <div v-else class="access-layout">
+    <div v-else class="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
       <!-- ── Brand panel (condensed) ───────────────────── -->
-      <aside class="welcome-panel">
+      <aside class="flex flex-col gap-[0.85rem] py-4 items-center text-center md:items-start md:text-left">
         <div class="brand-badge">
           <i class="pi pi-leaf" />
         </div>
-        <h1 class="brand-title">FreshFlow</h1>
-        <p class="brand-subtitle">Smart Grocery Assistant</p>
-        <p class="brand-description">
+        <h1 class="text-[2.6rem] font-extrabold m-0 text-[#111827] tracking-tight leading-[1.1]">FreshFlow</h1>
+        <p class="text-[1.05rem] font-semibold text-[#16a34a] m-0">Smart Grocery Assistant</p>
+        <p class="text-[0.95rem] text-[#4b5563] m-0 leading-relaxed max-w-[380px]">
           Verwalte Lebensmittel, Einkaufsliste und Ablaufdaten.
         </p>
-        <ul class="feature-list">
-          <li class="feature-item">
-            <i class="pi pi-check-circle" />
+        <ul class="list-none mt-2 mb-1 p-0 flex flex-col gap-[0.7rem]">
+          <li class="flex items-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+            <i class="pi pi-check-circle text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
             <span>Lebensmittel im Blick behalten</span>
           </li>
-          <li class="feature-item">
-            <i class="pi pi-shopping-cart" />
+          <li class="flex items-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+            <i class="pi pi-shopping-cart text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
             <span>Einkaufsliste schneller planen</span>
           </li>
-          <li class="feature-item">
-            <i class="pi pi-clock" />
+          <li class="flex items-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
+            <i class="pi pi-clock text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
             <span>Ablaufdaten rechtzeitig erkennen</span>
           </li>
         </ul>
-        <p class="prototype-note">
+        <p class="text-[0.78rem] text-[#9ca3af] mt-1 leading-relaxed max-w-[360px]">
           Hilft dir dabei, Lebensmittel bewusster zu nutzen und unnötige Einkäufe zu vermeiden.
         </p>
       </aside>
 
       <!-- ── Card column ────────────────────────────────── -->
-      <div class="access-card-col">
+      <div class="w-full">
 
         <!-- ═══ ACCESS MODE ═══ -->
         <Card v-if="mode === 'access'" class="access-card">
           <template #title>Willkommen</template>
           <template #subtitle>Wähle, wie du FreshFlow verwenden möchtest.</template>
           <template #content>
-            <Message severity="info" :closable="false" class="mb-msg">
+            <Message severity="info" :closable="false" class="mb-4">
               Der Zugang wird im Web-Prototyp simuliert. Es wird keine echte Authentifizierung durchgeführt.
             </Message>
-            <div class="access-actions">
+            <div class="flex flex-col gap-3">
               <Button
                 label="Anmelden"
                 icon="pi pi-sign-in"
-                class="full-width"
+                class="w-full justify-center"
                 @click="showLogin"
               />
               <Button
@@ -211,16 +211,16 @@ function loginWithFingerprint(): void {
                 icon="pi pi-user-plus"
                 severity="secondary"
                 outlined
-                class="full-width"
+                class="w-full justify-center"
                 @click="showRegister"
               />
-              <Divider align="center"><span class="divider-text">oder</span></Divider>
+              <Divider align="center"><span class="text-[0.8rem] text-[#9ca3af] whitespace-nowrap">oder</span></Divider>
               <Button
                 label="Als Gast fortfahren"
                 icon="pi pi-user"
                 severity="secondary"
                 outlined
-                class="full-width"
+                class="w-full justify-center"
                 @click="continueAsGuest"
               />
             </div>
@@ -228,7 +228,7 @@ function loginWithFingerprint(): void {
               label="Zurück zur Startseite"
               icon="pi pi-arrow-left"
               text
-              class="back-button back-top"
+              class="mb-2 pl-0 mt-3"
               @click="showWelcome"
             />
           </template>
@@ -243,15 +243,15 @@ function loginWithFingerprint(): void {
               label="Zurück"
               icon="pi pi-arrow-left"
               text
-              class="back-button"
+              class="mb-2 pl-0"
               @click="showAccess"
             />
-            <Message severity="info" :closable="false" class="mb-msg">
+            <Message severity="info" :closable="false" class="mb-4">
               Demo-Zugang: Es wird keine echte Authentifizierung durchgeführt.
             </Message>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="login-email">E-Mail</label>
+            <div class="flex flex-col gap-[0.1rem] mb-4">
+              <div class="flex flex-col gap-[0.4rem] mb-[0.85rem]">
+                <label for="login-email" class="text-sm font-medium text-[#374151]">E-Mail</label>
                 <InputText
                   id="login-email"
                   v-model="email"
@@ -260,8 +260,8 @@ function loginWithFingerprint(): void {
                   autocomplete="email"
                 />
               </div>
-              <div class="form-field">
-                <label for="login-password">Passwort</label>
+              <div class="flex flex-col gap-[0.4rem] mb-[0.85rem]">
+                <label for="login-password" class="text-sm font-medium text-[#374151]">Passwort</label>
                 <Password
                   id="login-password"
                   v-model="password"
@@ -276,21 +276,21 @@ function loginWithFingerprint(): void {
             <Button
               label="Einloggen"
               icon="pi pi-sign-in"
-              class="full-width"
+              class="w-full justify-center"
               @click="login"
             />
-            <Message v-if="loginSuccess" severity="success" :closable="false" class="mt-msg">
+            <Message v-if="loginSuccess" severity="success" :closable="false" class="mt-3">
               Login erfolgreich. Weiterleitung zum Dashboard...
             </Message>
-            <Message v-if="loginError" severity="error" :closable="false" class="mt-msg">
+            <Message v-if="loginError" severity="error" :closable="false" class="mt-3">
               Bitte E-Mail und Passwort eingeben.
             </Message>
 
-            <div class="biometric-section">
-              <Divider align="center">
-                <span class="divider-text">Biometrische Anmeldung</span>
+            <div class="flex flex-col gap-3 mt-2">
+            <Divider align="center">
+                <span class="text-[0.8rem] text-[#9ca3af] whitespace-nowrap">Biometrische Anmeldung</span>
               </Divider>
-              <Message severity="info" :closable="false" class="mb-msg">
+              <Message severity="info" :closable="false" class="mb-4">
                 Die Fingerabdruck-Anmeldung wird im Web-Prototyp nur simuliert. Eine echte
                 biometrische Authentifizierung kann später in der Capacitor-Variante untersucht
                 werden.
@@ -301,13 +301,13 @@ function loginWithFingerprint(): void {
                 severity="secondary"
                 outlined
                 :loading="biometricLoading"
-                class="full-width"
+                class="w-full justify-center"
                 @click="loginWithFingerprint"
               />
-              <Message v-if="biometricSuccess" severity="success" :closable="false" class="mt-msg">
+              <Message v-if="biometricSuccess" severity="success" :closable="false" class="mt-3">
                 Biometrische Anmeldung erfolgreich. Weiterleitung zum Dashboard...
               </Message>
-              <Message v-if="biometricError" severity="error" :closable="false" class="mt-msg">
+              <Message v-if="biometricError" severity="error" :closable="false" class="mt-3">
                 Biometrische Anmeldung konnte nicht durchgeführt werden.
               </Message>
             </div>
@@ -323,15 +323,15 @@ function loginWithFingerprint(): void {
               label="Zurück"
               icon="pi pi-arrow-left"
               text
-              class="back-button"
+              class="mb-2 pl-0"
               @click="showAccess"
             />
-            <Message severity="info" :closable="false" class="mb-msg">
+            <Message severity="info" :closable="false" class="mb-4">
               Die Registrierung wird nur simuliert. Es wird kein echtes Konto erstellt.
             </Message>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="reg-name">Name</label>
+            <div class="flex flex-col gap-[0.1rem] mb-4">
+              <div class="flex flex-col gap-[0.4rem] mb-[0.85rem]">
+                <label for="reg-name" class="text-sm font-medium text-[#374151]">Name</label>
                 <InputText
                   id="reg-name"
                   v-model="registerName"
@@ -339,8 +339,8 @@ function loginWithFingerprint(): void {
                   autocomplete="name"
                 />
               </div>
-              <div class="form-field">
-                <label for="reg-email">E-Mail</label>
+              <div class="flex flex-col gap-[0.4rem] mb-[0.85rem]">
+                <label for="reg-email" class="text-sm font-medium text-[#374151]">E-Mail</label>
                 <InputText
                   id="reg-email"
                   v-model="registerEmail"
@@ -349,8 +349,8 @@ function loginWithFingerprint(): void {
                   autocomplete="email"
                 />
               </div>
-              <div class="form-field">
-                <label for="reg-password">Passwort</label>
+              <div class="flex flex-col gap-[0.4rem] mb-[0.85rem]">
+                <label for="reg-password" class="text-sm font-medium text-[#374151]">Passwort</label>
                 <Password
                   id="reg-password"
                   v-model="registerPassword"
@@ -364,13 +364,13 @@ function loginWithFingerprint(): void {
             <Button
               label="Registrieren"
               icon="pi pi-user-plus"
-              class="full-width"
+              class="w-full justify-center"
               @click="register"
             />
-            <Message v-if="registerSuccess" severity="success" :closable="false" class="mt-msg">
+            <Message v-if="registerSuccess" severity="success" :closable="false" class="mt-3">
               Registrierung erfolgreich. Weiterleitung zum Dashboard...
             </Message>
-            <Message v-if="registerError" severity="error" :closable="false" class="mt-msg">
+            <Message v-if="registerError" severity="error" :closable="false" class="mt-3">
               Bitte alle Felder ausfüllen.
             </Message>
           </template>
@@ -383,7 +383,7 @@ function loginWithFingerprint(): void {
 </template>
 
 <style scoped>
-/* ── Page ──────────────────────────────────────────────── */
+/* ── Page: gradient bg kept (complex multi-stop gradient) ── */
 .access-page {
   min-height: 100vh;
   display: flex;
@@ -392,82 +392,8 @@ function loginWithFingerprint(): void {
   padding: 2rem 1.5rem;
   background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 55%, #ecfdf5 100%);
 }
-/* ── Welcome Full (standalone welcome page) ──────────────── */
-.welcome-full {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 1rem;
-  max-width: 500px;
-  width: 100%;
-  padding: 2rem 1.5rem;
-}
 
-.welcome-full .brand-badge {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 0.5rem;
-}
-
-.welcome-full .brand-badge .pi {
-  font-size: 2.2rem;
-}
-
-.welcome-full .brand-title {
-  font-size: 3rem;
-}
-
-.welcome-full .brand-description {
-  max-width: 420px;
-  font-size: 1rem;
-}
-
-.welcome-full .feature-list {
-  align-self: stretch;
-  max-width: 360px;
-  margin: 0 auto;
-}
-
-.welcome-full .feature-item {
-  justify-content: center;
-}
-
-.welcome-full .prototype-note {
-  max-width: 380px;
-}
-
-/* ── Start button ─────────────────────────────────────────── */
-.start-button {
-  margin-top: 0.5rem;
-  padding: 0.75rem 2.25rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-/* ── Back button (top of access card) ────────────────── */
-.back-top {
-  margin-top: 0.75rem;
-  padding-left: 0;
-}
-/* ── Two-column layout ─────────────────────────────────── */
-.access-layout {
-  width: 100%;
-  max-width: 1100px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-  align-items: center;
-}
-
-/* ── Welcome Panel ─────────────────────────────────────── */
-.welcome-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  padding: 1rem 0;
-}
-
+/* ── Brand badge: circular gradient kept ─────────────────── */
 .brand-badge {
   width: 60px;
   height: 60px;
@@ -485,70 +411,7 @@ function loginWithFingerprint(): void {
   color: #fff;
 }
 
-.brand-title {
-  font-size: 2.6rem;
-  font-weight: 800;
-  margin: 0;
-  color: #111827;
-  letter-spacing: -0.75px;
-  line-height: 1.1;
-}
-
-.brand-subtitle {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #16a34a;
-  margin: 0;
-}
-
-.brand-description {
-  font-size: 0.95rem;
-  color: #4b5563;
-  margin: 0.25rem 0 0.25rem;
-  line-height: 1.65;
-  max-width: 380px;
-}
-
-/* Feature list */
-.feature-list {
-  list-style: none;
-  margin: 0.5rem 0 0.25rem;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 0.9rem;
-  color: #374151;
-  font-weight: 500;
-}
-
-.feature-item .pi {
-  font-size: 1rem;
-  color: #16a34a;
-  flex-shrink: 0;
-  width: 1.1rem;
-  text-align: center;
-}
-
-.prototype-note {
-  font-size: 0.78rem;
-  color: #9ca3af;
-  margin: 0.25rem 0 0;
-  line-height: 1.5;
-  max-width: 360px;
-}
-
-/* ── Access Card Column ────────────────────────────────── */
-.access-card-col {
-  width: 100%;
-}
-
+/* ── Access card: !important overrides for PrimeVue ─────── */
 .access-card {
   width: 100%;
   border-radius: 16px !important;
@@ -557,96 +420,15 @@ function loginWithFingerprint(): void {
   overflow: hidden;
 }
 
-/* ── Actions (welcome mode) ────────────────────────────── */
-.access-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* ── Form ──────────────────────────────────────────────── */
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  margin-bottom: 1rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.85rem;
-}
-
-.form-field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
+/* ── PrimeVue input width inside form fields ─────────────── */
 .form-field :deep(.p-inputtext),
 .form-field :deep(.p-password),
 .form-field :deep(.p-password .p-inputtext) {
   width: 100%;
 }
 
-/* ── Utilities ─────────────────────────────────────────── */
-.full-width {
-  width: 100%;
-  justify-content: center;
-}
-
-.back-button {
-  margin-bottom: 0.5rem;
-  padding-left: 0;
-}
-
-.divider-text {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  white-space: nowrap;
-}
-
-.mb-msg {
-  margin-bottom: 1rem;
-}
-
-.mt-msg {
-  margin-top: 0.75rem;
-}
-
-/* ── Biometric Section ─────────────────────────────────── */
-.biometric-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-/* ── Responsive ────────────────────────────────────────── */
+/* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 760px) {
-  .access-layout {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-    max-width: 460px;
-  }
-
-  .welcome-panel {
-    align-items: center;
-    text-align: center;
-    padding: 0;
-  }
-
-  .brand-description,
-  .prototype-note {
-    max-width: 100%;
-  }
-
-  .feature-item {
-    justify-content: center;
-  }
-
   .access-page {
     align-items: flex-start;
     padding: 1.5rem 1rem;

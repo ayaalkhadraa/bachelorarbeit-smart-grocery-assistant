@@ -41,10 +41,10 @@ function resetPrototypeData(): void {
 </script>
 
 <template>
-  <main class="settings-page">
-    <div class="settings-header">
-      <h1>Einstellungen</h1>
-      <p>Verwaltung einfacher Prototyp-Einstellungen.</p>
+  <main class="max-w-[1000px] mx-auto">
+    <div class="mb-6">
+      <h1 class="text-[1.75rem] font-bold m-0 mb-1">Einstellungen</h1>
+      <p class="text-muted-color m-0">Verwaltung einfacher Prototyp-Einstellungen.</p>
     </div>
 
     <Message severity="info" :closable="false">
@@ -53,17 +53,17 @@ function resetPrototypeData(): void {
 
     <Divider />
 
-    <div class="settings-grid">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <!-- Card: Profil -->
       <Card>
         <template #title>Profil</template>
         <template #content>
-          <div class="form-field">
-            <label for="username">Benutzername</label>
+          <div class="flex flex-col gap-[0.4rem] mb-4">
+            <label for="username" class="text-sm font-medium">Benutzername</label>
             <InputText id="username" v-model="username" placeholder="Benutzername eingeben" />
           </div>
-          <div class="form-field">
-            <label for="language">Sprache</label>
+          <div class="flex flex-col gap-[0.4rem] mb-4">
+            <label for="language" class="text-sm font-medium">Sprache</label>
             <Select
               id="language"
               v-model="language"
@@ -71,7 +71,7 @@ function resetPrototypeData(): void {
               placeholder="Sprache wählen"
             />
           </div>
-          <div class="actions">
+          <div class="mt-2">
             <Button label="Einstellungen speichern" icon="pi pi-save" @click="saveSettings" />
           </div>
         </template>
@@ -81,12 +81,12 @@ function resetPrototypeData(): void {
       <Card>
         <template #title>Benachrichtigungen</template>
         <template #content>
-          <div class="setting-row">
-            <span class="setting-text">Erinnerungen für bald ablaufende Produkte</span>
+          <div class="flex items-center justify-between gap-4 mb-3">
+            <span class="text-[0.95rem] flex-1">Erinnerungen für bald ablaufende Produkte</span>
             <ToggleSwitch v-model="notificationsEnabled" />
           </div>
-          <p class="hint-text">
-            <span v-if="notificationsEnabled">Benachrichtigungen sind im Prototyp aktiviert.</span>
+          <p class="text-[0.85rem] text-muted-color m-0 mt-1">
+            <span v-if="notificationsEnabled">Benachrichtigungen aktiv: Du wirst 2 Tage vor Ablauf benachrichtigt.</span>
             <span v-else>Benachrichtigungen sind deaktiviert.</span>
           </p>
         </template>
@@ -96,14 +96,12 @@ function resetPrototypeData(): void {
       <Card>
         <template #title>Darstellung</template>
         <template #content>
-          <div class="setting-row">
-            <span class="setting-text">Dark Mode Simulation</span>
+          <div class="flex items-center justify-between gap-4 mb-3">
+            <span class="text-[0.95rem] flex-1">Dark Mode Simulation</span>
             <ToggleSwitch v-model="darkModeSimulation" />
           </div>
-          <p class="hint-text">
-            <span v-if="darkModeSimulation">
-              <strong>Dark Mode simuliert</strong>
-            </span>
+          <p class="text-[0.85rem] text-muted-color m-0 mt-1">
+            <span v-if="darkModeSimulation"><strong>Dark Mode simuliert</strong></span>
             <span v-else>Standarddarstellung aktiv</span>
           </p>
         </template>
@@ -113,10 +111,8 @@ function resetPrototypeData(): void {
       <Card>
         <template #title>Prototyp-Daten</template>
         <template #content>
-          <p class="hint-text">
-            Lokale Daten können zurückgesetzt werden, um den Ausgangszustand wiederherzustellen.
-          </p>
-          <div class="danger-zone">
+          <p class="text-[0.85rem] text-muted-color m-0">Nutze den Zurücksetzen-Button, um den Ausgangszustand wiederherzustellen.</p>
+          <div class="mt-3">
             <Button
               label="Lokale Daten zurücksetzen"
               severity="danger"
@@ -125,7 +121,7 @@ function resetPrototypeData(): void {
               @click="resetPrototypeData"
             />
           </div>
-          <Message v-if="resetMessageVisible" severity="success" :closable="false" class="reset-message">
+          <Message v-if="resetMessageVisible" severity="success" :closable="false" class="mt-4">
             Lokale Daten wurden zurückgesetzt.
           </Message>
         </template>
@@ -135,87 +131,14 @@ function resetPrototypeData(): void {
 </template>
 
 <style scoped>
-.settings-page {
-  padding: 1.5rem;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.settings-header {
-  margin-bottom: 1.5rem;
-}
-
-.settings-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.settings-header p {
-  color: var(--p-text-muted-color, #6b7280);
-  margin: 0;
-}
-
-.settings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-}
-
-.form-field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
+/* ── Full-width PrimeVue inputs inside form fields ───────── */
 .form-field :deep(.p-inputtext),
 .form-field :deep(.p-select) {
   width: 100%;
 }
 
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.setting-text {
-  font-size: 0.95rem;
-  flex: 1;
-}
-
-.actions {
-  margin-top: 0.5rem;
-}
-
-.danger-zone {
-  margin-top: 0.75rem;
-}
-
-.hint-text {
-  font-size: 0.85rem;
-  color: var(--p-text-muted-color, #6b7280);
-  margin: 0.25rem 0 0;
-}
-
-.reset-message {
-  margin-top: 1rem;
-}
-
+/* ── Mobile: full-width buttons ──────────────────────────── */
 @media (max-width: 900px) {
-  .settings-grid {
-    grid-template-columns: 1fr;
-  }
-
   .actions .p-button,
   .danger-zone .p-button {
     width: 100%;

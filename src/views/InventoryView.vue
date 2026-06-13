@@ -169,7 +169,7 @@ function saveEditedItem() {
     category: editForm.value.category,
     quantity: editForm.value.quantity,
     unit: editForm.value.unit,
-    expiryDate: editForm.value.expiryDate.toISOString().split('T')[0],
+    expiryDate: editForm.value.expiryDate?.toISOString().split('T')[0] ?? '',
     location: editForm.value.location,
     barcode: editForm.value.barcode,
     status: editingItem.value.status
@@ -180,11 +180,11 @@ function saveEditedItem() {
 </script>
 
 <template>
-  <main class="inventory-page">
-    <section class="page-header">
+  <main class="w-full">
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div>
-        <h1>Inventar</h1>
-        <p>Alle gespeicherten Lebensmittel im Überblick.</p>
+        <h1 class="m-0 text-4xl font-bold text-color">Inventar</h1>
+        <p class="m-0 mt-1 text-muted-color">Alle gespeicherten Lebensmittel im Überblick.</p>
       </div>
 
       <Button
@@ -194,17 +194,17 @@ function saveEditedItem() {
 />
     </section>
 
-    <section class="search-section">
-      <IconField class="search-box">
+    <section class="mb-6">
+      <IconField class="w-full max-w-[500px]">
        <InputIcon class="pi pi-search" />
        <InputText v-model="searchTerm" placeholder="Nach Name oder Kategorie suchen..." />
        </IconField>
     </section>
 
-    <section class="items-grid">
-      <Card v-for="item in filteredItems" :key="item.id" class="item-card">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Card v-for="item in filteredItems" :key="item.id" class="h-full">
         <template #title>
-          <div class="card-title">
+          <div class="flex justify-between items-center">
             <span>{{ item.name }}</span>
 
             <Button
@@ -221,23 +221,23 @@ function saveEditedItem() {
         </template>
 
         <template #content>
-          <div class="item-content">
+          <div class="flex flex-col gap-2">
             <Tag
               :value="getStatusLabel(item.status)"
               :severity="getStatusSeverity(item.status)"
             />
 
-            <p>
+            <p class="m-0">
               <strong>Menge:</strong>
               {{ item.quantity }} {{ item.unit }}
             </p>
 
-            <p>
+            <p class="m-0">
               <strong>Ablaufdatum:</strong>
               {{ item.expiryDate }}
             </p>
 
-            <p>
+            <p class="m-0">
               <strong>Ort:</strong>
               {{ item.location }}
             </p>
@@ -245,7 +245,7 @@ function saveEditedItem() {
         </template>
 
         <template #footer>
-          <div class="card-actions">
+          <div class="flex flex-wrap gap-2 justify-end">
             <Button
               label="-"
               severity="secondary"
@@ -305,7 +305,7 @@ function saveEditedItem() {
       </Card>
     </section>
 
-    <p v-if="filteredItems.length === 0" class="empty-message">
+    <p v-if="filteredItems.length === 0" class="mt-8 text-center text-muted-color">
       Keine Lebensmittel gefunden.
     </p>
 
@@ -316,11 +316,11 @@ function saveEditedItem() {
       :style="{ width: '32rem' }"
       :breakpoints="{ '640px': '95vw' }"
     >
-      <div class="form-grid">
+      <div class="flex flex-col">
 
         <!-- 1. Produktdaten -->
-        <div class="form-section">
-          <p class="form-section-title">Produktdaten</p>
+        <div class="form-section flex flex-col gap-3 py-1">
+          <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Produktdaten</p>
           <div class="form-field">
             <label for="new-name">Name</label>
             <InputText id="new-name" v-model="newItem.name" placeholder="z. B. Milch" />
@@ -339,8 +339,8 @@ function saveEditedItem() {
         <Divider />
 
         <!-- 2. Menge und Ablaufdatum -->
-        <div class="form-section">
-          <p class="form-section-title">Menge &amp; Ablaufdatum</p>
+        <div class="form-section flex flex-col gap-3 py-1">
+          <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Menge &amp; Ablaufdatum</p>
           <div class="form-field">
             <label for="new-quantity">Menge</label>
             <InputNumber
@@ -372,8 +372,8 @@ function saveEditedItem() {
         <Divider />
 
         <!-- 3. Barcode -->
-        <div class="form-section">
-          <p class="form-section-title">Barcode</p>
+        <div class="form-section flex flex-col gap-3 py-1">
+          <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Barcode</p>
           <div class="form-field">
             <label for="new-barcode">Barcode</label>
             <div class="barcode-row">
@@ -391,7 +391,7 @@ function saveEditedItem() {
               />
             </div>
           </div>
-          <Message v-if="showScanMessage" severity="info" class="scan-message">
+          <Message v-if="showScanMessage" severity="info" class="mt-1">
             Der Barcode-Scan wird im Web-Prototyp simuliert. In der mobilen Variante kann er
             später über Capacitor umgesetzt werden.
           </Message>
@@ -400,8 +400,8 @@ function saveEditedItem() {
         <Divider />
 
         <!-- 4. Lagerort -->
-        <div class="form-section">
-          <p class="form-section-title">Lagerort</p>
+        <div class="form-section flex flex-col gap-3 py-1">
+          <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Lagerort</p>
           <div class="form-field">
             <label for="new-location">Ort</label>
             <Dropdown
@@ -439,12 +439,12 @@ function saveEditedItem() {
       :breakpoints="{ '640px': '90vw' }"
       @hide="closeEditDialog"
     >
-      <div class="edit-product-form">
-        <div class="form-grid">
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-col">
 
           <!-- Produktdaten -->
-          <div class="form-section">
-            <p class="form-section-title">Produktdaten</p>
+          <div class="form-section flex flex-col gap-3 py-1">
+            <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Produktdaten</p>
             <div class="form-field">
               <label for="edit-name">Name</label>
               <InputText id="edit-name" v-model="editForm.name" placeholder="z. B. Milch" />
@@ -463,8 +463,8 @@ function saveEditedItem() {
           <Divider />
 
           <!-- Menge & Ablaufdatum -->
-          <div class="form-section">
-            <p class="form-section-title">Menge &amp; Ablaufdatum</p>
+          <div class="form-section flex flex-col gap-3 py-1">
+            <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Menge &amp; Ablaufdatum</p>
             <div class="form-field">
               <label for="edit-quantity">Menge</label>
               <InputNumber
@@ -496,8 +496,8 @@ function saveEditedItem() {
           <Divider />
 
           <!-- Lagerort -->
-          <div class="form-section">
-            <p class="form-section-title">Lagerort</p>
+          <div class="form-section flex flex-col gap-3 py-1">
+            <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Lagerort</p>
             <div class="form-field">
               <label for="edit-location">Ort</label>
               <Dropdown
@@ -512,8 +512,8 @@ function saveEditedItem() {
           <Divider />
 
           <!-- Barcode -->
-          <div class="form-section">
-            <p class="form-section-title">Barcode</p>
+          <div class="form-section flex flex-col gap-3 py-1">
+            <p class="m-0 mb-1 text-[0.75rem] font-bold uppercase tracking-[0.07em] text-muted-color">Barcode</p>
             <div class="form-field">
               <label for="edit-barcode">Barcode</label>
               <InputText id="edit-barcode" v-model="editForm.barcode" placeholder="Barcode eingeben" />
@@ -522,13 +522,13 @@ function saveEditedItem() {
 
         </div>
 
-        <Message severity="info" class="edit-info-message">
+        <Message severity="info" class="mt-2">
           Beim Speichern wird der Status anhand des Ablaufdatums neu berechnet.
         </Message>
       </div>
 
       <template #footer>
-        <div class="dialog-actions">
+        <div class="flex justify-end gap-2 w-full">
           <Button
             label="Abbrechen"
             severity="secondary"
@@ -548,121 +548,7 @@ function saveEditedItem() {
 </template>
 
 <style scoped>
-.inventory-page {
-  width: 100%;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: #111827;
-}
-
-.page-header p {
-  margin: 0.4rem 0 0;
-  color: #6b7280;
-}
-
-.search-section {
-  margin-bottom: 1.5rem;
-}
-
-.search-box {
-  width: 100%;
-   max-width: 500px;
-}
-
-.search-box input {
-  width: 100%;
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.item-card {
-  height: 100%;
-}
-
-.card-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.item-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.item-content p {
-  margin: 0;
-}
-
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.empty-message {
-  margin-top: 2rem;
-  text-align: center;
-  color: #6b7280;
-}
-
-@media (max-width: 1000px) {
-  .items-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 650px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .items-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.25rem 0;
-}
-
-.form-section-title {
-  margin: 0 0 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--sg-muted, #6b7280);
-}
-
+/* ── Form field layout (used many times in dialogs) ─────── */
 .form-field {
   display: flex;
   flex-direction: column;
@@ -675,7 +561,7 @@ function saveEditedItem() {
   color: var(--sg-text, #374151);
 }
 
-/* Full-width inputs */
+/* Full-width PrimeVue inputs inside form fields ─────────── */
 .form-field :deep(input),
 .form-field :deep(.p-inputtext),
 .form-field :deep(.p-dropdown),
@@ -687,7 +573,7 @@ function saveEditedItem() {
   width: 100%;
 }
 
-/* Barcode row: input + button side by side */
+/* Barcode row: input + button side by side ──────────────── */
 .barcode-row {
   display: flex;
   gap: 0.5rem;
@@ -699,11 +585,6 @@ function saveEditedItem() {
   width: auto;
 }
 
-.scan-message {
-  margin-top: 0.25rem;
-}
-
-/* Mobile: stack barcode row */
 @media (max-width: 640px) {
   .barcode-row {
     flex-direction: column;
@@ -712,23 +593,5 @@ function saveEditedItem() {
   .barcode-row :deep(.p-inputtext) {
     width: 100%;
   }
-}
-
-/* Edit dialog */
-.edit-product-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.edit-info-message {
-  margin-top: 0.5rem;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  width: 100%;
 }
 </style>

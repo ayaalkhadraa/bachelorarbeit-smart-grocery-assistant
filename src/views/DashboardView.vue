@@ -29,67 +29,67 @@ const shoppingWeather = {
 </script>
 
 <template>
-  <main class="dashboard-page">
-    <section class="dashboard-header">
-      <h1>Dashboard</h1>
+  <main class="w-full">
+    <section class="mb-6">
+      <h1 class="m-0 text-4xl font-bold text-color">Dashboard</h1>
     </section>
 
-    <section class="stats-grid">
-      <Card class="stat-card">
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <Card class="text-center">
         <template #content>
-          <div class="stat-number">{{ groceryStore.totalItems }}</div>
-          <div class="stat-label">Lebensmittel im Inventar</div>
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.totalItems }}</div>
+          <div class="text-sm text-muted-color">Lebensmittel im Inventar</div>
         </template>
       </Card>
 
-      <Card class="stat-card">
+      <Card class="text-center">
         <template #content>
-          <div class="stat-number">{{ groceryStore.freshItems.length }}</div>
-          <div class="stat-label">
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.freshItems.length }}</div>
+          <div class="text-sm text-muted-color">
             <Tag value="Frisch" severity="success" />
           </div>
         </template>
       </Card>
 
-      <Card class="stat-card">
+      <Card class="text-center">
         <template #content>
-          <div class="stat-number">{{ groceryStore.soonExpiringItems.length }}</div>
-          <div class="stat-label">
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.soonExpiringItems.length }}</div>
+          <div class="text-sm text-muted-color">
             <Tag value="Bald ablaufend" severity="warning" />
           </div>
         </template>
       </Card>
 
-      <Card class="stat-card">
+      <Card class="text-center">
         <template #content>
-          <div class="stat-number">{{ groceryStore.criticalItems.length }}</div>
-          <div class="stat-label">
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.criticalItems.length }}</div>
+          <div class="text-sm text-muted-color">
             <Tag value="Abgelaufen" severity="danger" />
           </div>
         </template>
       </Card>
     </section>
 
-    <section class="content-grid">
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <Card>
         <template #title>Favoriten</template>
         <template #content>
           <template v-if="groceryStore.favoriteItems.length > 0">
-            <ul class="list">
+            <ul class="list-none m-0 p-0 flex flex-col gap-3">
               <li
                 v-for="item in groceryStore.favoriteItems"
                 :key="item.id"
-                class="list-item"
+                class="flex items-center justify-between gap-2"
               >
-                <span class="list-item-info">
+                <span class="flex flex-col gap-[0.15rem]">
                   <strong>{{ item.name }}</strong>
-                  <span class="list-item-meta">{{ item.category }} · {{ item.quantity }} {{ item.unit }}</span>
+                  <span class="text-[0.8rem] text-muted-color">{{ item.category }} · {{ item.quantity }} {{ item.unit }}</span>
                 </span>
                 <Tag value="Favorit" severity="info" />
               </li>
             </ul>
           </template>
-          <p v-else class="empty-text">Noch keine Favoriten vorhanden.</p>
+          <p v-else class="m-0 text-muted-color">Noch keine Favoriten vorhanden.</p>
         </template>
       </Card>
 
@@ -97,15 +97,15 @@ const shoppingWeather = {
         <template #title>Bald ablaufende Produkte</template>
         <template #content>
           <template v-if="expiringItems.length > 0">
-            <ul class="list">
+            <ul class="list-none m-0 p-0 flex flex-col gap-3">
               <li
                 v-for="item in expiringItems"
                 :key="item.id"
-                class="list-item"
+                class="flex items-center justify-between gap-2"
               >
-                <span class="list-item-info">
+                <span class="flex flex-col gap-[0.15rem]">
                   <strong>{{ item.name }}</strong>
-                  <span class="list-item-meta">{{ item.expiryDate }}</span>
+                  <span class="text-[0.8rem] text-muted-color">{{ item.expiryDate }}</span>
                 </span>
                 <Tag
                   v-if="item.status === 'critical'"
@@ -116,27 +116,27 @@ const shoppingWeather = {
               </li>
             </ul>
           </template>
-          <p v-else class="empty-text">Keine bald ablaufenden Produkte.</p>
+          <p v-else class="m-0 text-muted-color">Keine bald ablaufenden Produkte.</p>
         </template>
       </Card>
     </section>
 
     <!-- Einkaufswetter -->
-    <section class="weather-section">
-      <Card class="weather-card">
+    <section class="mb-6">
+      <Card class="w-full">
         <template #title>
-          <div class="weather-title">
+          <div class="flex items-center gap-2">
             <i class="pi pi-sun" />
             Wetter
           </div>
         </template>
         <template #content>
-          <div class="weather-body">
-            <div class="weather-main">
-              <i :class="shoppingWeather.icon" class="weather-icon" />
-              <div class="weather-info">
-                <span class="weather-temp">{{ shoppingWeather.temperature }}°C</span>
-                <span class="weather-condition">{{ shoppingWeather.condition }}</span>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-4">
+              <i :class="shoppingWeather.icon" class="text-[2.5rem] text-[#4b9cd3]" />
+              <div class="flex flex-col gap-[0.15rem]">
+                <span class="text-[1.75rem] font-bold text-color leading-none">{{ shoppingWeather.temperature }}°C</span>
+                <span class="text-[0.9rem] text-muted-color">{{ shoppingWeather.condition }}</span>
               </div>
             </div>
             <p class="weather-hint">{{ shoppingWeather.hint }}</p>
@@ -146,8 +146,8 @@ const shoppingWeather = {
     </section>
 
     <!-- Map Preview Card -->
-    <section class="map-section">
-      <Card class="nearby-store-card">
+    <section class="mb-6">
+      <Card class="w-full">
         <template #title>Einkaufen in der Nähe</template>
         <template #subtitle>Nahegelegene Supermärkte im Überblick.</template>
         <template #content>
@@ -199,8 +199,8 @@ const shoppingWeather = {
           </ul>
         </template>
         <template #footer>
-          <div class="dashboard-map-actions">
-            <RouterLink to="/stores">
+          <div class="flex">
+            <RouterLink to="/stores" class="no-underline">
               <Button
                 label="Alle Supermärkte anzeigen"
                 icon="pi pi-map-marker"
@@ -213,11 +213,11 @@ const shoppingWeather = {
       </Card>
     </section>
 
-    <section class="dashboard-actions">
-      <RouterLink to="/inventory">
+    <section class="flex gap-4 flex-wrap">
+      <RouterLink to="/inventory" class="no-underline">
         <Button label="Zum Inventar" icon="pi pi-box" />
       </RouterLink>
-      <RouterLink to="/shopping-list">
+      <RouterLink to="/shopping-list" class="no-underline">
         <Button
           label="Zur Einkaufsliste"
           icon="pi pi-shopping-cart"
@@ -230,164 +230,7 @@ const shoppingWeather = {
 </template>
 
 <style scoped>
-.dashboard-page {
-  width: 100%;
-}
-
-.dashboard-header {
-  margin-bottom: 1.5rem;
-}
-
-.dashboard-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: #111827;
-}
-
-.dashboard-header p {
-  margin: 0.4rem 0 0;
-  color: #6b7280;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-card {
-  text-align: center;
-}
-
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #111827;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.list-item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.list-item-meta {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.empty-text {
-  margin: 0;
-  color: #6b7280;
-}
-
-.dashboard-actions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.dashboard-actions a {
-  text-decoration: none;
-}
-
-@media (max-width: 1000px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 650px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Weather Section ─────────────────────────────────── */
-.weather-section {
-  margin-bottom: 1.5rem;
-}
-
-.weather-card {
-  width: 100%;
-}
-
-.weather-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.weather-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.weather-main {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.weather-icon {
-  font-size: 2.5rem;
-  color: #4b9cd3;
-}
-
-.weather-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.weather-temp {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-  line-height: 1;
-}
-
-.weather-condition {
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
+/* ── Weather Hint (border-left accent, kept intentionally) ── */
 .weather-hint {
   margin: 0;
   font-size: 0.875rem;
@@ -399,15 +242,7 @@ const shoppingWeather = {
   line-height: 1.5;
 }
 
-/* ── Map Section ─────────────────────────────────────── */
-.map-section {
-  margin-bottom: 1.5rem;
-}
-
-.nearby-store-card {
-  width: 100%;
-}
-
+/* ── Mini Map Preview ────────────────────────────────────── */
 .mini-map-preview {
   position: relative;
   width: 100%;
@@ -419,7 +254,6 @@ const shoppingWeather = {
   margin-bottom: 0.75rem;
 }
 
-/* Grid / road lines */
 .mini-map-grid {
   position: absolute;
   inset: 0;
@@ -440,7 +274,6 @@ const shoppingWeather = {
   background-size: 108px 108px;
 }
 
-/* ── Mini Markers ─────────────────────────────────────── */
 .mini-map-marker {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -451,19 +284,13 @@ const shoppingWeather = {
   z-index: 1;
 }
 
-.mini-map-marker i {
-  font-size: 1.15rem;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-}
-
+.mini-map-marker i { font-size: 1.15rem; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
 .mini-map-marker.user i         { color: #1565c0; font-size: 1.3rem; }
 .mini-map-marker.store-open i   { color: #2e7d32; }
 .mini-map-marker.store-closed i { color: #9e9e9e; }
 .mini-map-marker.nearest i      { color: #e65100; font-size: 1.35rem; }
 
-.mini-map-marker.nearest {
-  z-index: 2;
-}
+.mini-map-marker.nearest { z-index: 2; }
 
 .mini-map-marker.nearest::before {
   content: '';
@@ -484,7 +311,6 @@ const shoppingWeather = {
   100% { transform: translateX(-50%) scale(1.6); opacity: 0;   }
 }
 
-/* ── Mini Labels ──────────────────────────────────────── */
 .mini-marker-label {
   font-size: 0.58rem;
   font-weight: 600;
@@ -503,7 +329,7 @@ const shoppingWeather = {
 .mini-map-marker.nearest .mini-marker-label      { background: #e65100; color: #fff; }
 .mini-map-marker.store-closed .mini-marker-label { background: rgba(158,158,158,0.85); color: #fff; }
 
-/* ── Nearest List ─────────────────────────────────────── */
+/* ── Nearest Stores List ────────────────────────────────── */
 .nearest-list {
   list-style: none;
   margin: 0;
@@ -521,57 +347,20 @@ const shoppingWeather = {
   font-size: 0.875rem;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
-  background: transparent;
   transition: background 0.15s;
 }
 
-.nearest-store-item.nearest {
-  background: #fff3e0;
-}
+.nearest-store-item.nearest { background: #fff3e0; }
 
-.nearest-store-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
+.nearest-store-info { display: flex; flex-direction: column; gap: 0.1rem; }
+.nearest-store-name { font-weight: 500; color: #111827; line-height: 1.2; }
+.nearest-store-item.nearest .nearest-store-name { color: #e65100; font-weight: 600; }
+.nearest-store-meta { font-size: 0.75rem; color: #6b7280; }
 
-.nearest-store-name {
-  font-weight: 500;
-  color: #111827;
-  line-height: 1.2;
-}
-
-.nearest-store-item.nearest .nearest-store-name {
-  color: #e65100;
-  font-weight: 600;
-}
-
-.nearest-store-meta {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-/* ── Actions ──────────────────────────────────────────── */
-.dashboard-map-actions {
-  display: flex;
-}
-
-.dashboard-map-actions a {
-  text-decoration: none;
-}
-
-/* ── Mobile ───────────────────────────────────────────── */
+/* ── Mobile ─────────────────────────────────────────────── */
 @media (max-width: 650px) {
-  .mini-map-preview {
-    height: 180px;
-  }
-
   .mini-map-marker i       { font-size: 0.95rem; }
   .mini-map-marker.user i  { font-size: 1.05rem; }
-
-  .mini-marker-label {
-    font-size: 0.5rem;
-    max-width: 48px;
-  }
+  .mini-marker-label { font-size: 0.5rem; max-width: 48px; }
 }
 </style>
