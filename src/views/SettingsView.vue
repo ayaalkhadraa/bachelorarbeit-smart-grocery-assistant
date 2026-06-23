@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -8,8 +8,13 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import Message from 'primevue/message'
 import Divider from 'primevue/divider'
 import { useGroceryStore } from '@/stores/groceryStore'
+import NotificationCard from '@/components/NotificationCard.vue'
 
 const groceryStore = useGroceryStore()
+onMounted(() => {
+  groceryStore.loadItems()
+  console.log('[SettingsView] loaded grocery items:', groceryStore.items)
+})
 
 const username = ref('Demo User')
 const language = ref('Deutsch')
@@ -77,20 +82,8 @@ function resetPrototypeData(): void {
         </template>
       </Card>
 
-      <!-- Card: Benachrichtigungen -->
-      <Card>
-        <template #title>Benachrichtigungen</template>
-        <template #content>
-          <div class="flex items-center justify-between gap-4 mb-3">
-            <span class="text-[0.95rem] flex-1">Erinnerungen für bald ablaufende Produkte</span>
-            <ToggleSwitch v-model="notificationsEnabled" />
-          </div>
-          <p class="text-[0.85rem] text-muted-color m-0 mt-1">
-            <span v-if="notificationsEnabled">Benachrichtigungen aktiv: Du wirst 2 Tage vor Ablauf benachrichtigt.</span>
-            <span v-else>Benachrichtigungen sind deaktiviert.</span>
-          </p>
-        </template>
-      </Card>
+      <!-- Card: Benachrichtigungen (Push) -->
+      <NotificationCard :products="groceryStore.items" />
 
       <!-- Card: Darstellung -->
       <Card>
