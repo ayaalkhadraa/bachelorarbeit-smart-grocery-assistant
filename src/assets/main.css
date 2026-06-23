@@ -46,3 +46,46 @@ a {
   text-decoration: none;
   color: inherit;
 }
+
+/* ── Leaflet custom markers (not scoped – injected by JS) ── */
+.lf-user-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  background: #1565c0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.lf-user-marker i {
+  transform: rotate(45deg);
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.lf-store-marker {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  background: #2e7d32;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.lf-store-marker i {
+  transform: rotate(45deg);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.lf-store-marker.nearest {
+  background: #e65100;
+  width: 34px;
+  height: 34px;
+}

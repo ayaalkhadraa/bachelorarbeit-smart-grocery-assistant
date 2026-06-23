@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import OverlayPanel from 'primevue/overlaypanel'
 import Tag from 'primevue/tag'
 import { useGroceryStore } from '@/stores/groceryStore'
+import { checkExpiringProducts } from '@/services/notificationService'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +30,11 @@ function logout(): void {
 
 onMounted(() => {
   groceryStore.loadItems()
+  // Check for expiring products on app start if permission is already granted.
+  // NotificationCard handles the same check when the settings page is opened.
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    checkExpiringProducts(groceryStore.items)
+  }
 })
 
 watch(

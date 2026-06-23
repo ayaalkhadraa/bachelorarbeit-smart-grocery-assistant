@@ -1,86 +1,243 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import InputText from 'primevue/inputtext'
 
+// Fix default Leaflet marker icon paths broken by bundlers
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
 const searchTerm = ref('')
 const locationEnabled = ref(false)
+const locationLoading = ref(false)
+const locationError = ref('')
+const mapContainer = ref<HTMLElement | null>(null)
+let leafletMap: L.Map | null = null
+let userMarker: L.Marker | null = null
 
+const userCoords = ref<{
+  lat: number
+  lng: number
+  accuracy: number
+} | null>(null)
+
+// ── Haversine formula ──────────────────────────────────────
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+// ── Stores ────────────────────────────────────────────────
 const stores = [
-  { id: 1, name: 'REWE City',    address: 'Alexanderplatz 1, Berlin',      distance: 0.8, open: true,  type: 'Supermarkt',     mapX: 62, mapY: 38 },
-  { id: 2, name: 'EDEKA',        address: 'Friedrichstraße 120, Berlin',    distance: 1.4, open: true,  type: 'Supermarkt',     mapX: 42, mapY: 52 },
-  { id: 3, name: 'Lidl',         address: 'Karl-Marx-Straße 90, Berlin',    distance: 2.1, open: false, type: 'Discounter',     mapX: 72, mapY: 68 },
-  { id: 4, name: 'Bio Company',  address: 'Prenzlauer Allee 45, Berlin',    distance: 2.7, open: true,  type: 'Bio-Supermarkt', mapX: 30, mapY: 34 },
-  { id: 5, name: 'Aldi Nord',    address: 'Hermannplatz 5, Berlin',         distance: 3.2, open: false, type: 'Discounter',     mapX: 55, mapY: 74 },
+  { id: 1, name: 'REWE City',  address: 'Alexanderplatz 1, Berlin',       open: true,  type: 'Supermarkt', lat: 52.5219, lng: 13.4132 },
+  { id: 2, name: 'EDEKA',      address: 'Friedrichstraße 120, Berlin',     open: true,  type: 'Supermarkt', lat: 52.5195, lng: 13.3887 },
+  { id: 3, name: 'Lidl',       address: 'Karl-Marx-Straße 90, Berlin',     open: false, type: 'Discounter', lat: 52.4807, lng: 13.4355 },
+  { id: 4, name: 'Aldi Nord',  address: 'Schönhauser Allee 79, Berlin',    open: true,  type: 'Discounter', lat: 52.5360, lng: 13.4120 },
+  { id: 5, name: 'Kaufland',   address: 'Tempelhof Damm 14, Berlin',       open: true,  type: 'Supermarkt', lat: 52.4670, lng: 13.3820 },
 ]
+
+const storesWithDistance = computed(() =>
+  stores.map((store) => ({
+    ...store,
+    distance: userCoords.value
+      ? getDistanceKm(userCoords.value.lat, userCoords.value.lng, store.lat, store.lng)
+      : null,
+  }))
+)
 
 const filteredStores = computed(() => {
   const term = searchTerm.value.toLowerCase()
-  if (!term) return stores
-  return stores.filter(
-    (s) =>
-      s.name.toLowerCase().includes(term) ||
-      s.address.toLowerCase().includes(term) ||
-      s.type.toLowerCase().includes(term)
-  )
+  return storesWithDistance.value
+    .filter(
+      (s) =>
+        s.name.toLowerCase().includes(term) ||
+        s.address.toLowerCase().includes(term) ||
+        s.type.toLowerCase().includes(term)
+    )
+    .sort((a, b) => {
+      if (a.distance === null) return 1
+      if (b.distance === null) return -1
+      return a.distance - b.distance
+    })
 })
-
-const userPosition = { x: 50, y: 50 }
 
 const nearestStore = computed(() => {
-  if (filteredStores.value.length === 0) return null
-  return filteredStores.value.reduce((prev, curr) =>
-    curr.distance < prev.distance ? curr : prev
-  )
+  const withDist = filteredStores.value.filter((s) => s.distance !== null)
+  return withDist.length > 0 ? withDist[0] : null
 })
 
-function enableLocationSimulation() {
-  locationEnabled.value = true
+// ── Geolocation ───────────────────────────────────────────
+function requestLocation() {
+  locationError.value = ''
+
+  if (!('geolocation' in navigator)) {
+    locationError.value = 'Dein Browser unterstützt keine Standortbestimmung.'
+    return
+  }
+
+  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost'
+  if (!isSecure) {
+    locationError.value =
+      'Standortbestimmung erfordert HTTPS oder localhost. Bitte öffne die App über https:// oder localhost.'
+    return
+  }
+
+  locationLoading.value = true
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      userCoords.value = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      }
+      locationEnabled.value = true
+      locationLoading.value = false
+      await nextTick()
+      initMap()
+    },
+    (error) => {
+      locationLoading.value = false
+      locationEnabled.value = false
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          locationError.value =
+            'Standort-Zugriff wurde abgelehnt. Bitte erlaube den Standort-Zugriff in den Browser-Einstellungen.'
+          break
+        case error.POSITION_UNAVAILABLE:
+          locationError.value = 'Standort konnte nicht ermittelt werden.'
+          break
+        case error.TIMEOUT:
+          locationError.value = 'Standort-Anfrage hat zu lange gedauert.'
+          break
+        default:
+          locationError.value = 'Unbekannter Fehler bei der Standortbestimmung.'
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  )
 }
 
-function resetLocationSimulation() {
+function resetLocation() {
   locationEnabled.value = false
+  userCoords.value = null
+  locationError.value = ''
+  if (leafletMap) {
+    leafletMap.remove()
+    leafletMap = null
+    userMarker = null
+  }
+}
+
+// ── Leaflet map init ──────────────────────────────────────
+function initMap() {
+  if (!mapContainer.value || !userCoords.value) return
+
+  const { lat, lng } = userCoords.value
+
+  if (leafletMap) {
+    leafletMap.remove()
+    leafletMap = null
+  }
+
+  leafletMap = L.map(mapContainer.value).setView([lat, lng], 14)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(leafletMap)
+
+  // User marker (blue)
+  const userIcon = L.divIcon({
+    className: '',
+    html: '<div class="lf-user-marker"><i class="pi pi-map-marker"></i></div>',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+  })
+  userMarker = L.marker([lat, lng], { icon: userIcon })
+    .addTo(leafletMap)
+    .bindPopup('Du bist hier')
+
+  // Store markers
+  stores.forEach((store) => {
+    const isNearest = nearestStore.value?.id === store.id
+    const storeIcon = L.divIcon({
+      className: '',
+      html: `<div class="lf-store-marker${isNearest ? ' nearest' : ''}"><i class="pi pi-shopping-cart"></i></div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+    })
+    L.marker([store.lat, store.lng], { icon: storeIcon })
+      .addTo(leafletMap!)
+      .bindPopup(`<strong>${store.name}</strong><br>${store.address}`)
+  })
+}
+
+// ── Navigation ────────────────────────────────────────────
+function openRoute(store: { lat: number; lng: number; name: string }) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&destination_place_id=${encodeURIComponent(store.name)}`
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 </script>
 
 <template>
   <main class="stores-page">
+    <!-- Header -->
     <div class="stores-header">
       <h1>Supermärkte</h1>
-      <p>Übersicht über nahegelegene Einkaufsmöglichkeiten im Web-Prototyp.</p>
+      <p>Übersicht über nahegelegene Einkaufsmöglichkeiten.</p>
     </div>
-
-    <Message severity="info" :closable="false">
-      Die Standortbestimmung wird in dieser Web-Version simuliert. In der mobilen Variante kann sie später über Capacitor Geolocation umgesetzt werden.
-    </Message>
 
     <!-- Location Card -->
     <Card class="location-card">
-      <template #title>Standortsimulation</template>
+      <template #title>Standort</template>
       <template #content>
         <div class="location-content">
           <template v-if="!locationEnabled">
             <p>Standort wurde noch nicht aktiviert.</p>
             <Button
-              label="Standort verwenden"
+              label="Standort freigeben"
               icon="pi pi-map-marker"
-              @click="enableLocationSimulation"
+              :loading="locationLoading"
+              @click="requestLocation"
             />
           </template>
+
           <template v-else>
-            <p>Simulierter Standort aktiv: Berlin</p>
+            <p>Genauigkeit: {{ userCoords?.accuracy?.toFixed(0) }} m</p>
             <Tag value="Standort aktiv" severity="success" />
             <Button
               label="Zurücksetzen"
               icon="pi pi-refresh"
               severity="secondary"
               outlined
-              @click="resetLocationSimulation"
+              @click="resetLocation"
             />
           </template>
+
+          <Message v-if="locationError" severity="error" :closable="false" class="location-error">
+            {{ locationError }}
+          </Message>
         </div>
       </template>
     </Card>
@@ -94,55 +251,26 @@ function resetLocationSimulation() {
       />
     </div>
 
-    <!-- Map Preview Card -->
+    <!-- Leaflet Map Card -->
     <Card class="map-card">
-      <template #title>Map Preview</template>
-      <template #subtitle>Simulierte Kartenansicht der nahegelegenen Supermärkte.</template>
+      <template #title>Karte</template>
+      <template #subtitle>
+        <span v-if="locationEnabled">Echter Standort – OpenStreetMap</span>
+        <span v-else>Bitte Standort freigeben, um die Karte zu laden.</span>
+      </template>
       <template #content>
-        <div class="map-preview">
-          <div class="map-grid" />
-
-          <!-- User Marker -->
-          <div
-            class="map-marker user"
-            :style="{ left: userPosition.x + '%', top: userPosition.y + '%' }"
-          >
-            <i class="pi pi-map-marker" />
-            <span class="marker-label">Du</span>
-          </div>
-
-          <!-- Store Markers -->
-          <div
-            v-for="store in filteredStores"
-            :key="store.id"
-            class="map-marker store"
-            :class="{ nearest: store.id === nearestStore?.id }"
-            :style="{ left: store.mapX + '%', top: store.mapY + '%' }"
-          >
-            <i class="pi pi-shopping-cart" />
-            <span class="marker-label">{{ store.name }}</span>
-          </div>
-
-          <!-- Empty state inside map -->
-          <div v-if="filteredStores.length === 0" class="map-empty-hint">
-            Keine Marker für die aktuelle Suche.
-          </div>
-
-          <!-- Legend -->
-          <div class="map-legend">
-            <span><i class="pi pi-map-marker" /> Du bist hier</span>
-            <span><i class="pi pi-circle-fill" /> Nächster Markt</span>
-          </div>
+        <div v-if="locationEnabled" ref="mapContainer" class="leaflet-map-container" />
+        <div v-else class="map-placeholder">
+          <i class="pi pi-map" style="font-size: 2.5rem; color: var(--p-text-muted-color, #6c757d);" />
+          <p>Karte erscheint nach Standortfreigabe.</p>
         </div>
       </template>
       <template #footer>
-        <div class="map-summary">
-          <Tag v-if="locationEnabled" value="Standortsimulation aktiv" severity="success" />
-          <span v-if="nearestStore">
-            Nächster Markt: <strong>{{ nearestStore.name }}</strong> ({{ nearestStore.distance }} km)
-          </span>
-          <span v-if="!locationEnabled" class="map-hint">
-            Aktiviere die Standortsimulation, um die Nähe visuell zu bewerten.
+        <div v-if="nearestStore" class="map-summary">
+          <Tag value="Nächster Markt" severity="warn" />
+          <span>
+            <strong>{{ nearestStore.name }}</strong>
+            ({{ nearestStore.distance!.toFixed(2) }} km)
           </span>
         </div>
       </template>
@@ -150,14 +278,35 @@ function resetLocationSimulation() {
 
     <!-- Stores Grid -->
     <div v-if="filteredStores.length > 0" class="stores-grid">
-      <Card v-for="store in filteredStores" :key="store.id" class="store-card">
-        <template #title>{{ store.name }}</template>
+      <Card
+        v-for="store in filteredStores"
+        :key="store.id"
+        class="store-card"
+        :class="{ 'nearest-card': store.id === nearestStore?.id }"
+      >
+        <template #title>
+          <div class="store-title-row">
+            <span>{{ store.name }}</span>
+            <Tag
+              v-if="store.id === nearestStore?.id"
+              value="Nächster"
+              severity="warn"
+              class="nearest-tag"
+            />
+          </div>
+        </template>
         <template #subtitle>{{ store.type }}</template>
         <template #content>
           <div class="store-content">
             <div class="store-meta">
-              <p><i class="pi pi-map-marker"></i> {{ store.address }}</p>
-              <p><i class="pi pi-compass"></i> {{ store.distance }} km</p>
+              <p><i class="pi pi-map-marker" /> {{ store.address }}</p>
+              <p>
+                <i class="pi pi-compass" />
+                <span v-if="store.distance !== null">
+                  {{ store.distance.toFixed(2) }} km
+                </span>
+                <span v-else>Entfernung nach Standortfreigabe</span>
+              </p>
             </div>
             <Tag
               :value="store.open ? 'Geöffnet' : 'Geschlossen'"
@@ -168,7 +317,11 @@ function resetLocationSimulation() {
         <template #footer>
           <div class="store-actions">
             <Button label="Details" icon="pi pi-info-circle" severity="secondary" outlined />
-            <Button label="Route simulieren" icon="pi pi-directions" />
+            <Button
+              label="Route anzeigen"
+              icon="pi pi-directions"
+              @click="openRoute(store)"
+            />
           </div>
         </template>
       </Card>
@@ -214,6 +367,10 @@ function resetLocationSimulation() {
   flex: 1 1 100%;
 }
 
+.location-error {
+  flex: 1 1 100%;
+}
+
 .search-section {
   display: flex;
 }
@@ -222,6 +379,50 @@ function resetLocationSimulation() {
   width: 100%;
 }
 
+/* ── Leaflet Map ──────────────────────────────────────────── */
+.map-card {
+  width: 100%;
+}
+
+.leaflet-map-container {
+  width: 100%;
+  height: 380px;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--p-surface-100, #f8f9fa);
+  border-radius: 8px;
+  color: var(--p-text-muted-color, #6c757d);
+}
+
+.map-placeholder p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.map-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.map-summary strong {
+  color: var(--p-text-color, #1b1b1b);
+}
+
+/* ── Stores Grid ──────────────────────────────────────────── */
 .stores-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -231,6 +432,22 @@ function resetLocationSimulation() {
 .store-card {
   display: flex;
   flex-direction: column;
+}
+
+.nearest-card {
+  outline: 2px solid var(--p-orange-400, #fb923c);
+  border-radius: var(--p-card-border-radius, 8px);
+}
+
+.store-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nearest-tag {
+  font-size: 0.7rem;
 }
 
 .store-content {
@@ -270,204 +487,9 @@ function resetLocationSimulation() {
   .stores-grid {
     grid-template-columns: 1fr;
   }
-}
 
-/* ── Map Card ─────────────────────────────────────────── */
-.map-card {
-  width: 100%;
-}
-
-.map-preview {
-  position: relative;
-  width: 100%;
-  height: 260px;
-  background: #e8f5e9;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #c8e6c9;
-}
-
-/* Decorative road grid via pseudo-element on .map-grid */
-.map-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(150, 180, 150, 0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(150, 180, 150, 0.3) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-}
-
-/* Road-like lines */
-.map-grid::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(180, 200, 160, 0.55) 2px, transparent 2px),
-    linear-gradient(to bottom, rgba(180, 200, 160, 0.55) 2px, transparent 2px);
-  background-size: 120px 120px;
-}
-
-/* ── Markers ──────────────────────────────────────────── */
-.map-marker {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  cursor: default;
-  transition: transform 0.2s ease;
-  z-index: 1;
-}
-
-.map-marker i {
-  font-size: 1.4rem;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
-  transition: font-size 0.2s ease;
-}
-
-.map-marker.user i {
-  color: #1565c0;
-  font-size: 1.6rem;
-}
-
-.map-marker.store i {
-  color: #2e7d32;
-}
-
-.map-marker.nearest i {
-  color: #e65100;
-  font-size: 1.7rem;
-}
-
-.map-marker.nearest {
-  z-index: 2;
-}
-
-/* Pulse ring on nearest marker */
-.map-marker.nearest::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid #e65100;
-  opacity: 0.5;
-  animation: pulse-ring 1.6s ease-out infinite;
-}
-
-@keyframes pulse-ring {
-  0%   { transform: translateX(-50%) scale(0.8); opacity: 0.6; }
-  100% { transform: translateX(-50%) scale(1.6); opacity: 0; }
-}
-
-/* ── Marker Labels ────────────────────────────────────── */
-.marker-label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  padding: 1px 4px;
-  white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  color: #1b1b1b;
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.map-marker.user .marker-label {
-  background: #1565c0;
-  color: #fff;
-}
-
-.map-marker.nearest .marker-label {
-  background: #e65100;
-  color: #fff;
-}
-
-/* ── Empty hint inside map ────────────────────────────── */
-.map-empty-hint {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  color: #6c757d;
-  pointer-events: none;
-}
-
-/* ── Legend ───────────────────────────────────────────── */
-.map-legend {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.7rem;
-  color: #333;
-  pointer-events: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
-.map-legend span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.map-legend .pi-map-marker { color: #1565c0; }
-.map-legend .pi-circle-fill { color: #e65100; }
-
-/* ── Summary footer ───────────────────────────────────── */
-.map-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.map-summary strong {
-  color: var(--p-text-color, #1b1b1b);
-}
-
-.map-hint {
-  color: var(--p-text-muted-color, #6c757d);
-  font-size: 0.85rem;
-}
-
-/* ── Mobile ───────────────────────────────────────────── */
-@media (max-width: 650px) {
-  .map-preview {
-    height: 220px;
-  }
-
-  .map-marker i {
-    font-size: 1.1rem;
-  }
-
-  .map-marker.user i {
-    font-size: 1.25rem;
-  }
-
-  .map-marker.nearest i {
-    font-size: 1.3rem;
-  }
-
-  .marker-label {
-    font-size: 0.55rem;
-    max-width: 56px;
+  .leaflet-map-container {
+    height: 280px;
   }
 }
 </style>
