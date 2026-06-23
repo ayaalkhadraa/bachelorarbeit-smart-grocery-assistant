@@ -15,8 +15,15 @@ import Divider from 'primevue/divider'
 
 import { useGroceryStore } from '@/stores/groceryStore'
 import type { GroceryItem } from '@/stores/groceryStore'
+import { getExpiryInfo, getProductExpiryDate } from '@/utils/expiryUtils'
+import type { ExpiryInfo } from '@/utils/expiryUtils'
 
 const groceryStore = useGroceryStore()
+
+/** Returns ExpiryInfo for any item, resolving the date field via getProductExpiryDate. */
+function itemExpiryInfo(item: GroceryItem): ExpiryInfo {
+  return getExpiryInfo(getProductExpiryDate(item as Record<string, unknown>))
+}
 
 const searchTerm = ref('')
 const showAddDialog = ref(false)
@@ -83,20 +90,6 @@ const filteredItems = computed(() => {
     )
   })
 })
-
-const getStatusLabel = (status: string) => {
-  if (status === 'fresh') return 'Frisch'
-  if (status === 'soon') return 'Läuft bald ab'
-  if (status === 'critical') return 'Abgelaufen'
-  return 'Unbekannt'
-}
-
-const getStatusSeverity = (status: string) => {
-  if (status === 'fresh') return 'success'
-  if (status === 'soon') return 'warning'
-  if (status === 'critical') return 'danger'
-  return 'secondary'
-}
 
 const resetNewItem = () => {
   newItem.value = {
@@ -223,8 +216,8 @@ function saveEditedItem() {
         <template #content>
           <div class="flex flex-col gap-2">
             <Tag
-              :value="getStatusLabel(item.status)"
-              :severity="getStatusSeverity(item.status)"
+              :value="itemExpiryInfo(item).label"
+              :severity="itemExpiryInfo(item).severity"
             />
 
             <p class="m-0">

@@ -1,11 +1,52 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import Card from 'primevue/card'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import { RouterLink } from 'vue-router'
 import { useGroceryStore } from '@/stores/groceryStore'
+import type { GroceryItem } from '@/stores/groceryStore'
+import { getExpiryInfo, getProductExpiryDate } from '@/utils/expiryUtils'
+import type { ExpiryInfo } from '@/utils/expiryUtils'
 
 const groceryStore = useGroceryStore()
+
+/** Helper so templates never call getExpiryInfo twice per item. */
+function getItemExpiry(item: GroceryItem): ExpiryInfo {
+  return getExpiryInfo(getProductExpiryDate(item as Record<string, unknown>))
+}
+
+/** All items enriched with their current ExpiryInfo (reactive). */
+const productsWithExpiry = computed(() =>
+  groceryStore.items.map(item => ({ item, expiry: getItemExpiry(item) }))
+)
+
+/** Stat counts derived from getExpiryInfo – aligned with the 5-state model. */
+const freshCount = computed(() =>
+  productsWithExpiry.value.filter(p => p.expiry.status === 'fresh').length
+)
+const soonCount = computed(() =>
+  productsWithExpiry.value.filter(
+    p => p.expiry.status === 'today' || p.expiry.status === 'soon'
+  ).length
+)
+const expiredCount = computed(() =>
+  productsWithExpiry.value.filter(p => p.expiry.status === 'expired').length
+)
+
+/** Products that expire today or within the warning window (status today | soon). */
+const soonExpiringItems = computed(() =>
+  productsWithExpiry.value
+    .filter(p => p.expiry.status === 'today' || p.expiry.status === 'soon')
+    .map(p => p.item)
+)
+
+/** Products whose expiry date is already in the past (status expired). */
+const expiredItems = computed(() =>
+  productsWithExpiry.value
+    .filter(p => p.expiry.status === 'expired')
+    .map(p => p.item)
+)
 
 const nearestStores = [
   { id: 1, name: 'REWE City', distance: 0.8, open: true,  mapX: 62, mapY: 38 },
@@ -14,11 +55,6 @@ const nearestStores = [
 ]
 
 const userPosition = { x: 50, y: 50 }
-
-const expiringItems = [
-  ...groceryStore.criticalItems,
-  ...groceryStore.soonExpiringItems
-]
 
 const shoppingWeather = {
   temperature: 12,
@@ -44,7 +80,7 @@ const shoppingWeather = {
 
       <Card class="text-center">
         <template #content>
-          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.freshItems.length }}</div>
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ freshCount }}</div>
           <div class="text-sm text-muted-color">
             <Tag value="Frisch" severity="success" />
           </div>
@@ -53,16 +89,16 @@ const shoppingWeather = {
 
       <Card class="text-center">
         <template #content>
-          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.soonExpiringItems.length }}</div>
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ soonCount }}</div>
           <div class="text-sm text-muted-color">
-            <Tag value="Bald ablaufend" severity="warning" />
+            <Tag value="Bald ablaufend" severity="warn" />
           </div>
         </template>
       </Card>
 
       <Card class="text-center">
         <template #content>
-          <div class="text-5xl font-bold text-color leading-none mb-2">{{ groceryStore.criticalItems.length }}</div>
+          <div class="text-5xl font-bold text-color leading-none mb-2">{{ expiredCount }}</div>
           <div class="text-sm text-muted-color">
             <Tag value="Abgelaufen" severity="danger" />
           </div>
@@ -70,7 +106,7 @@ const shoppingWeather = {
       </Card>
     </section>
 
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       <Card>
         <template #title>Favoriten</template>
         <template #content>
@@ -93,13 +129,14 @@ const shoppingWeather = {
         </template>
       </Card>
 
+      <!-- Bald ablaufend: status 'today' oder 'soon' (days 0–3) -->
       <Card>
         <template #title>Bald ablaufende Produkte</template>
         <template #content>
-          <template v-if="expiringItems.length > 0">
+          <template v-if="soonExpiringItems.length > 0">
             <ul class="list-none m-0 p-0 flex flex-col gap-3">
               <li
-                v-for="item in expiringItems"
+                v-for="item in soonExpiringItems"
                 :key="item.id"
                 class="flex items-center justify-between gap-2"
               >
@@ -108,15 +145,36 @@ const shoppingWeather = {
                   <span class="text-[0.8rem] text-muted-color">{{ item.expiryDate }}</span>
                 </span>
                 <Tag
-                  v-if="item.status === 'critical'"
-                  value="Abgelaufen"
-                  severity="danger"
+                  :value="getItemExpiry(item).label"
+                  :severity="getItemExpiry(item).severity"
                 />
-                <Tag v-else value="Bald" severity="warning" />
               </li>
             </ul>
           </template>
           <p v-else class="m-0 text-muted-color">Keine bald ablaufenden Produkte.</p>
+        </template>
+      </Card>
+
+      <!-- Bereits abgelaufen: status 'expired' (days < 0) -->
+      <Card>
+        <template #title>Abgelaufene Produkte</template>
+        <template #content>
+          <template v-if="expiredItems.length > 0">
+            <ul class="list-none m-0 p-0 flex flex-col gap-3">
+              <li
+                v-for="item in expiredItems"
+                :key="item.id"
+                class="flex items-center justify-between gap-2"
+              >
+                <span class="flex flex-col gap-[0.15rem]">
+                  <strong>{{ item.name }}</strong>
+                  <span class="text-[0.8rem] text-muted-color">{{ item.expiryDate }}</span>
+                </span>
+                <Tag value="Abgelaufen" severity="danger" />
+              </li>
+            </ul>
+          </template>
+          <p v-else class="m-0 text-muted-color">Keine abgelaufenen Produkte. ✓</p>
         </template>
       </Card>
     </section>

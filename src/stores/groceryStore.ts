@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { groceryItems } from '@/data/groceryItems'
+import { getExpiryInfo } from '@/utils/expiryUtils'
 
 type GroceryStatus = 'fresh' | 'soon' | 'critical'
 
@@ -21,13 +22,9 @@ export interface GroceryItem {
 const STORAGE_KEY = 'smart-grocery-items'
 
 function calculateStatus(isoDate: string): GroceryStatus {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const expiry = new Date(isoDate)
-  expiry.setHours(0, 0, 0, 0)
-  const diffDays = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return 'critical'
-  if (diffDays <= 3) return 'soon'
+  const { status } = getExpiryInfo(isoDate)
+  if (status === 'expired' || status === 'today') return 'critical'
+  if (status === 'soon') return 'soon'
   return 'fresh'
 }
 
