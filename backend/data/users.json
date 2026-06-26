@@ -1,0 +1,34 @@
+[
+  {
+    "id": "1f6b10ae-9129-47a3-b827-02fc1d554fed",
+    "email": "Thien@gmail.com",
+    "name": "Thien",
+    "currentChallenge": null,
+    "credentials": [
+      {
+        "id": "lg6Crd2iDvjbZtPDRKgvhIzN_j2nMf_SOetsqtEp5Ng",
+        "publicKey": "pAEBAycgBiFYIAv22tWC_xsyC0mRp0HLg8MsqMtD3hdk7dksrnmtaSfV",
+        "counter": 2,
+        "transports": [
+          "internal"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "4d310da5-205b-4542-91c0-dcf81cccb32b",
+    "email": "Aya@gmail.com",
+    "name": "Aya",
+    "currentChallenge": null,
+    "credentials": [
+      {
+        "id": "vdlwWKMf1H1fP0MIYSkIf6XJwO9Zou9EuQcbHEIbbMU",
+        "publicKey": "pQECAyYgASFYIBqO895Q2oBCubZ_KeNbqpX4821E4zfthoitxJAsAiypIlggX9otnJm01eiI7-L3SMzwgTNEF70sz8-un8cORLAQmx8",
+        "counter": 1,
+        "transports": [
+          "internal"
+        ]
+      }
+    ]
+  }
+]

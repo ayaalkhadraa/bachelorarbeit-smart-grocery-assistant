@@ -46,3 +46,15 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## WebAuthn Test Mode
+
+If Windows Hello is not available or the passkey prompt hangs during automated testing, use Chrome DevTools:
+
+1. Open the app in Chrome on `http://localhost:5173`.
+2. Open DevTools, then the `More tools` menu.
+3. Open `WebAuthn`.
+4. Enable `Virtual authenticator environment`.
+5. Add a `Platform authenticator` and repeat the passkey registration/login flow.
+
+This is a test fallback only. It does not bypass WebAuthn verification in the app.
