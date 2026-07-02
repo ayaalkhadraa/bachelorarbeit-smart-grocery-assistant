@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import "tailwindcss-primeui";
+/* ── Design Tokens ───────────────────────────────────────── */
+:root {
+  /* Colors */
+  --sg-primary:      #2F855A;
+  --sg-primary-soft: #E6F4EA;
+  --sg-secondary:    #F6AD55;
+  --sg-background:   #F7FAF8;
+  --sg-surface:      #FFFFFF;
+  --sg-text:         #1F2933;
+  --sg-muted:        #6B7280;
+  --sg-border:       #E5E7EB;
+  --sg-success:      #2F855A;
+  --sg-warning:      #D97706;
+  --sg-danger:       #DC2626;
+  --sg-info:         #2563EB;
+
+  /* Spacing / Radius */
+  --sg-radius-sm: 10px;
+  --sg-radius-md: 14px;
+  --sg-radius-lg: 18px;
+
+  /* Shadows */
+  --sg-shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.05);
+  --sg-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+/* ── Base Reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--sg-background);
+  color: var(--sg-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Leaflet custom markers (not scoped – injected by JS) ── */
+.lf-user-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  background: #1565c0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.lf-user-marker i {
+  transform: rotate(45deg);
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.lf-store-marker {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  background: #2e7d32;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.lf-store-marker i {
+  transform: rotate(45deg);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.lf-store-marker.nearest {
+  background: #e65100;
+  width: 34px;
+  height: 34px;
+}
