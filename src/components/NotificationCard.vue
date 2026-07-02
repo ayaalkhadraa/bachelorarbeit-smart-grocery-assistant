@@ -26,7 +26,6 @@ type NotificationStatus =
 // ── State ─────────────────────────────────────────────────
 const status = ref<NotificationStatus>('idle')
 const errorMessage = ref('')
-const subscriptionEndpoint = ref<string | null>(null)
 const loading = ref(false)
 const checkingProducts = ref(false)
 const expiryResult = ref<ExpiryCheckResult>({ soonExpiring: [], alreadyExpired: [] })
@@ -45,9 +44,6 @@ const hasNotificationAPI = computed(() =>
 )
 const hasServiceWorker = computed(() =>
   typeof navigator !== 'undefined' && 'serviceWorker' in navigator
-)
-const hasPushManager = computed(() =>
-  typeof window !== 'undefined' && 'PushManager' in window
 )
 const isSupported = computed(
   () => hasNotificationAPI.value && hasServiceWorker.value

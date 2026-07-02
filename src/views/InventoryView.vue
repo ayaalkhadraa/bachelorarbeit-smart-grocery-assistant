@@ -22,7 +22,7 @@ const groceryStore = useGroceryStore()
 
 /** Returns ExpiryInfo for any item, resolving the date field via getProductExpiryDate. */
 function itemExpiryInfo(item: GroceryItem): ExpiryInfo {
-  return getExpiryInfo(getProductExpiryDate(item as Record<string, unknown>))
+  return getExpiryInfo(getProductExpiryDate(item as unknown as Record<string, unknown>))
 }
 
 const searchTerm = ref('')

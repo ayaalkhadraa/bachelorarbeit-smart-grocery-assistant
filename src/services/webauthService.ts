@@ -59,7 +59,9 @@ export async function registerPasskey(
 ): Promise<{ verified: boolean }> {
   console.log('[WebAuthn] registerPasskey started', { email, name })
 
-  const optionsJSON = await postJson<any>('/api/webauthn/register/options', {
+  type RegistrationOptionsJSON = Parameters<typeof startRegistration>[0]['optionsJSON']
+
+  const optionsJSON = await postJson<RegistrationOptionsJSON>('/api/webauthn/register/options', {
     email,
     name,
   })
@@ -107,7 +109,9 @@ export async function loginWithPasskey(
     name: string
   }
 }> {
-  const optionsJSON = await postJson<any>('/api/webauthn/login/options', {
+  type AuthenticationOptionsJSON = Parameters<typeof startAuthentication>[0]['optionsJSON']
+
+  const optionsJSON = await postJson<AuthenticationOptionsJSON>('/api/webauthn/login/options', {
     email,
   })
 

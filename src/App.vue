@@ -2,8 +2,6 @@
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
-import OverlayPanel from 'primevue/overlaypanel'
-import Tag from 'primevue/tag'
 import { useGroceryStore } from '@/stores/groceryStore'
 import { checkExpiringProducts } from '@/services/notificationService'
 
@@ -46,12 +44,12 @@ watch(
 )
 
 const navItems = [
-  { path: '/',              label: 'Dashboard',    icon: 'pi pi-home' },
-  { path: '/inventory',     label: 'Inventar',     icon: 'pi pi-box' },
-  { path: '/shopping-list', label: 'Einkaufsliste',icon: 'pi pi-shopping-cart' },
-  { path: '/scanner',       label: 'Scanner',      icon: 'pi pi-camera' },
-  { path: '/stores',        label: 'Supermärkte',  icon: 'pi pi-map-marker' },
-  { path: '/settings',      label: 'Einstellungen',icon: 'pi pi-cog' },
+  { path: '/', label: 'Dashboard', icon: 'pi pi-home' },
+  { path: '/inventory', label: 'Inventar', icon: 'pi pi-box' },
+  { path: '/shopping-list', label: 'Einkaufsliste', icon: 'pi pi-shopping-cart' },
+  { path: '/scanner', label: 'Scanner', icon: 'pi pi-camera' },
+  { path: '/stores', label: 'Supermärkte', icon: 'pi pi-map-marker' },
+  { path: '/settings', label: 'Einstellungen', icon: 'pi pi-cog' },
 ]
 
 const isActive = (path: string): boolean => route.path === path
@@ -70,66 +68,6 @@ const currentPageTitle = computed(() => pageTitles[route.path] ?? 'Smart Grocery
 
 const isPublicRoute = computed(() => route.path === '/login')
 
-// ── Notifications ──────────────────────────────────────────
-
-interface AppNotification {
-  id: string
-  title: string
-  text: string
-  severity: 'danger' | 'warn' | 'info'
-  icon: string
-}
-
-const notificationPanel = ref()
-
-const notifications = computed<AppNotification[]>(() => {
-  const result: AppNotification[] = []
-
-  for (const item of groceryStore.criticalItems) {
-    result.push({
-      id: `critical-${item.id}`,
-      title: 'Produkt abgelaufen',
-      text: `${item.name} ist abgelaufen.`,
-      severity: 'danger',
-      icon: 'pi pi-exclamation-triangle',
-    })
-    if (result.length >= 5) return result
-  }
-
-  for (const item of groceryStore.soonExpiringItems) {
-    result.push({
-      id: `soon-${item.id}`,
-      title: 'Läuft bald ab',
-      text: `${item.name} läuft bald ab.`,
-      severity: 'warn',
-      icon: 'pi pi-clock',
-    })
-    if (result.length >= 5) return result
-  }
-
-  const openCount = groceryStore.openShoppingItems.length
-  if (openCount > 0 && result.length < 5) {
-    result.push({
-      id: 'shopping-open',
-      title: 'Einkaufsliste',
-      text: `Du hast ${openCount} offene Artikel auf deiner Einkaufsliste.`,
-      severity: 'info',
-      icon: 'pi pi-shopping-cart',
-    })
-  }
-
-  return result
-})
-
-const unreadNotificationCount = computed(() => notifications.value.length)
-
-function toggleNotifications(event: Event): void {
-  notificationPanel.value?.toggle(event)
-}
-
-function closeNotificationPanel(): void {
-  notificationPanel.value?.hide()
-}
 </script>
 
 <template>
@@ -168,55 +106,6 @@ function closeNotificationPanel(): void {
         <h2 class="text-[0.95rem] md:text-[1.05rem] font-semibold m-0 whitespace-nowrap text-color">{{ currentPageTitle }}</h2>
 
         <div class="flex items-center gap-2 flex-wrap">
-          <div class="relative inline-flex items-center">
-            <Button
-              icon="pi pi-bell"
-              text
-              rounded
-              aria-label="Benachrichtigungen"
-              :badge="unreadNotificationCount > 0 ? String(unreadNotificationCount) : undefined"
-              badgeSeverity="danger"
-              @click="toggleNotifications"
-            />
-          </div>
-
-          <OverlayPanel ref="notificationPanel" class="notification-panel">
-            <div class="flex flex-col gap-[0.15rem] px-4 py-[0.85rem] pb-[0.6rem] border-b border-[var(--sg-border)]">
-              <span class="text-[0.95rem] font-semibold text-color">Benachrichtigungen</span>
-              <span class="text-[0.75rem] text-muted-color">Aktuelle Hinweise zu Vorrat und Einkaufsliste</span>
-            </div>
-
-            <div v-if="notifications.length === 0" class="flex flex-col items-center gap-2 py-6 px-4 text-muted-color text-[0.85rem]">
-              <i class="pi pi-check-circle text-[1.5rem] text-[var(--p-green-500,#22c55e)]"></i>
-              <span>Keine neuen Benachrichtigungen</span>
-            </div>
-
-            <ul v-else class="list-none m-0 p-0">
-              <li v-for="n in notifications" :key="n.id" class="flex items-start gap-3 px-4 py-3 border-b border-[var(--sg-border)] last:border-b-0">
-                <i :class="[n.icon, `notification-icon--${n.severity}`]" class="text-base mt-[0.15rem] shrink-0"></i>
-                <div class="flex-1 min-w-0 flex flex-col gap-[0.15rem]">
-                  <span class="text-[0.85rem] font-semibold text-color">{{ n.title }}</span>
-                  <span class="text-[0.8rem] text-muted-color leading-[1.4]">{{ n.text }}</span>
-                </div>
-                <Tag
-                  :value="n.severity === 'danger' ? 'Kritisch' : n.severity === 'warn' ? 'Bald' : 'Info'"
-                  :severity="n.severity"
-                  class="shrink-0 text-[0.7rem]"
-                />
-              </li>
-            </ul>
-
-            <div class="flex justify-end px-3 py-2 border-t border-[var(--sg-border)]">
-              <Button
-                label="Alle als gelesen markieren"
-                icon="pi pi-check"
-                text
-                size="small"
-                @click="closeNotificationPanel"
-              />
-            </div>
-          </OverlayPanel>
-
           <template v-if="currentUser">
             <Button icon="pi pi-user" :label="currentUser.name" text disabled />
             <Button

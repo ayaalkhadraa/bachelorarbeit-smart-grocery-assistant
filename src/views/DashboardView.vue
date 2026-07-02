@@ -13,7 +13,7 @@ const groceryStore = useGroceryStore()
 
 /** Helper so templates never call getExpiryInfo twice per item. */
 function getItemExpiry(item: GroceryItem): ExpiryInfo {
-  return getExpiryInfo(getProductExpiryDate(item as Record<string, unknown>))
+  return getExpiryInfo(getProductExpiryDate(item as unknown as Record<string, unknown>))
 }
 
 /** All items enriched with their current ExpiryInfo (reactive). */

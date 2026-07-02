@@ -15,7 +15,7 @@
 const SW_VERSION = 'smart-grocery-sw-v1'
 
 // ── Install ───────────────────────────────────────────────────────────────────
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   console.log(`[SW] Installing (${SW_VERSION})`)
   // Skip waiting so the new SW activates immediately
   self.skipWaiting()

@@ -4,7 +4,6 @@ import { ref, onMounted } from 'vue'
 
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Divider from 'primevue/divider'
@@ -19,22 +18,9 @@ const router = useRouter()
 
 const mode = ref<'welcome' | 'access' | 'login' | 'register'>('welcome')
 
-const email = ref('demo@freshflow.local')
-const password = ref('demo123')
-
+const email = ref('')
 const registerName = ref('')
 const registerEmail = ref('')
-const registerPassword = ref('')
-
-const loginSuccess = ref(false)
-const loginError = ref(false)
-
-const registerSuccess = ref(false)
-const registerError = ref(false)
-
-const biometricLoading = ref(false)
-const biometricSuccess = ref(false)
-const biometricError = ref(false)
 
 const webauthnSupported = ref(false)
 const platformAvailable = ref(false)
@@ -42,6 +28,7 @@ const platformAvailable = ref(false)
 const passkeyLoading = ref(false)
 const passkeySuccess = ref('')
 const passkeyError = ref('')
+
 const passkeyLoginLoading = ref(false)
 const passkeyLoginSuccess = ref('')
 const passkeyLoginError = ref('')
@@ -52,19 +39,14 @@ onMounted(async () => {
 
     webauthnSupported.value = support.supported
     platformAvailable.value = support.platformAvailable
-  } catch {
+  } catch (error) {
+    console.error('[WebAuthn] support check failed', error)
     webauthnSupported.value = false
     platformAvailable.value = false
   }
 })
 
 function resetMessages(): void {
-  loginSuccess.value = false
-  loginError.value = false
-  registerSuccess.value = false
-  registerError.value = false
-  biometricSuccess.value = false
-  biometricError.value = false
   passkeySuccess.value = ''
   passkeyError.value = ''
   passkeyLoginSuccess.value = ''
@@ -91,53 +73,24 @@ function showWelcome(): void {
   resetMessages()
 }
 
-function login(): void {
-  if (email.value && password.value) {
-    loginSuccess.value = true
-    loginError.value = false
+function continueAsGuest(): void {
+  localStorage.setItem(
+    'smart-grocery-demo-user',
+    JSON.stringify({
+      email: 'guest@freshflow.local',
+      name: 'Guest User',
+      loginMethod: 'guest',
+    }),
+  )
 
-    localStorage.setItem(
-      'smart-grocery-demo-user',
-      JSON.stringify({
-        email: email.value,
-        name: 'Demo User',
-        loginMethod: 'demo-login',
-      }),
-    )
-
-    setTimeout(() => router.push('/'), 1000)
-  } else {
-    loginError.value = true
-    loginSuccess.value = false
-  }
+  router.push('/')
 }
 
-function register(): void {
-  if (registerName.value && registerEmail.value && registerPassword.value) {
-    registerSuccess.value = true
-    registerError.value = false
-
-    localStorage.setItem(
-      'smart-grocery-demo-user',
-      JSON.stringify({
-        email: registerEmail.value,
-        name: registerName.value,
-        loginMethod: 'simulated-register',
-      }),
-    )
-
-    setTimeout(() => router.push('/'), 1000)
-  } else {
-    registerError.value = true
-    registerSuccess.value = false
-  }
-}
 async function handleRegisterPasskey(): Promise<void> {
   passkeySuccess.value = ''
   passkeyError.value = ''
 
   if (!registerEmail.value) {
-    console.warn('[WebAuthn] registration aborted: missing email')
     passkeyError.value = 'Bitte geben Sie eine E-Mail-Adresse ein.'
     return
   }
@@ -159,6 +112,7 @@ async function handleRegisterPasskey(): Promise<void> {
 
     if (result.verified) {
       passkeySuccess.value = 'Passkey wurde erfolgreich registriert.'
+      email.value = registerEmail.value
     } else {
       passkeyError.value = 'Passkey konnte nicht registriert werden.'
     }
@@ -179,14 +133,21 @@ async function handleLoginWithPasskey(): Promise<void> {
   passkeyLoginError.value = ''
 
   if (!email.value) {
-    passkeyLoginError.value = 'Bitte geben Sie die E-Mail-Adresse ein, mit der der Passkey registriert wurde.'
+    passkeyLoginError.value =
+      'Bitte geben Sie die E-Mail-Adresse ein, mit der der Passkey registriert wurde.'
     return
   }
 
   try {
     passkeyLoginLoading.value = true
 
+    console.log('[WebAuthn] login started', {
+      email: email.value,
+    })
+
     const result = await loginWithPasskey(email.value)
+
+    console.log('[WebAuthn] login finished', result)
 
     if (result.verified && result.user) {
       localStorage.setItem(
@@ -198,13 +159,17 @@ async function handleLoginWithPasskey(): Promise<void> {
         }),
       )
 
-      passkeyLoginSuccess.value = 'Passkey-Anmeldung erfolgreich. Weiterleitung zum Dashboard...'
+      passkeyLoginSuccess.value =
+        'Passkey-Anmeldung erfolgreich. Weiterleitung zum Dashboard...'
 
       setTimeout(() => router.push('/'), 1000)
     } else {
-      passkeyLoginError.value = 'Passkey-Anmeldung konnte nicht verifiziert werden.'
+      passkeyLoginError.value =
+        'Passkey-Anmeldung konnte nicht verifiziert werden.'
     }
   } catch (error: unknown) {
+    console.error('[WebAuthn] login failed', error)
+
     passkeyLoginError.value =
       error instanceof Error
         ? error.message
@@ -212,40 +177,6 @@ async function handleLoginWithPasskey(): Promise<void> {
   } finally {
     passkeyLoginLoading.value = false
   }
-}
-function continueAsGuest(): void {
-  localStorage.setItem(
-    'smart-grocery-demo-user',
-    JSON.stringify({
-      email: 'guest@freshflow.local',
-      name: 'Guest User',
-      loginMethod: 'guest',
-    }),
-  )
-
-  router.push('/')
-}
-
-function loginWithFingerprint(): void {
-  biometricLoading.value = true
-  biometricSuccess.value = false
-  biometricError.value = false
-
-  setTimeout(() => {
-    localStorage.setItem(
-      'smart-grocery-demo-user',
-      JSON.stringify({
-        email: 'biometric@freshflow.local',
-        name: 'Biometric Demo User',
-        loginMethod: 'fingerprint-simulation',
-      }),
-    )
-
-    biometricLoading.value = false
-    biometricSuccess.value = true
-
-    setTimeout(() => router.push('/'), 1200)
-  }, 1500)
 }
 </script>
 
@@ -341,7 +272,8 @@ function loginWithFingerprint(): void {
         </ul>
 
         <p class="text-[0.78rem] text-[#9ca3af] mt-1 leading-relaxed max-w-[360px]">
-          Hilft dir dabei, Lebensmittel bewusster zu nutzen und unnötige Einkäufe zu vermeiden.
+          Die Anmeldung dient in diesem Prototyp der Untersuchung einer
+          browserbasierten Passkey-Authentifizierung.
         </p>
       </aside>
 
@@ -359,20 +291,22 @@ function loginWithFingerprint(): void {
 
           <template #content>
             <Message severity="info" :closable="false" class="mb-4">
-              Der Zugang wird im Web-Prototyp simuliert. Es wird keine echte Authentifizierung durchgeführt.
+              In diesem Prototyp wird eine Anmeldung über WebAuthn beziehungsweise
+              Passkeys untersucht. Die eigentliche Bestätigung erfolgt durch den
+              Browser oder das Betriebssystem.
             </Message>
 
             <div class="flex flex-col gap-3">
               <Button
-                label="Anmelden"
-                icon="pi pi-sign-in"
+                label="Mit Passkey anmelden"
+                icon="pi pi-key"
                 class="w-full justify-center"
                 type="button"
                 @click="showLogin"
               />
 
               <Button
-                label="Registrieren"
+                label="Passkey registrieren"
                 icon="pi pi-user-plus"
                 severity="secondary"
                 outlined
@@ -383,7 +317,7 @@ function loginWithFingerprint(): void {
 
               <Divider align="center">
                 <span class="text-[0.8rem] text-[#9ca3af] whitespace-nowrap">
-                  oder
+                  Testzugang
                 </span>
               </Divider>
 
@@ -412,11 +346,11 @@ function loginWithFingerprint(): void {
         <!-- ═══ LOGIN MODE ═══ -->
         <Card v-else-if="mode === 'login'" class="access-card">
           <template #title>
-            Anmelden
+            Passkey-Anmeldung
           </template>
 
           <template #subtitle>
-            Melde dich mit Demo-Zugangsdaten an.
+            Melde dich mit einem bereits registrierten Passkey an.
           </template>
 
           <template #content>
@@ -430,109 +364,82 @@ function loginWithFingerprint(): void {
             />
 
             <Message severity="info" :closable="false" class="mb-4">
-              Demo-Zugang: Es wird keine echte Authentifizierung durchgeführt.
+              Die Anmeldung nutzt WebAuthn beziehungsweise Passkeys im Browser.
+              Je nach Gerät kann die Bestätigung über Windows Hello, PIN,
+              Fingerabdruck, Gesichtserkennung oder Gerätecode erfolgen.
             </Message>
 
-            <div class="flex flex-col gap-[0.1rem] mb-4">
-              <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
-                <label for="login-email" class="text-sm font-medium text-[#374151]">
-                  E-Mail
-                </label>
+            <Message
+              v-if="!webauthnSupported"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              WebAuthn wird in diesem Browser nicht unterstützt.
+            </Message>
 
-                <InputText
-                  id="login-email"
-                  v-model="email"
-                  type="email"
-                  placeholder="demo@freshflow.local"
-                  autocomplete="email"
-                />
-              </div>
+            <Message
+              v-else-if="!platformAvailable"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              WebAuthn wird unterstützt, aber es wurde kein Plattform-Authenticator
+              erkannt. Je nach Gerät kann die Anmeldung dennoch eingeschränkt möglich sein.
+            </Message>
 
-              <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
-                <label for="login-password" class="text-sm font-medium text-[#374151]">
-                  Passwort
-                </label>
+            <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
+              <label for="login-email" class="text-sm font-medium text-[#374151]">
+                E-Mail
+              </label>
 
-                <Password
-                  id="login-password"
-                  v-model="password"
-                  :feedback="false"
-                  toggle-mask
-                  placeholder="Passwort eingeben"
-                  autocomplete="current-password"
-                  @keyup.enter="login"
-                />
-              </div>
+              <InputText
+                id="login-email"
+                v-model="email"
+                type="email"
+                placeholder="deine@email.de"
+                autocomplete="email"
+              />
             </div>
 
             <Button
-              label="Einloggen"
-              icon="pi pi-sign-in"
+              label="Mit Passkey anmelden"
+              icon="pi pi-key"
+              :loading="passkeyLoginLoading"
+              :disabled="!webauthnSupported || passkeyLoginLoading"
               class="w-full justify-center"
               type="button"
-              @click="login"
+              @click="handleLoginWithPasskey"
             />
 
-            <Message v-if="loginSuccess" severity="success" :closable="false" class="mt-3">
-              Login erfolgreich. Weiterleitung zum Dashboard...
+            <Message
+              v-if="passkeyLoginSuccess"
+              severity="success"
+              :closable="false"
+              class="mt-3"
+            >
+              {{ passkeyLoginSuccess }}
             </Message>
 
-            <Message v-if="loginError" severity="error" :closable="false" class="mt-3">
-              Bitte E-Mail und Passwort eingeben.
+            <Message
+              v-if="passkeyLoginError"
+              severity="error"
+              :closable="false"
+              class="mt-3"
+            >
+              {{ passkeyLoginError }}
             </Message>
-<div class="flex flex-col gap-3 mt-2">
-  <Divider align="center">
-    <span class="text-[0.8rem] text-[#9ca3af] whitespace-nowrap">
-      Passkey-Anmeldung
-    </span>
-  </Divider>
-
-  <Message severity="info" :closable="false" class="mb-4">
-    Diese Anmeldung nutzt WebAuthn beziehungsweise Passkeys im Browser.
-    Die biometrische Prüfung erfolgt durch den Browser oder das Betriebssystem.
-  </Message>
-
-  <Message
-    v-if="!webauthnSupported"
-    severity="warn"
-    :closable="false"
-    class="mb-3"
-  >
-    WebAuthn wird in diesem Browser nicht unterstützt.
-  </Message>
-
-  <Button
-    label="Mit Passkey anmelden"
-    icon="pi pi-key"
-    severity="secondary"
-    outlined
-    :loading="passkeyLoginLoading"
-    :disabled="!webauthnSupported || passkeyLoginLoading"
-    class="w-full justify-center"
-    type="button"
-    @click="handleLoginWithPasskey"
-  />
-
-  <Message v-if="passkeyLoginSuccess" severity="success" :closable="false" class="mt-3">
-    {{ passkeyLoginSuccess }}
-  </Message>
-
-  <Message v-if="passkeyLoginError" severity="error" :closable="false" class="mt-3">
-    {{ passkeyLoginError }}
-  </Message>
-</div>  
-              
           </template>
         </Card>
 
         <!-- ═══ REGISTER MODE ═══ -->
         <Card v-else class="access-card">
           <template #title>
-            Registrieren
+            Passkey registrieren
           </template>
 
           <template #subtitle>
-            Erstelle ein simuliertes Demo-Profil oder registriere einen Passkey.
+            Erstelle einen Passkey für die Anmeldung im Web-Prototyp.
           </template>
 
           <template #content>
@@ -546,8 +453,36 @@ function loginWithFingerprint(): void {
             />
 
             <Message severity="info" :closable="false" class="mb-4">
-              Die klassische Registrierung wird nur simuliert. Für das WebAuthn-Szenario
-              kann zusätzlich ein Passkey im Browser registriert werden.
+              Die Anwendung speichert keine biometrischen Daten. Die Verifikation
+              wird durch den Browser beziehungsweise das Betriebssystem durchgeführt.
+            </Message>
+
+            <Message
+              v-if="!webauthnSupported"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              WebAuthn wird in diesem Browser nicht unterstützt.
+            </Message>
+
+            <Message
+              v-else-if="!platformAvailable"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              WebAuthn wird unterstützt, aber es wurde kein Plattform-Authenticator
+              erkannt. Für den Test kann auch ein Virtual Authenticator verwendet werden.
+            </Message>
+
+            <Message
+              v-else
+              severity="success"
+              :closable="false"
+              class="mb-3"
+            >
+              WebAuthn und ein Plattform-Authenticator sind verfügbar.
             </Message>
 
             <div class="flex flex-col gap-[0.1rem] mb-4">
@@ -577,82 +512,11 @@ function loginWithFingerprint(): void {
                   autocomplete="email"
                 />
               </div>
-
-              <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
-                <label for="reg-password" class="text-sm font-medium text-[#374151]">
-                  Passwort
-                </label>
-
-                <Password
-                  id="reg-password"
-                  v-model="registerPassword"
-                  :feedback="false"
-                  toggle-mask
-                  placeholder="Passwort wählen"
-                  autocomplete="new-password"
-                />
-              </div>
             </div>
-
-            <Button
-              label="Registrieren"
-              icon="pi pi-user-plus"
-              class="w-full justify-center"
-              type="button"
-              @click="register"
-            />
-
-            <Message v-if="registerSuccess" severity="success" :closable="false" class="mt-3">
-              Registrierung erfolgreich. Weiterleitung zum Dashboard...
-            </Message>
-
-            <Message v-if="registerError" severity="error" :closable="false" class="mt-3">
-              Bitte alle Felder ausfüllen.
-            </Message>
-
-            <Divider align="center">
-              <span class="text-[0.8rem] text-[#9ca3af] whitespace-nowrap">
-                oder mit Passkey
-              </span>
-            </Divider>
-
-            <Message severity="info" :closable="false" class="mb-4">
-              Diese Funktion prüft eine browserbasierte WebAuthn-Registrierung.
-              Die biometrische Prüfung erfolgt durch den Browser beziehungsweise das Betriebssystem.
-            </Message>
-
-            <Message
-              v-if="!webauthnSupported"
-              severity="warn"
-              :closable="false"
-              class="mb-3"
-            >
-              WebAuthn wird in diesem Browser nicht unterstützt.
-            </Message>
-
-            <Message
-              v-else-if="!platformAvailable"
-              severity="warn"
-              :closable="false"
-              class="mb-3"
-            >
-              WebAuthn wird unterstützt, aber es wurde kein Plattform-Authenticator erkannt.
-            </Message>
-
-            <Message
-              v-else
-              severity="success"
-              :closable="false"
-              class="mb-3"
-            >
-              WebAuthn und ein Plattform-Authenticator sind verfügbar.
-            </Message>
 
             <Button
               label="Passkey registrieren"
               icon="pi pi-key"
-              severity="secondary"
-              outlined
               :loading="passkeyLoading"
               :disabled="!webauthnSupported || passkeyLoading"
               class="w-full justify-center"
@@ -660,13 +524,34 @@ function loginWithFingerprint(): void {
               @click="handleRegisterPasskey"
             />
 
-            <Message v-if="passkeySuccess" severity="success" :closable="false" class="mt-3">
+            <Message
+              v-if="passkeySuccess"
+              severity="success"
+              :closable="false"
+              class="mt-3"
+            >
               {{ passkeySuccess }}
             </Message>
 
-            <Message v-if="passkeyError" severity="error" :closable="false" class="mt-3">
+            <Message
+              v-if="passkeyError"
+              severity="error"
+              :closable="false"
+              class="mt-3"
+            >
               {{ passkeyError }}
             </Message>
+
+            <Button
+              v-if="passkeySuccess"
+              label="Zur Anmeldung wechseln"
+              icon="pi pi-sign-in"
+              severity="secondary"
+              outlined
+              class="w-full justify-center mt-3"
+              type="button"
+              @click="showLogin"
+            />
           </template>
         </Card>
       </div>
@@ -709,9 +594,7 @@ function loginWithFingerprint(): void {
   overflow: hidden;
 }
 
-.form-field :deep(.p-inputtext),
-.form-field :deep(.p-password),
-.form-field :deep(.p-password .p-inputtext) {
+.form-field :deep(.p-inputtext) {
   width: 100%;
 }
 

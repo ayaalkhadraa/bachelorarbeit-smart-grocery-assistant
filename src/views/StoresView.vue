@@ -26,7 +26,6 @@ const locationLoading = ref(false)
 const locationError = ref('')
 const mapContainer = ref<HTMLElement | null>(null)
 let leafletMap: L.Map | null = null
-let userMarker: L.Marker | null = null
 
 const userCoords = ref<{
   lat: number
@@ -145,7 +144,6 @@ function resetLocation() {
   if (leafletMap) {
     leafletMap.remove()
     leafletMap = null
-    userMarker = null
   }
 }
 
@@ -174,7 +172,7 @@ function initMap() {
     iconSize: [32, 32],
     iconAnchor: [16, 32],
   })
-  userMarker = L.marker([lat, lng], { icon: userIcon })
+  L.marker([lat, lng], { icon: userIcon })
     .addTo(leafletMap)
     .bindPopup('Du bist hier')
 

@@ -37,7 +37,7 @@
 const VAPID_PUBLIC_KEY =
   'BEl62iUYgUivxIkv69yViEuiBIa40HI80NMzQFQbevANEDCYCbVVw1w5pUg5sdkXFl0xKCnCFZBNgkLKp-OQMY'
 
-import { getExpiryInfo, getProductExpiryDate, EXPIRY_WARNING_DAYS } from '@/utils/expiryUtils'
+import { getExpiryInfo, getProductExpiryDate } from '@/utils/expiryUtils'
 
 // ── INotificationProvider ─────────────────────────────────────────────────────
 /**
