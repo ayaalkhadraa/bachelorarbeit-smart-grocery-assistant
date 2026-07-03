@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { NativeBiometric } from '@capgo/capacitor-native-biometric'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -14,17 +16,101 @@ const groceryStore = useGroceryStore()
 onMounted(() => {
   groceryStore.loadItems()
   console.log('[SettingsView] loaded grocery items:', groceryStore.items)
+  loadBiometricSettings()
+  void syncBiometricAvailability()
 })
+
+const isAndroidNative = computed(() => Capacitor.getPlatform() === 'android')
 
 const username = ref('Demo User')
 const language = ref('Deutsch')
 const notificationsEnabled = ref(true)
 const darkModeSimulation = ref(false)
 const resetMessageVisible = ref(false)
+const biometricEnabled = ref(false)
+const biometricAvailable = ref(false)
+const biometricActivationLoading = ref(false)
+const biometricActivationSuccess = ref('')
+const biometricActivationError = ref('')
 
 const languages = ['Deutsch', 'Englisch', 'Arabisch']
 
 const SETTINGS_KEY = 'smart-grocery-settings'
+const BIOMETRIC_ENABLED_KEY = 'smart-grocery-biometric-enabled'
+
+function loadBiometricSettings(): void {
+  try {
+    biometricEnabled.value = localStorage.getItem(BIOMETRIC_ENABLED_KEY) === 'true'
+  } catch {
+    biometricEnabled.value = false
+  }
+}
+
+function saveBiometricSettings(enabled: boolean): void {
+  localStorage.setItem(BIOMETRIC_ENABLED_KEY, String(enabled))
+  biometricEnabled.value = enabled
+}
+
+async function syncBiometricAvailability(): Promise<void> {
+  if (!isAndroidNative.value) {
+    biometricAvailable.value = false
+    return
+  }
+
+  try {
+    const result = await NativeBiometric.isAvailable()
+    biometricAvailable.value = result.isAvailable
+  } catch (error) {
+    console.error('[SettingsView] biometric availability check failed', error)
+    biometricAvailable.value = false
+  }
+}
+
+async function activateBiometricLogin(): Promise<void> {
+  biometricActivationSuccess.value = ''
+  biometricActivationError.value = ''
+
+  if (!isAndroidNative.value) {
+    biometricActivationError.value = 'Die Biometrie-Aktivierung ist nur in der Android-App verfügbar.'
+    return
+  }
+
+  biometricActivationLoading.value = true
+
+  try {
+    await syncBiometricAvailability()
+
+    if (!biometricAvailable.value) {
+      biometricActivationError.value = 'Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.'
+      return
+    }
+
+    const available = await NativeBiometric.isAvailable()
+
+    if (!available.isAvailable) {
+      biometricActivationError.value = 'Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.'
+      return
+    }
+
+    await NativeBiometric.verifyIdentity({
+      reason: 'Bestätige die Aktivierung der biometrischen Anmeldung für FreshFlow.',
+      title: 'FreshFlow',
+      subtitle: 'Biometrische Anmeldung aktivieren',
+      description: 'Bestätige die Aktivierung mit Fingerabdruck, Gesicht oder Gerätecode.',
+    })
+
+    saveBiometricSettings(true)
+    biometricActivationSuccess.value = 'Biometrische Anmeldung wurde auf diesem Gerät aktiviert.'
+  } catch (error) {
+    console.error('[SettingsView] biometric activation failed', error)
+    biometricActivationError.value =
+      error instanceof Error
+        ? error.message
+        : 'Biometrische Anmeldung konnte nicht aktiviert werden.'
+  } finally {
+    biometricActivationLoading.value = false
+  }
+}
 
 function saveSettings(): void {
   const settings = {
@@ -40,7 +126,11 @@ function saveSettings(): void {
 function resetPrototypeData(): void {
   localStorage.removeItem('smart-grocery-items')
   localStorage.removeItem(SETTINGS_KEY)
+  localStorage.removeItem(BIOMETRIC_ENABLED_KEY)
   groceryStore.loadItems()
+  biometricEnabled.value = false
+  biometricActivationSuccess.value = ''
+  biometricActivationError.value = ''
   resetMessageVisible.value = true
 }
 </script>
@@ -55,6 +145,49 @@ function resetPrototypeData(): void {
     <Message severity="info" :closable="false">
       Diese Einstellungen dienen der Simulation im Web-Prototyp und ersetzen kein vollständiges Benutzerkonto.
     </Message>
+
+    <Card v-if="isAndroidNative" class="mt-6 mb-6">
+      <template #title>Biometrische Anmeldung</template>
+      <template #content>
+        <p class="text-[0.85rem] text-muted-color m-0 mb-4">
+          Aktiviere hier die lokale biometrische Anmeldung für die Android-Capacitor-Version.
+        </p>
+
+        <div class="flex items-center justify-between gap-4 mb-3">
+          <span class="text-[0.95rem] flex-1">Biometrie aktivieren</span>
+          <Button
+            :label="biometricEnabled ? 'Biometrie aktiviert' : 'Biometrie aktivieren'"
+            icon="pi pi-shield"
+            :loading="biometricActivationLoading"
+            :disabled="biometricActivationLoading || biometricEnabled"
+            severity="secondary"
+            outlined
+            type="button"
+            @click="activateBiometricLogin"
+          />
+        </div>
+
+        <Message v-if="biometricEnabled" severity="success" :closable="false" class="mb-3">
+          Die biometrische Anmeldung ist lokal aktiviert und bleibt nach dem Logout erhalten.
+        </Message>
+
+        <Message v-else-if="biometricAvailable" severity="info" :closable="false" class="mb-3">
+          Das Gerät unterstützt Biometrie. Du kannst die Anmeldung jetzt aktivieren.
+        </Message>
+
+        <Message v-else severity="warn" :closable="false" class="mb-3">
+          Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.
+        </Message>
+
+        <Message v-if="biometricActivationSuccess" severity="success" :closable="false" class="mt-2">
+          {{ biometricActivationSuccess }}
+        </Message>
+
+        <Message v-if="biometricActivationError" severity="error" :closable="false" class="mt-2">
+          {{ biometricActivationError }}
+        </Message>
+      </template>
+    </Card>
 
     <Divider />
 

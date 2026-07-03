@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, nextTick } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { NativeBiometric } from '@capgo/capacitor-native-biometric'
 
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
@@ -16,6 +18,20 @@ import {
 
 const router = useRouter()
 
+type DemoUser = {
+  email: string
+  name: string
+  loginMethod?: string
+}
+
+type BiometricProfile = {
+  email: string
+  name: string
+}
+
+const BIOMETRIC_STORAGE_KEY = 'smart-grocery-biometric-login'
+const BIOMETRIC_ENABLED_KEY = 'smart-grocery-biometric-enabled'
+
 const mode = ref<'welcome' | 'access' | 'login' | 'register'>('welcome')
 
 const email = ref('')
@@ -24,6 +40,21 @@ const registerEmail = ref('')
 
 const webauthnSupported = ref(false)
 const platformAvailable = ref(false)
+const isAndroidNative = computed(() => Capacitor.getPlatform() === 'android')
+const isWebPlatform = computed(() => !isAndroidNative.value)
+
+const biometricAvailable = ref(false)
+const biometricProfile = ref<BiometricProfile | null>(null)
+const biometricEnabled = ref(false)
+const pendingLoginUser = ref<DemoUser | null>(null)
+
+const biometricLoginLoading = ref(false)
+const biometricLoginSuccess = ref('')
+const biometricLoginError = ref('')
+
+const biometricActivationLoading = ref(false)
+const biometricActivationSuccess = ref('')
+const biometricActivationError = ref('')
 
 const passkeyLoading = ref(false)
 const passkeySuccess = ref('')
@@ -44,6 +75,10 @@ onMounted(async () => {
     webauthnSupported.value = false
     platformAvailable.value = false
   }
+
+  loadBiometricProfile()
+  loadBiometricActivationState()
+  await syncBiometricAvailability()
 })
 
 function resetMessages(): void {
@@ -51,6 +86,88 @@ function resetMessages(): void {
   passkeyError.value = ''
   passkeyLoginSuccess.value = ''
   passkeyLoginError.value = ''
+  biometricLoginSuccess.value = ''
+  biometricLoginError.value = ''
+  biometricActivationSuccess.value = ''
+  biometricActivationError.value = ''
+  pendingLoginUser.value = null
+}
+
+function loadBiometricProfile(): void {
+  try {
+    const raw = localStorage.getItem(BIOMETRIC_STORAGE_KEY)
+
+    if (!raw) {
+      biometricProfile.value = null
+      return
+    }
+
+    const parsed = JSON.parse(raw) as Partial<BiometricProfile>
+
+    if (typeof parsed.email !== 'string' || typeof parsed.name !== 'string') {
+      biometricProfile.value = null
+      return
+    }
+
+    biometricProfile.value = {
+      email: parsed.email,
+      name: parsed.name,
+    }
+  } catch {
+    biometricProfile.value = null
+  }
+}
+
+function loadBiometricActivationState(): void {
+  try {
+    biometricEnabled.value = localStorage.getItem(BIOMETRIC_ENABLED_KEY) === 'true'
+  } catch {
+    biometricEnabled.value = false
+  }
+}
+
+function saveBiometricProfile(profile: BiometricProfile): void {
+  localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(profile))
+  biometricProfile.value = profile
+}
+
+async function syncBiometricAvailability(): Promise<void> {
+  if (!isAndroidNative.value) {
+    biometricAvailable.value = false
+    return
+  }
+
+  try {
+    const result = await NativeBiometric.isAvailable()
+    biometricAvailable.value = result.isAvailable
+  } catch (error) {
+    console.error('[Biometric] availability check failed', error)
+    biometricAvailable.value = false
+  }
+}
+
+async function verifyNativeBiometric(reason: string): Promise<boolean> {
+  if (!isAndroidNative.value || !biometricAvailable.value) {
+    return false
+  }
+
+  try {
+    await NativeBiometric.verifyIdentity({
+      reason,
+      title: 'FreshFlow',
+      subtitle: 'Biometrische Anmeldung',
+      description: 'Bestätige die Anmeldung mit Fingerabdruck, Gesicht oder Gerätecode.',
+    })
+
+    return true
+  } catch (error) {
+    console.error('[Biometric] verification failed', error)
+    return false
+  }
+}
+
+function persistDemoUser(user: DemoUser): void {
+  localStorage.setItem('smart-grocery-demo-user', JSON.stringify(user))
 }
 
 function showAccess(): void {
@@ -74,16 +191,100 @@ function showWelcome(): void {
 }
 
 function continueAsGuest(): void {
-  localStorage.setItem(
-    'smart-grocery-demo-user',
-    JSON.stringify({
-      email: 'guest@freshflow.local',
-      name: 'Guest User',
-      loginMethod: 'guest',
-    }),
-  )
+  persistDemoUser({
+    email: 'guest@freshflow.local',
+    name: 'Guest User',
+    loginMethod: 'guest',
+  })
 
   router.push('/')
+}
+
+async function handleEnableBiometricLogin(): Promise<void> {
+  biometricActivationSuccess.value = ''
+  biometricActivationError.value = ''
+
+  if (!pendingLoginUser.value) {
+    biometricActivationError.value = 'Für die Aktivierung ist zuerst ein erfolgreicher Login erforderlich.'
+    return
+  }
+
+  biometricActivationLoading.value = true
+
+  try {
+    const verified = await verifyNativeBiometric(
+      'Bestätige die Aktivierung der biometrischen Anmeldung für dieses Gerät.',
+    )
+
+    if (!verified) {
+      biometricActivationError.value = 'Biometrische Aktivierung wurde abgebrochen oder ist fehlgeschlagen.'
+      return
+    }
+
+    const biometricUser = {
+      email: pendingLoginUser.value.email,
+      name: pendingLoginUser.value.name,
+    }
+
+    saveBiometricProfile(biometricUser)
+    persistDemoUser({
+      email: biometricUser.email,
+      name: biometricUser.name,
+      loginMethod: 'biometric-native',
+    })
+    biometricActivationSuccess.value = 'Biometrische Anmeldung wurde für dieses Gerät aktiviert.'
+    setTimeout(() => router.push('/'), 1000)
+  } finally {
+    biometricActivationLoading.value = false
+  }
+}
+
+async function handleBiometricLogin(): Promise<void> {
+  biometricLoginSuccess.value = ''
+  biometricLoginError.value = ''
+  biometricLoginLoading.value = true
+
+  await nextTick()
+
+  try {
+    if (!isAndroidNative.value) {
+      biometricLoginError.value = 'Die native biometrische Anmeldung ist nur auf Android verfügbar.'
+      return
+    }
+
+    if (!biometricAvailable.value) {
+      biometricLoginError.value = 'Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.'
+      return
+    }
+
+    if (!biometricEnabled.value) {
+      biometricLoginError.value = 'Biometrische Anmeldung ist noch nicht aktiviert. Öffne die Einstellungen und aktiviere sie zuerst.'
+      return
+    }
+
+    const verified = await verifyNativeBiometric('Bestätige die biometrische Anmeldung für FreshFlow.')
+
+    if (!verified) {
+      biometricLoginError.value = 'Biometrische Anmeldung wurde abgebrochen oder ist fehlgeschlagen.'
+      return
+    }
+
+    const loginUser = {
+      email: email.value.trim(),
+      name: email.value.trim() || 'Android User',
+    }
+
+    persistDemoUser({
+      email: loginUser.email,
+      name: loginUser.name,
+      loginMethod: 'biometric-native',
+    })
+
+    biometricLoginSuccess.value = 'Biometrische Anmeldung erfolgreich. Weiterleitung zum Dashboard...'
+    setTimeout(() => router.push('/'), 1000)
+  } finally {
+    biometricLoginLoading.value = false
+  }
 }
 
 async function handleRegisterPasskey(): Promise<void> {
@@ -150,15 +351,13 @@ async function handleLoginWithPasskey(): Promise<void> {
     console.log('[WebAuthn] login finished', result)
 
     if (result.verified && result.user) {
-      localStorage.setItem(
-        'smart-grocery-demo-user',
-        JSON.stringify({
-          email: result.user.email,
-          name: result.user.name || 'Passkey User',
-          loginMethod: 'webauthn-passkey',
-        }),
-      )
+      const authenticatedUser = {
+        email: result.user.email,
+        name: result.user.name || 'Passkey User',
+        loginMethod: 'webauthn-passkey',
+      }
 
+      persistDemoUser(authenticatedUser)
       passkeyLoginSuccess.value =
         'Passkey-Anmeldung erfolgreich. Weiterleitung zum Dashboard...'
 
@@ -178,6 +377,56 @@ async function handleLoginWithPasskey(): Promise<void> {
     passkeyLoginLoading.value = false
   }
 }
+
+const loginButtonLabel = computed(() => (isAndroidNative.value ? 'Mit Biometrie anmelden' : 'Mit Passkey anmelden'))
+
+const primaryLoginLoading = computed(() =>
+  isAndroidNative.value ? biometricLoginLoading.value : passkeyLoginLoading.value,
+)
+
+const primaryLoginDisabled = computed(() =>
+  isAndroidNative.value
+    ? biometricLoginLoading.value
+    : !webauthnSupported.value || passkeyLoginLoading.value,
+)
+
+const primaryLoginSuccess = computed(() =>
+  isAndroidNative.value ? biometricLoginSuccess.value : passkeyLoginSuccess.value,
+)
+
+const primaryLoginError = computed(() =>
+  isAndroidNative.value ? biometricLoginError.value : passkeyLoginError.value,
+)
+
+const loginCardTitle = computed(() => (isAndroidNative.value ? 'Biometrische Anmeldung' : 'Passkey-Anmeldung'))
+
+const loginCardSubtitle = computed(() =>
+  isAndroidNative.value
+    ? 'Melde dich mit dem nativen Android-Biometrie-Dialog an.'
+    : 'Melde dich mit einem bereits registrierten Passkey an.',
+)
+
+const loginCardInfoMessage = computed(() =>
+  isAndroidNative.value
+    ? 'Die Anmeldung verwendet den nativen Android-Biometrie-Dialog. Es werden keine Passwörter oder biometrischen Daten serverseitig gespeichert.'
+    : 'Die Anmeldung nutzt WebAuthn beziehungsweise Passkeys im Browser. Je nach Gerät kann die Bestätigung über Windows Hello, PIN, Fingerabdruck, Gesichtserkennung oder Gerätecode erfolgen.',
+)
+
+const accessCardInfoMessage = computed(() =>
+  isAndroidNative.value
+    ? 'Die Anmeldung auf Android verwendet die native biometrische Authentifizierung des Geräts. Es werden keine Passkeys im Browser registriert.'
+    : 'In diesem Prototyp wird eine Anmeldung über WebAuthn beziehungsweise Passkeys untersucht. Die eigentliche Bestätigung erfolgt durch den Browser oder das Betriebssystem.',
+)
+
+const showAndroidBiometricWarning = computed(() => isAndroidNative.value && !biometricAvailable.value)
+
+const showWebAuthnUnavailableMessage = computed(() => isWebPlatform.value && !webauthnSupported.value)
+
+const showWebPlatformWarning = computed(() => isWebPlatform.value && webauthnSupported.value && !platformAvailable.value)
+
+const showBiometricActivationPrompt = computed(
+  () => isAndroidNative.value && Boolean(pendingLoginUser.value) && !biometricEnabled.value,
+)
 </script>
 
 <template>
@@ -272,8 +521,7 @@ async function handleLoginWithPasskey(): Promise<void> {
         </ul>
 
         <p class="text-[0.78rem] text-[#9ca3af] mt-1 leading-relaxed max-w-[360px]">
-          Die Anmeldung dient in diesem Prototyp der Untersuchung einer
-          browserbasierten Passkey-Authentifizierung.
+            {{ isAndroidNative ? 'Die Anmeldung nutzt auf Android die native biometrische Authentifizierung des Geräts.' : 'Die Anmeldung dient in diesem Prototyp der Untersuchung einer browserbasierten Passkey-Authentifizierung.' }}
         </p>
       </aside>
 
@@ -291,21 +539,20 @@ async function handleLoginWithPasskey(): Promise<void> {
 
           <template #content>
             <Message severity="info" :closable="false" class="mb-4">
-              In diesem Prototyp wird eine Anmeldung über WebAuthn beziehungsweise
-              Passkeys untersucht. Die eigentliche Bestätigung erfolgt durch den
-              Browser oder das Betriebssystem.
+              {{ accessCardInfoMessage }}
             </Message>
 
             <div class="flex flex-col gap-3">
               <Button
-                label="Mit Passkey anmelden"
-                icon="pi pi-key"
+                :label="loginButtonLabel"
+                :icon="isAndroidNative ? 'pi pi-shield' : 'pi pi-key'"
                 class="w-full justify-center"
                 type="button"
                 @click="showLogin"
               />
 
               <Button
+                v-if="!isAndroidNative"
                 label="Passkey registrieren"
                 icon="pi pi-user-plus"
                 severity="secondary"
@@ -346,11 +593,11 @@ async function handleLoginWithPasskey(): Promise<void> {
         <!-- ═══ LOGIN MODE ═══ -->
         <Card v-else-if="mode === 'login'" class="access-card">
           <template #title>
-            Passkey-Anmeldung
+            {{ loginCardTitle }}
           </template>
 
           <template #subtitle>
-            Melde dich mit einem bereits registrierten Passkey an.
+            {{ loginCardSubtitle }}
           </template>
 
           <template #content>
@@ -364,13 +611,11 @@ async function handleLoginWithPasskey(): Promise<void> {
             />
 
             <Message severity="info" :closable="false" class="mb-4">
-              Die Anmeldung nutzt WebAuthn beziehungsweise Passkeys im Browser.
-              Je nach Gerät kann die Bestätigung über Windows Hello, PIN,
-              Fingerabdruck, Gesichtserkennung oder Gerätecode erfolgen.
+              {{ loginCardInfoMessage }}
             </Message>
 
             <Message
-              v-if="!webauthnSupported"
+              v-if="showWebAuthnUnavailableMessage"
               severity="warn"
               :closable="false"
               class="mb-3"
@@ -379,13 +624,22 @@ async function handleLoginWithPasskey(): Promise<void> {
             </Message>
 
             <Message
-              v-else-if="!platformAvailable"
+              v-else-if="showWebPlatformWarning"
               severity="warn"
               :closable="false"
               class="mb-3"
             >
               WebAuthn wird unterstützt, aber es wurde kein Plattform-Authenticator
               erkannt. Je nach Gerät kann die Anmeldung dennoch eingeschränkt möglich sein.
+            </Message>
+
+            <Message
+              v-else-if="showAndroidBiometricWarning"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              Biometrische Anmeldung ist auf diesem Gerät aktuell nicht verfügbar.
             </Message>
 
             <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
@@ -403,37 +657,78 @@ async function handleLoginWithPasskey(): Promise<void> {
             </div>
 
             <Button
-              label="Mit Passkey anmelden"
-              icon="pi pi-key"
-              :loading="passkeyLoginLoading"
-              :disabled="!webauthnSupported || passkeyLoginLoading"
+              :label="loginButtonLabel"
+              :icon="isAndroidNative ? 'pi pi-shield' : 'pi pi-key'"
+              :loading="primaryLoginLoading"
+              :disabled="primaryLoginDisabled"
               class="w-full justify-center"
               type="button"
-              @click="handleLoginWithPasskey"
+              @click="isAndroidNative ? handleBiometricLogin() : handleLoginWithPasskey()"
             />
 
             <Message
-              v-if="passkeyLoginSuccess"
+              v-if="primaryLoginSuccess"
               severity="success"
               :closable="false"
               class="mt-3"
             >
-              {{ passkeyLoginSuccess }}
+              {{ primaryLoginSuccess }}
             </Message>
 
             <Message
-              v-if="passkeyLoginError"
+              v-if="primaryLoginError"
               severity="error"
               :closable="false"
               class="mt-3"
             >
-              {{ passkeyLoginError }}
+              {{ primaryLoginError }}
             </Message>
+
+            <div
+              v-if="showBiometricActivationPrompt"
+              class="mt-4 rounded-[var(--sg-radius-md)] border border-[var(--sg-border)] bg-[var(--sg-primary-soft)]/30 p-4 flex flex-col gap-3"
+            >
+              <div>
+                <p class="text-sm font-semibold text-[#111827] m-0">
+                  Biometrische Anmeldung für dieses Gerät
+                </p>
+
+                <p class="text-sm text-[#4b5563] m-0 mt-1 leading-relaxed">
+                  Es wird nur ein lokaler Aktivierungsstatus gespeichert. Es werden keine
+                  Passwörter oder biometrischen Daten in der App abgelegt.
+                </p>
+              </div>
+
+              <Button
+                label="Biometrie aktivieren"
+                icon="pi pi-shield"
+                :loading="biometricActivationLoading"
+                class="w-full justify-center"
+                type="button"
+                @click="handleEnableBiometricLogin"
+              />
+
+              <Message
+                v-if="biometricActivationSuccess"
+                severity="success"
+                :closable="false"
+              >
+                {{ biometricActivationSuccess }}
+              </Message>
+
+              <Message
+                v-if="biometricActivationError"
+                severity="error"
+                :closable="false"
+              >
+                {{ biometricActivationError }}
+              </Message>
+            </div>
           </template>
         </Card>
 
         <!-- ═══ REGISTER MODE ═══ -->
-        <Card v-else class="access-card">
+        <Card v-else-if="!isAndroidNative" class="access-card">
           <template #title>
             Passkey registrieren
           </template>
@@ -549,6 +844,31 @@ async function handleLoginWithPasskey(): Promise<void> {
               severity="secondary"
               outlined
               class="w-full justify-center mt-3"
+              type="button"
+              @click="showLogin"
+            />
+          </template>
+        </Card>
+
+        <Card v-else class="access-card">
+          <template #title>
+            Diese Funktion ist auf Android deaktiviert
+          </template>
+
+          <template #subtitle>
+            Die Android-App nutzt den nativen Biometrie-Login und keine Passkey-Registrierung.
+          </template>
+
+          <template #content>
+            <Message severity="info" :closable="false" class="mb-4">
+              Auf Android wird nur der biometrische Anmeldeweg verwendet. Eine separate
+              Passkey-Registrierung ist nicht vorgesehen.
+            </Message>
+
+            <Button
+              label="Zur Anmeldung wechseln"
+              icon="pi pi-shield"
+              class="w-full justify-center"
               type="button"
               @click="showLogin"
             />
