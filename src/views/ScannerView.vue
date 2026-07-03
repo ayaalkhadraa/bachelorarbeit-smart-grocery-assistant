@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import {
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerAndroidScanningLibrary,
+  CapacitorBarcodeScannerTypeHint
+} from '@capacitor/barcode-scanner'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -143,42 +149,72 @@ const simulatedProducts: SimulatedProduct[] = [
 
 const UNKNOWN_BARCODE = '9999999999999'
 
-function startFakeScan() {
+function handleScanResult(barcode: string) {
+  scannedBarcode.value = barcode
+  scannedProduct.value = simulatedProducts.find((item) => item.barcode === barcode) ?? null
+  isScanning.value = false
+  scanCompleted.value = true
+
+  const entry: ScanHistoryEntry = {
+    id: Date.now(),
+    barcode,
+    productName: scannedProduct.value?.name ?? 'Unbekannt',
+    category: scannedProduct.value?.category ?? '-',
+    result: scannedProduct.value ? 'Gefunden' : 'Nicht gefunden',
+    target: 'Noch nicht übernommen',
+    scannedAt: new Date().toLocaleTimeString('de-DE', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  scanHistory.value.unshift(entry)
+  scanHistory.value = scanHistory.value.slice(0, 10)
+  saveScanHistory()
+}
+
+async function startScan() {
   isScanning.value = true
   scanCompleted.value = false
   scannedBarcode.value = ''
   scannedProduct.value = null
   showFeedback.value = false
+  cameraError.value = ''
+
+  if (Capacitor.getPlatform() === 'android') {
+    try {
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint: CapacitorBarcodeScannerTypeHint.ALL,
+        scanButton: true,
+        scanText: 'Barcode scannen',
+        scanInstructions: 'Barcode vor die Kamera halten',
+        android: {
+          scanningLibrary: CapacitorBarcodeScannerAndroidScanningLibrary.MLKIT
+        }
+      })
+
+      if (!result.ScanResult) {
+        isScanning.value = false
+        return
+      }
+
+      handleScanResult(result.ScanResult)
+      return
+    } catch {
+      isScanning.value = false
+      cameraError.value = 'Der Barcode-Scanner konnte nicht gestartet werden.'
+      return
+    }
+  }
 
   setTimeout(() => {
     const roll = Math.random()
-    if (roll < 0.15) {
-      scannedBarcode.value = UNKNOWN_BARCODE
-      scannedProduct.value = null
-    } else {
-      const randomIndex = Math.floor(Math.random() * simulatedProducts.length)
-      const found = simulatedProducts[randomIndex]!
-      scannedBarcode.value = found.barcode
-      scannedProduct.value = found
-    }
-    isScanning.value = false
-    scanCompleted.value = true
+    const barcode =
+      roll < 0.15
+        ? UNKNOWN_BARCODE
+        : simulatedProducts[Math.floor(Math.random() * simulatedProducts.length)]!.barcode
 
-    const entry: ScanHistoryEntry = {
-      id: Date.now(),
-      barcode: scannedBarcode.value,
-      productName: scannedProduct.value?.name ?? 'Unbekannt',
-      category: scannedProduct.value?.category ?? '-',
-      result: scannedProduct.value ? 'Gefunden' : 'Nicht gefunden',
-      target: 'Noch nicht übernommen',
-      scannedAt: new Date().toLocaleTimeString('de-DE', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-    scanHistory.value.unshift(entry)
-    scanHistory.value = scanHistory.value.slice(0, 10)
-    saveScanHistory()
+    handleScanResult(barcode)
   }, 1500)
 }
 
@@ -303,7 +339,7 @@ function clearScanHistory() {
           <video v-if="cameraActive" ref="videoRef" class="camera-preview" autoplay playsinline muted></video>
 
           <p class="m-0 text-sm text-muted-color leading-relaxed">
-            Im Web-Prototyp kann die Kamera geöffnet werden. Die Barcode-Erkennung wird weiterhin simuliert.
+            Auf Android wird der native Barcode-Scanner verwendet. Im Web bleibt die bestehende Simulation aktiv.
           </p>
 
           <Message v-if="cameraError" severity="warn" :closable="false">{{ cameraError }}</Message>
@@ -314,7 +350,7 @@ function clearScanHistory() {
               icon="pi pi-barcode"
               :loading="isScanning"
               :disabled="isScanning"
-              @click="startFakeScan"
+              @click="startScan"
             />
             <Button
               v-if="scanCompleted"
