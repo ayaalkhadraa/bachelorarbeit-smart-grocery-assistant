@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Card from 'primevue/card'
@@ -32,6 +34,14 @@ const userCoords = ref<{
   lng: number
   accuracy: number
 } | null>(null)
+
+type LocationPosition = {
+  coords: {
+    latitude: number
+    longitude: number
+    accuracy: number
+  }
+}
 
 // ── Haversine formula ──────────────────────────────────────
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -86,55 +96,105 @@ const nearestStore = computed(() => {
 })
 
 // ── Geolocation ───────────────────────────────────────────
-function requestLocation() {
+async function applyPosition(position: LocationPosition) {
+  userCoords.value = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracy: position.coords.accuracy,
+  }
+  locationEnabled.value = true
+  await nextTick()
+  initMap()
+}
+
+function setBrowserLocationError(error: GeolocationPositionError) {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      locationError.value =
+        'Standort-Zugriff wurde abgelehnt. Bitte erlaube den Standort-Zugriff in den Browser-Einstellungen.'
+      break
+    case error.POSITION_UNAVAILABLE:
+      locationError.value = 'Standort konnte nicht ermittelt werden.'
+      break
+    case error.TIMEOUT:
+      locationError.value = 'Standort-Anfrage hat zu lange gedauert.'
+      break
+    default:
+      locationError.value = 'Unbekannter Fehler bei der Standortbestimmung.'
+  }
+}
+
+function setNativeLocationError(error: unknown) {
+  const code = typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: string }).code : undefined
+
+  switch (code) {
+    case 'OS-PLUG-GLOC-0003':
+      locationError.value =
+        'Standort-Zugriff wurde abgelehnt. Bitte erlaube den Standort-Zugriff in den Android-App-Berechtigungen.'
+      break
+    case 'OS-PLUG-GLOC-0007':
+      locationError.value = 'Standortdienste sind auf dem Gerät deaktiviert.'
+      break
+    case 'OS-PLUG-GLOC-0009':
+      locationError.value = 'Standortfreigabe wurde vom Gerät abgelehnt.'
+      break
+    case 'OS-PLUG-GLOC-0010':
+      locationError.value = 'Standort-Anfrage hat zu lange gedauert.'
+      break
+    default:
+      locationError.value = 'Unbekannter Fehler bei der Standortbestimmung.'
+  }
+}
+
+async function requestLocation() {
   locationError.value = ''
-
-  if (!('geolocation' in navigator)) {
-    locationError.value = 'Dein Browser unterstützt keine Standortbestimmung.'
-    return
-  }
-
-  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost'
-  if (!isSecure) {
-    locationError.value =
-      'Standortbestimmung erfordert HTTPS oder localhost. Bitte öffne die App über https:// oder localhost.'
-    return
-  }
-
   locationLoading.value = true
 
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      userCoords.value = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      }
-      locationEnabled.value = true
-      locationLoading.value = false
-      await nextTick()
-      initMap()
-    },
-    (error) => {
-      locationLoading.value = false
-      locationEnabled.value = false
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          locationError.value =
-            'Standort-Zugriff wurde abgelehnt. Bitte erlaube den Standort-Zugriff in den Browser-Einstellungen.'
-          break
-        case error.POSITION_UNAVAILABLE:
-          locationError.value = 'Standort konnte nicht ermittelt werden.'
-          break
-        case error.TIMEOUT:
-          locationError.value = 'Standort-Anfrage hat zu lange gedauert.'
-          break
-        default:
-          locationError.value = 'Unbekannter Fehler bei der Standortbestimmung.'
-      }
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  )
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await Geolocation.requestPermissions()
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      })
+      await applyPosition(position)
+      return
+    }
+
+    if (!('geolocation' in navigator)) {
+      locationError.value = 'Dein Browser unterstützt keine Standortbestimmung.'
+      return
+    }
+
+    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost'
+    if (!isSecure) {
+      locationError.value =
+        'Standortbestimmung erfordert HTTPS oder localhost. Bitte öffne die App über https:// oder localhost.'
+      return
+    }
+
+    const position = await new Promise<LocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      })
+    })
+    await applyPosition(position)
+  } catch (error) {
+    locationEnabled.value = false
+
+    if (Capacitor.isNativePlatform()) {
+      setNativeLocationError(error)
+    } else if (typeof error === 'object' && error !== null && 'code' in error) {
+      setBrowserLocationError(error as GeolocationPositionError)
+    } else {
+      locationError.value = 'Unbekannter Fehler bei der Standortbestimmung.'
+    }
+  } finally {
+    locationLoading.value = false
+  }
 }
 
 function resetLocation() {

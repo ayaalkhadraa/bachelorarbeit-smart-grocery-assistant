@@ -18,6 +18,7 @@
     "@capacitor/android": "^8.4.1",
     "@capacitor/barcode-scanner": "^3.0.2",
     "@capacitor/core": "^8.4.1",
+    "@capacitor/geolocation": "^8.2.0",
     "@primevue/themes": "^4.5.4",
     "@simplewebauthn/browser": "^13.3.0",
     "@tailwindcss/vite": "^4.3.1",
