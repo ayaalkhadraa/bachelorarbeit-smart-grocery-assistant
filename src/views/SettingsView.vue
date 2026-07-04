@@ -8,7 +8,6 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Message from 'primevue/message'
-import Divider from 'primevue/divider'
 import { useGroceryStore } from '@/stores/groceryStore'
 import NotificationCard from '@/components/NotificationCard.vue'
 import {
@@ -26,6 +25,12 @@ onMounted(() => {
 })
 
 const isAndroidNative = computed(() => Capacitor.getPlatform() === 'android')
+
+type DemoUser = {
+  email: string
+  name: string
+  loginMethod?: string
+}
 
 const username = ref('Demo User')
 const language = ref('Deutsch')
@@ -45,6 +50,7 @@ const languages = ['Deutsch', 'Englisch', 'Arabisch']
 
 const SETTINGS_KEY = 'smart-grocery-settings'
 const BIOMETRIC_ENABLED_KEY = 'smart-grocery-biometric-enabled'
+const BIOMETRIC_STORAGE_KEY = 'smart-grocery-biometric-login'
 
 function loadBiometricSettings(): void {
   try {
@@ -57,6 +63,34 @@ function loadBiometricSettings(): void {
 function saveBiometricSettings(enabled: boolean): void {
   localStorage.setItem(BIOMETRIC_ENABLED_KEY, String(enabled))
   biometricEnabled.value = enabled
+}
+
+function loadCurrentUserContext(): DemoUser | null {
+  try {
+    const raw = localStorage.getItem('smart-grocery-demo-user')
+
+    if (!raw) {
+      return null
+    }
+
+    const parsed = JSON.parse(raw) as Partial<DemoUser>
+
+    if (typeof parsed.email !== 'string' || typeof parsed.name !== 'string') {
+      return null
+    }
+
+    return {
+      email: parsed.email,
+      name: parsed.name,
+      loginMethod: typeof parsed.loginMethod === 'string' ? parsed.loginMethod : undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
+function saveBiometricProfile(profile: DemoUser): void {
+  localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(profile))
 }
 
 async function syncBiometricAvailability(): Promise<void> {
@@ -107,6 +141,14 @@ async function activateBiometricLogin(): Promise<void> {
       description: 'Bestätige die Aktivierung mit Fingerabdruck, Gesicht oder Gerätecode.',
     })
 
+    const currentUser = loadCurrentUserContext()
+
+    if (!currentUser) {
+      biometricActivationError.value = 'Bitte zuerst normal anmelden und Biometrie aktivieren.'
+      return
+    }
+
+    saveBiometricProfile(currentUser)
     saveBiometricSettings(true)
     biometricActivationSuccess.value = 'Biometrische Anmeldung wurde auf diesem Gerät aktiviert.'
   } catch (error) {
@@ -172,6 +214,7 @@ function resetPrototypeData(): void {
   localStorage.removeItem('smart-grocery-items')
   localStorage.removeItem(SETTINGS_KEY)
   localStorage.removeItem(BIOMETRIC_ENABLED_KEY)
+  localStorage.removeItem(BIOMETRIC_STORAGE_KEY)
   groceryStore.loadItems()
   biometricEnabled.value = false
   biometricActivationSuccess.value = ''
@@ -192,72 +235,75 @@ function resetPrototypeData(): void {
     </Message>
 
     <Card v-if="isAndroidNative" class="mt-6 mb-6">
-      <template #title>Biometrische Anmeldung</template>
+      <template #title>Mobile Funktionen</template>
       <template #content>
-        <p class="text-[0.85rem] text-muted-color m-0 mb-4">
-          Aktiviere hier die lokale biometrische Anmeldung für die Android-Capacitor-Version.
-        </p>
+        <div class="space-y-4">
+          <section class="rounded-[var(--sg-radius-md)] border border-[var(--sg-border)] bg-[var(--sg-surface-2)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h3 class="text-[0.95rem] font-semibold m-0">Biometrie</h3>
+                <p class="text-[0.82rem] text-muted-color m-0 mt-1">
+                  Lokale Anmeldung auf diesem Android-Gerät.
+                </p>
+              </div>
+              <Button
+                :label="biometricEnabled ? 'Aktiviert' : 'Aktivieren'"
+                icon="pi pi-shield"
+                :loading="biometricActivationLoading"
+                :disabled="biometricActivationLoading || biometricEnabled"
+                severity="secondary"
+                outlined
+                size="small"
+                type="button"
+                @click="activateBiometricLogin"
+              />
+            </div>
 
-        <div class="flex items-center justify-between gap-4 mb-3">
-          <span class="text-[0.95rem] flex-1">Biometrie aktivieren</span>
-          <Button
-            :label="biometricEnabled ? 'Biometrie aktiviert' : 'Biometrie aktivieren'"
-            icon="pi pi-shield"
-            :loading="biometricActivationLoading"
-            :disabled="biometricActivationLoading || biometricEnabled"
-            severity="secondary"
-            outlined
-            type="button"
-            @click="activateBiometricLogin"
-          />
+            <p class="text-[0.82rem] m-0 mt-3 text-muted-color">
+              Status:
+              <span v-if="biometricEnabled" class="text-[var(--sg-success)] font-medium">Aktiviert</span>
+              <span v-else-if="biometricAvailable" class="font-medium">Verfügbar</span>
+              <span v-else class="text-[var(--sg-warning)] font-medium">Nicht verfügbar</span>
+            </p>
+
+            <Message v-if="biometricActivationSuccess" severity="success" :closable="false" class="mt-3 mb-0">
+              {{ biometricActivationSuccess }}
+            </Message>
+
+            <Message v-if="biometricActivationError" severity="error" :closable="false" class="mt-3 mb-0">
+              {{ biometricActivationError }}
+            </Message>
+          </section>
+
+          <section class="rounded-[var(--sg-radius-md)] border border-[var(--sg-border)] bg-[var(--sg-surface-2)] p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h3 class="text-[0.95rem] font-semibold m-0">Ablauf-Erinnerung</h3>
+                <p class="text-[0.82rem] text-muted-color m-0 mt-1">
+                  Testet die lokale Erinnerung mit aktuellen Produkten.
+                </p>
+              </div>
+              <Button
+                label="Testen"
+                icon="pi pi-bell"
+                :loading="expiryReminderLoading"
+                severity="secondary"
+                outlined
+                size="small"
+                type="button"
+                @click="testExpiryReminder"
+              />
+            </div>
+
+            <Message v-if="expiryReminderSuccess" severity="success" :closable="false" class="mt-3 mb-0">
+              {{ expiryReminderSuccess }}
+            </Message>
+
+            <Message v-if="expiryReminderError" severity="warn" :closable="false" class="mt-3 mb-0">
+              {{ expiryReminderError }}
+            </Message>
+          </section>
         </div>
-
-        <Message v-if="biometricEnabled" severity="success" :closable="false" class="mb-3">
-          Die biometrische Anmeldung ist lokal aktiviert und bleibt nach dem Logout erhalten.
-        </Message>
-
-        <Message v-else-if="biometricAvailable" severity="info" :closable="false" class="mb-3">
-          Das Gerät unterstützt Biometrie. Du kannst die Anmeldung jetzt aktivieren.
-        </Message>
-
-        <Message v-else severity="warn" :closable="false" class="mb-3">
-          Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.
-        </Message>
-
-        <Message v-if="biometricActivationSuccess" severity="success" :closable="false" class="mt-2">
-          {{ biometricActivationSuccess }}
-        </Message>
-
-        <Message v-if="biometricActivationError" severity="error" :closable="false" class="mt-2">
-          {{ biometricActivationError }}
-        </Message>
-
-        <Divider class="my-5" />
-
-        <div class="flex items-center justify-between gap-4 mb-3">
-          <span class="text-[0.95rem] flex-1">Ablauf-Erinnerung testen</span>
-          <Button
-            label="Ablauf-Erinnerung testen"
-            icon="pi pi-bell"
-            :loading="expiryReminderLoading"
-            severity="secondary"
-            outlined
-            type="button"
-            @click="testExpiryReminder"
-          />
-        </div>
-
-        <Message severity="info" :closable="false" class="mb-3">
-          Es werden die vorhandenen bald ablaufenden Produkte aus dem aktuellen Store verwendet.
-        </Message>
-
-        <Message v-if="expiryReminderSuccess" severity="success" :closable="false" class="mt-2">
-          {{ expiryReminderSuccess }}
-        </Message>
-
-        <Message v-if="expiryReminderError" severity="warn" :closable="false" class="mt-2">
-          {{ expiryReminderError }}
-        </Message>
       </template>
     </Card>
 

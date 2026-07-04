@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { computed, ref, onMounted, nextTick } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { NativeBiometric } from '@capgo/capacitor-native-biometric'
 
@@ -24,11 +24,6 @@ type DemoUser = {
   loginMethod?: string
 }
 
-type BiometricProfile = {
-  email: string
-  name: string
-}
-
 const BIOMETRIC_STORAGE_KEY = 'smart-grocery-biometric-login'
 const BIOMETRIC_ENABLED_KEY = 'smart-grocery-biometric-enabled'
 
@@ -44,7 +39,7 @@ const isAndroidNative = computed(() => Capacitor.getPlatform() === 'android')
 const isWebPlatform = computed(() => !isAndroidNative.value)
 
 const biometricAvailable = ref(false)
-const biometricProfile = ref<BiometricProfile | null>(null)
+const biometricProfile = ref<DemoUser | null>(null)
 const biometricEnabled = ref(false)
 const pendingLoginUser = ref<DemoUser | null>(null)
 
@@ -102,7 +97,7 @@ function loadBiometricProfile(): void {
       return
     }
 
-    const parsed = JSON.parse(raw) as Partial<BiometricProfile>
+    const parsed = JSON.parse(raw) as Partial<DemoUser>
 
     if (typeof parsed.email !== 'string' || typeof parsed.name !== 'string') {
       biometricProfile.value = null
@@ -112,6 +107,7 @@ function loadBiometricProfile(): void {
     biometricProfile.value = {
       email: parsed.email,
       name: parsed.name,
+      loginMethod: typeof parsed.loginMethod === 'string' ? parsed.loginMethod : undefined,
     }
   } catch {
     biometricProfile.value = null
@@ -126,7 +122,7 @@ function loadBiometricActivationState(): void {
   }
 }
 
-function saveBiometricProfile(profile: BiometricProfile): void {
+function saveBiometricProfile(profile: DemoUser): void {
   localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(profile))
   biometricProfile.value = profile
 }
@@ -224,6 +220,7 @@ async function handleEnableBiometricLogin(): Promise<void> {
     const biometricUser = {
       email: pendingLoginUser.value.email,
       name: pendingLoginUser.value.name,
+      loginMethod: pendingLoginUser.value.loginMethod,
     }
 
     saveBiometricProfile(biometricUser)
@@ -244,8 +241,6 @@ async function handleBiometricLogin(): Promise<void> {
   biometricLoginError.value = ''
   biometricLoginLoading.value = true
 
-  await nextTick()
-
   try {
     if (!isAndroidNative.value) {
       biometricLoginError.value = 'Die native biometrische Anmeldung ist nur auf Android verfügbar.'
@@ -262,6 +257,11 @@ async function handleBiometricLogin(): Promise<void> {
       return
     }
 
+    if (!biometricProfile.value) {
+      biometricLoginError.value = 'Bitte zuerst normal anmelden und Biometrie aktivieren.'
+      return
+    }
+
     const verified = await verifyNativeBiometric('Bestätige die biometrische Anmeldung für FreshFlow.')
 
     if (!verified) {
@@ -269,14 +269,9 @@ async function handleBiometricLogin(): Promise<void> {
       return
     }
 
-    const loginUser = {
-      email: email.value.trim(),
-      name: email.value.trim() || 'Android User',
-    }
-
     persistDemoUser({
-      email: loginUser.email,
-      name: loginUser.name,
+      email: biometricProfile.value.email,
+      name: biometricProfile.value.name,
       loginMethod: 'biometric-native',
     })
 
@@ -386,7 +381,7 @@ const primaryLoginLoading = computed(() =>
 
 const primaryLoginDisabled = computed(() =>
   isAndroidNative.value
-    ? biometricLoginLoading.value
+    ? biometricLoginLoading.value || !biometricAvailable.value || !biometricEnabled.value || !biometricProfile.value
     : !webauthnSupported.value || passkeyLoginLoading.value,
 )
 
@@ -419,6 +414,10 @@ const accessCardInfoMessage = computed(() =>
 )
 
 const showAndroidBiometricWarning = computed(() => isAndroidNative.value && !biometricAvailable.value)
+
+const showAndroidBiometricProfileMissing = computed(
+  () => isAndroidNative.value && biometricEnabled.value && !biometricProfile.value,
+)
 
 const showWebAuthnUnavailableMessage = computed(() => isWebPlatform.value && !webauthnSupported.value)
 
@@ -634,6 +633,15 @@ const showBiometricActivationPrompt = computed(
             </Message>
 
             <Message
+              v-if="isAndroidNative && !biometricProfile"
+              severity="warn"
+              :closable="false"
+              class="mb-3"
+            >
+              Bitte zuerst normal anmelden und Biometrie aktivieren.
+            </Message>
+
+            <Message
               v-else-if="showAndroidBiometricWarning"
               severity="warn"
               :closable="false"
@@ -642,7 +650,7 @@ const showBiometricActivationPrompt = computed(
               Biometrische Anmeldung ist auf diesem Gerät aktuell nicht verfügbar.
             </Message>
 
-            <div class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
+            <div v-if="!isAndroidNative" class="form-field flex flex-col gap-[0.4rem] mb-[0.85rem]">
               <label for="login-email" class="text-sm font-medium text-[#374151]">
                 E-Mail
               </label>

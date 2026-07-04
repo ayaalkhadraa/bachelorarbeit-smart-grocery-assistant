@@ -83,6 +83,10 @@ const currentPageTitle = computed(() => pageTitles[route.path] ?? 'Smart Grocery
 
 const isPublicRoute = computed(() => route.path === '/login')
 
+const isAndroidNative = computed(
+  () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+)
+
 </script>
 
 <template>
@@ -122,7 +126,12 @@ const isPublicRoute = computed(() => route.path === '/login')
 
         <div class="flex items-center gap-2 flex-wrap">
           <template v-if="currentUser">
-            <Button icon="pi pi-user" :label="currentUser.name" text disabled />
+            <Button
+              icon="pi pi-user"
+              :label="isAndroidNative ? 'Angemeldet' : currentUser.name"
+              text
+              disabled
+            />
             <Button
               label="Logout"
               icon="pi pi-sign-out"
