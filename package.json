@@ -19,6 +19,7 @@
     "@capacitor/barcode-scanner": "^3.0.2",
     "@capacitor/core": "^8.4.1",
     "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/local-notifications": "^8.2.0",
     "@capgo/capacitor-native-biometric": "^8.5.0",
     "@primevue/themes": "^4.5.4",
     "@simplewebauthn/browser": "^13.3.0",

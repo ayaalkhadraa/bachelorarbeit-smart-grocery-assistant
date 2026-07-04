@@ -11,6 +11,11 @@ import Message from 'primevue/message'
 import Divider from 'primevue/divider'
 import { useGroceryStore } from '@/stores/groceryStore'
 import NotificationCard from '@/components/NotificationCard.vue'
+import {
+  checkLocalNotificationPermission,
+  requestLocalNotificationPermission,
+  scheduleExpiryReminderNotification,
+} from '@/services/localNotificationService'
 
 const groceryStore = useGroceryStore()
 onMounted(() => {
@@ -32,6 +37,9 @@ const biometricAvailable = ref(false)
 const biometricActivationLoading = ref(false)
 const biometricActivationSuccess = ref('')
 const biometricActivationError = ref('')
+const expiryReminderLoading = ref(false)
+const expiryReminderSuccess = ref('')
+const expiryReminderError = ref('')
 
 const languages = ['Deutsch', 'Englisch', 'Arabisch']
 
@@ -112,6 +120,43 @@ async function activateBiometricLogin(): Promise<void> {
   }
 }
 
+async function testExpiryReminder(): Promise<void> {
+  expiryReminderSuccess.value = ''
+  expiryReminderError.value = ''
+
+  if (!isAndroidNative.value) {
+    expiryReminderError.value = 'Ablauf-Erinnerungen sind nur in der Android-App verfügbar.'
+    return
+  }
+
+  expiryReminderLoading.value = true
+
+  try {
+    const permissionGranted =
+      (await checkLocalNotificationPermission()) || (await requestLocalNotificationPermission())
+
+    if (!permissionGranted) {
+      expiryReminderError.value = 'Die Berechtigung für lokale Benachrichtigungen wurde nicht erteilt.'
+      return
+    }
+
+    const result = await scheduleExpiryReminderNotification(groceryStore.items)
+
+    if (result.count === 0) {
+      expiryReminderError.value = result.message
+      return
+    }
+
+    expiryReminderSuccess.value = result.message
+  } catch (error) {
+    console.error('[SettingsView] expiry reminder test failed', error)
+    expiryReminderError.value =
+      error instanceof Error ? error.message : 'Die Ablauf-Erinnerung konnte nicht ausgelöst werden.'
+  } finally {
+    expiryReminderLoading.value = false
+  }
+}
+
 function saveSettings(): void {
   const settings = {
     username: username.value,
@@ -185,6 +230,33 @@ function resetPrototypeData(): void {
 
         <Message v-if="biometricActivationError" severity="error" :closable="false" class="mt-2">
           {{ biometricActivationError }}
+        </Message>
+
+        <Divider class="my-5" />
+
+        <div class="flex items-center justify-between gap-4 mb-3">
+          <span class="text-[0.95rem] flex-1">Ablauf-Erinnerung testen</span>
+          <Button
+            label="Ablauf-Erinnerung testen"
+            icon="pi pi-bell"
+            :loading="expiryReminderLoading"
+            severity="secondary"
+            outlined
+            type="button"
+            @click="testExpiryReminder"
+          />
+        </div>
+
+        <Message severity="info" :closable="false" class="mb-3">
+          Es werden die vorhandenen bald ablaufenden Produkte aus dem aktuellen Store verwendet.
+        </Message>
+
+        <Message v-if="expiryReminderSuccess" severity="success" :closable="false" class="mt-2">
+          {{ expiryReminderSuccess }}
+        </Message>
+
+        <Message v-if="expiryReminderError" severity="warn" :closable="false" class="mt-2">
+          {{ expiryReminderError }}
         </Message>
       </template>
     </Card>

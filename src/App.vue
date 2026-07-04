@@ -2,8 +2,12 @@
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
+import { Capacitor } from '@capacitor/core'
 import { useGroceryStore } from '@/stores/groceryStore'
 import { checkExpiringProducts } from '@/services/notificationService'
+import {
+  scheduleStartupExpiryReminderNotification,
+} from '@/services/localNotificationService'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,9 +32,20 @@ function logout(): void {
 
 onMounted(() => {
   groceryStore.loadItems()
+
+  if (Capacitor.getPlatform() === 'android') {
+    void scheduleStartupExpiryReminderNotification(groceryStore.items)
+
+    return
+  }
+
   // Check for expiring products on app start if permission is already granted.
   // NotificationCard handles the same check when the settings page is opened.
-  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+  if (
+    typeof window !== 'undefined' &&
+    'Notification' in window &&
+    Notification.permission === 'granted'
+  ) {
     checkExpiringProducts(groceryStore.items)
   }
 })
