@@ -9,6 +9,7 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import InputText from 'primevue/inputtext'
+import ToggleSwitch from 'primevue/toggleswitch'
 
 // Fix default Leaflet marker icon paths broken by bundlers
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -197,6 +198,15 @@ async function requestLocation() {
   }
 }
 
+async function handleLocationToggle(enabled: boolean) {
+  if (enabled) {
+    await requestLocation()
+    return
+  }
+
+  resetLocation()
+}
+
 function resetLocation() {
   locationEnabled.value = false
   userCoords.value = null
@@ -263,7 +273,6 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
     <!-- Header -->
     <div class="stores-header">
       <h1>Supermärkte</h1>
-      <p>Übersicht über nahegelegene Einkaufsmöglichkeiten.</p>
     </div>
 
     <!-- Location Card -->
@@ -271,26 +280,20 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
       <template #title>Standort</template>
       <template #content>
         <div class="location-content">
-          <template v-if="!locationEnabled">
-            <p>Standort wurde noch nicht aktiviert.</p>
-            <Button
-              label="Standort freigeben"
-              icon="pi pi-map-marker"
-              :loading="locationLoading"
-              @click="requestLocation"
+          <div class="location-toggle-row">
+            <span class="location-toggle-label">Standort freigeben</span>
+            <ToggleSwitch
+              class="location-toggle"
+              :modelValue="locationEnabled"
+              :disabled="locationLoading"
+              aria-label="Standortfreigabe umschalten"
+              @update:modelValue="handleLocationToggle"
             />
-          </template>
+          </div>
 
-          <template v-else>
+          <template v-if="locationEnabled">
             <p>Genauigkeit: {{ userCoords?.accuracy?.toFixed(0) }} m</p>
             <Tag value="Standort aktiv" severity="success" />
-            <Button
-              label="Zurücksetzen"
-              icon="pi pi-refresh"
-              severity="secondary"
-              outlined
-              @click="resetLocation"
-            />
           </template>
 
           <Message v-if="locationError" severity="error" :closable="false" class="location-error">
@@ -304,7 +307,7 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
     <div class="search-section">
       <InputText
         v-model="searchTerm"
-        placeholder="Nach Supermarkt, Adresse oder Typ suchen..."
+        placeholder="suchen..."
         class="w-full"
       />
     </div>
@@ -420,6 +423,18 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
   gap: 0.75rem;
 }
 
+.location-toggle-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.location-toggle-label {
+  font-weight: 500;
+}
+
 .location-content p {
   margin: 0;
   flex: 1 1 100%;
@@ -427,6 +442,20 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
 
 .location-error {
   flex: 1 1 100%;
+}
+
+:deep(.location-toggle.p-toggleswitch-checked .p-toggleswitch-slider) {
+  background: var(--sg-success, #16a34a);
+  border-color: var(--sg-success, #16a34a);
+}
+
+:deep(.location-toggle .p-toggleswitch-slider) {
+  background: var(--sg-surface-0, #fff);
+  border-color: var(--p-surface-300, #d1d5db);
+}
+
+:deep(.location-toggle .p-toggleswitch-handle) {
+  background: var(--sg-surface-0, #fff);
 }
 
 .search-section {

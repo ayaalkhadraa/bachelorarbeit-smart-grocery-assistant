@@ -4,6 +4,7 @@ import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tag from 'primevue/tag'
+import ToggleSwitch from 'primevue/toggleswitch'
 import {
   registerServiceWorker,
   requestNotificationPermission,
@@ -34,6 +35,8 @@ const props = defineProps<{ products: GroceryItem[] }>()
 
 const productCheckDone = ref(false)
 const productCheckError = ref('')
+
+const isEnabled = computed(() => status.value === 'granted')
 
 // ── Environment checks (computed once, stable) ────────────
 const isSecure = computed(() =>
@@ -122,6 +125,23 @@ async function activate() {
   }
 }
 
+function deactivate() {
+  status.value = 'idle'
+  errorMessage.value = ''
+  productCheckDone.value = false
+  productCheckError.value = ''
+  expiryResult.value = { soonExpiring: [], alreadyExpired: [] }
+}
+
+async function handleToggle(enabled: boolean): Promise<void> {
+  if (!enabled) {
+    deactivate()
+    return
+  }
+
+  await activate()
+}
+
 // ── Test notification ─────────────────────────────────────
 function sendTest() {
   showTestNotification()
@@ -150,17 +170,18 @@ function sendProductNotifications() {
   <Card>
     <template #title>
       <div class="notif-title-row">
-        <span>Push-Benachrichtigungen</span>
-        <Tag
-          v-if="status === 'granted'"
-          value="Aktiv"
-          severity="success"
-        />
-        <Tag
-          v-else-if="status === 'denied'"
-          value="Blockiert"
-          severity="danger"
-        />
+        <span>Browser-Benachrichtigungen</span>
+        <div class="notif-toggle-wrap">
+          <ToggleSwitch
+            class="notif-toggle"
+            :modelValue="isEnabled"
+            :disabled="status === 'loading' || status === 'unsupported' || status === 'insecure'"
+            aria-label="Browser-Benachrichtigungen umschalten"
+            @update:modelValue="handleToggle"
+          />
+          <Tag v-if="status === 'denied'" value="Blockiert" severity="danger" />
+          <Tag v-else-if="isEnabled" value="Aktiv" severity="success" />
+        </div>
       </div>
     </template>
 
@@ -169,14 +190,14 @@ function sendProductNotifications() {
 
         <!-- Insecure context -->
         <Message v-if="status === 'insecure'" severity="warn" :closable="false">
-          Push-Benachrichtigungen erfordern <strong>HTTPS</strong> oder <strong>localhost</strong>.
+          Browser-Benachrichtigungen erfordern <strong>HTTPS</strong> oder <strong>localhost</strong>.
           Bitte öffne die App über <code>https://</code> oder <code>http://localhost</code>.
         </Message>
 
         <!-- Unsupported browser -->
         <Message v-else-if="status === 'unsupported'" severity="warn" :closable="false">
-          Dein Browser unterstützt keine Push-Benachrichtigungen
-          (fehlt: Notification API, Service Worker oder Push API).
+          Dein Browser unterstützt keine Browser-Benachrichtigungen
+          (fehlt: Notification API oder Service Worker).
         </Message>
 
         <!-- Denied -->
@@ -207,24 +228,18 @@ function sendProductNotifications() {
             Aktiviere Browser-Benachrichtigungen, um Erinnerungen für bald ablaufende
             Produkte und Einkaufslisten zu erhalten.
           </p>
-          <Button
-            label="Benachrichtigungen aktivieren"
-            icon="pi pi-bell"
-            :loading="loading"
-            @click="activate"
-          />
         </template>
 
         <!-- Granted -->
         <template v-else-if="status === 'granted'">
           <Message severity="success" :closable="false">
-            Benachrichtigungen sind aktiviert. Du erhältst Erinnerungen direkt im Browser.
+            Browser-Benachrichtigungen sind aktiviert. Du erhältst Erinnerungen direkt im Browser.
           </Message>
 
           <div class="notif-sub-hint">
-  <i class="pi pi-info-circle" />
-  Lokale Browser-Benachrichtigungen aktiv.
-</div>
+            <i class="pi pi-info-circle" />
+            Lokale Browser-Benachrichtigungen aktiv.
+          </div>
 
           <div class="notif-actions">
             <Button
@@ -241,13 +256,6 @@ function sendProductNotifications() {
               outlined
               :loading="checkingProducts"
               @click="sendProductNotifications"
-            />
-            <Button
-              label="Deaktivieren"
-              icon="pi pi-bell-slash"
-              severity="danger"
-              text
-              @click="status = 'idle'"
             />
           </div>
 
@@ -318,6 +326,13 @@ function sendProductNotifications() {
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.notif-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .notif-content {
@@ -344,6 +359,20 @@ function sendProductNotifications() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+:deep(.notif-toggle.p-toggleswitch-checked .p-toggleswitch-slider) {
+  background: var(--sg-success, #16a34a);
+  border-color: var(--sg-success, #16a34a);
+}
+
+:deep(.notif-toggle .p-toggleswitch-slider) {
+  background: var(--sg-surface-0, #fff);
+  border-color: var(--sg-border, #d1d5db);
+}
+
+:deep(.notif-toggle .p-toggleswitch-handle) {
+  background: var(--sg-surface-0, #fff);
 }
 
 .notif-expiry-list {

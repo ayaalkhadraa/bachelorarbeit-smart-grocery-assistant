@@ -65,6 +65,14 @@ function saveBiometricSettings(enabled: boolean): void {
   biometricEnabled.value = enabled
 }
 
+function deactivateBiometricLogin(): void {
+  localStorage.removeItem(BIOMETRIC_ENABLED_KEY)
+  localStorage.removeItem(BIOMETRIC_STORAGE_KEY)
+  biometricEnabled.value = false
+  biometricActivationSuccess.value = 'Biometrische Anmeldung wurde auf diesem Gerät deaktiviert.'
+  biometricActivationError.value = ''
+}
+
 function loadCurrentUserContext(): DemoUser | null {
   try {
     const raw = localStorage.getItem('smart-grocery-demo-user')
@@ -114,6 +122,7 @@ async function activateBiometricLogin(): Promise<void> {
 
   if (!isAndroidNative.value) {
     biometricActivationError.value = 'Die Biometrie-Aktivierung ist nur in der Android-App verfügbar.'
+    biometricEnabled.value = false
     return
   }
 
@@ -124,6 +133,7 @@ async function activateBiometricLogin(): Promise<void> {
 
     if (!biometricAvailable.value) {
       biometricActivationError.value = 'Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.'
+      biometricEnabled.value = false
       return
     }
 
@@ -131,6 +141,7 @@ async function activateBiometricLogin(): Promise<void> {
 
     if (!available.isAvailable) {
       biometricActivationError.value = 'Biometrische Anmeldung ist auf diesem Gerät nicht verfügbar.'
+      biometricEnabled.value = false
       return
     }
 
@@ -145,6 +156,7 @@ async function activateBiometricLogin(): Promise<void> {
 
     if (!currentUser) {
       biometricActivationError.value = 'Bitte zuerst normal anmelden und Biometrie aktivieren.'
+      biometricEnabled.value = false
       return
     }
 
@@ -153,6 +165,7 @@ async function activateBiometricLogin(): Promise<void> {
     biometricActivationSuccess.value = 'Biometrische Anmeldung wurde auf diesem Gerät aktiviert.'
   } catch (error) {
     console.error('[SettingsView] biometric activation failed', error)
+    biometricEnabled.value = false
     biometricActivationError.value =
       error instanceof Error
         ? error.message
@@ -160,6 +173,17 @@ async function activateBiometricLogin(): Promise<void> {
   } finally {
     biometricActivationLoading.value = false
   }
+}
+
+async function handleBiometricToggle(enabled: boolean): Promise<void> {
+  biometricEnabled.value = enabled
+
+  if (enabled) {
+    await activateBiometricLogin()
+    return
+  }
+
+  deactivateBiometricLogin()
 }
 
 async function testExpiryReminder(): Promise<void> {
@@ -239,30 +263,26 @@ function resetPrototypeData(): void {
       <template #content>
         <div class="space-y-4">
           <section class="rounded-[var(--sg-radius-md)] border border-[var(--sg-border)] bg-[var(--sg-surface-2)] p-4">
-            <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center justify-between gap-4">
               <div class="min-w-0">
-                <h3 class="text-[0.95rem] font-semibold m-0">Biometrie</h3>
+                <h3 class="text-[0.95rem] font-semibold m-0">Biometrische Authentifizierung</h3>
                 <p class="text-[0.82rem] text-muted-color m-0 mt-1">
                   Lokale Anmeldung auf diesem Android-Gerät.
                 </p>
               </div>
-              <Button
-                :label="biometricEnabled ? 'Aktiviert' : 'Aktivieren'"
-                icon="pi pi-shield"
-                :loading="biometricActivationLoading"
-                :disabled="biometricActivationLoading || biometricEnabled"
-                severity="secondary"
-                outlined
-                size="small"
-                type="button"
-                @click="activateBiometricLogin"
+              <ToggleSwitch
+                class="sg-toggle"
+                :modelValue="biometricEnabled"
+                :disabled="biometricActivationLoading"
+                aria-label="Biometrische Authentifizierung umschalten"
+                @update:modelValue="handleBiometricToggle"
               />
             </div>
 
             <p class="text-[0.82rem] m-0 mt-3 text-muted-color">
               Status:
-              <span v-if="biometricEnabled" class="text-[var(--sg-success)] font-medium">Aktiviert</span>
-              <span v-else-if="biometricAvailable" class="font-medium">Verfügbar</span>
+              <span v-if="biometricEnabled" class="text-[var(--sg-success)] font-medium">Eingeschaltet</span>
+              <span v-else-if="biometricAvailable" class="font-medium">Ausgeschaltet</span>
               <span v-else class="text-[var(--sg-warning)] font-medium">Nicht verfügbar</span>
             </p>
 
@@ -379,6 +399,20 @@ function resetPrototypeData(): void {
 .form-field :deep(.p-inputtext),
 .form-field :deep(.p-select) {
   width: 100%;
+}
+
+:deep(.sg-toggle.p-toggleswitch-checked .p-toggleswitch-slider) {
+  background: var(--sg-success);
+  border-color: var(--sg-success);
+}
+
+:deep(.sg-toggle .p-toggleswitch-slider) {
+  background: var(--sg-surface-0, #fff);
+  border-color: var(--sg-border);
+}
+
+:deep(.sg-toggle .p-toggleswitch-handle) {
+  background: var(--sg-surface-0, #fff);
 }
 
 /* ── Mobile: full-width buttons ──────────────────────────── */

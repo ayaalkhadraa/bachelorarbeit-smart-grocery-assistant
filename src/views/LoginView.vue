@@ -433,7 +433,7 @@ const showBiometricActivationPrompt = computed(
     <!-- ═══ WELCOME MODE ═══ -->
     <div
       v-if="mode === 'welcome'"
-      class="flex flex-col items-center text-center gap-4 max-w-[500px] w-full py-8 px-6"
+      class="flex flex-col items-center text-center gap-4 max-w-[500px] w-full py-6 px-4 md:py-8 md:px-6"
     >
       <div class="brand-badge">
         <i class="pi pi-leaf" />
@@ -482,27 +482,27 @@ const showBiometricActivationPrompt = computed(
     <!-- ═══ ACCESS / LOGIN / REGISTER ═══ -->
     <div
       v-else
-      class="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+      class="w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start md:items-center"
     >
       <!-- ── Brand panel ───────────────────── -->
-      <aside class="flex flex-col gap-[0.85rem] py-4 items-center text-center md:items-start md:text-left">
+      <aside class="flex flex-col gap-[0.75rem] py-2 md:py-4 items-center text-center md:items-start md:text-left">
         <div class="brand-badge">
           <i class="pi pi-leaf" />
         </div>
 
-        <h1 class="text-[2.6rem] font-extrabold m-0 text-[#111827] tracking-tight leading-[1.1]">
+        <h1 class="text-[2.15rem] md:text-[2.6rem] font-extrabold m-0 text-[#111827] tracking-tight leading-[1.05] md:leading-[1.1]">
           FreshFlow
         </h1>
 
-        <p class="text-[1.05rem] font-semibold text-[#16a34a] m-0">
+        <p class="text-[0.98rem] md:text-[1.05rem] font-semibold text-[#16a34a] m-0">
           Smart Grocery Assistant
         </p>
 
-        <p class="text-[0.95rem] text-[#4b5563] m-0 leading-relaxed max-w-[380px]">
+        <p class="text-[0.9rem] md:text-[0.95rem] text-[#4b5563] m-0 leading-relaxed max-w-[380px]">
           Verwalte Lebensmittel, Einkaufsliste und Ablaufdaten.
         </p>
 
-        <ul class="list-none mt-2 mb-1 p-0 flex flex-col gap-[0.7rem]">
+        <ul class="list-none mt-1 md:mt-2 mb-1 p-0 flex flex-col gap-[0.55rem] md:gap-[0.7rem]">
           <li class="flex items-center gap-[0.65rem] text-[0.9rem] text-[#374151] font-medium">
             <i class="pi pi-check-circle text-base text-[#16a34a] shrink-0 w-[1.1rem] text-center" />
             <span>Lebensmittel im Blick behalten</span>
@@ -519,7 +519,7 @@ const showBiometricActivationPrompt = computed(
           </li>
         </ul>
 
-        <p class="text-[0.78rem] text-[#9ca3af] mt-1 leading-relaxed max-w-[360px]">
+        <p class="text-[0.72rem] md:text-[0.78rem] text-[#9ca3af] mt-1 leading-relaxed max-w-[360px]">
             {{ isAndroidNative ? 'Die Anmeldung nutzt auf Android die native biometrische Authentifizierung des Geräts.' : 'Die Anmeldung dient in diesem Prototyp der Untersuchung einer browserbasierten Passkey-Authentifizierung.' }}
         </p>
       </aside>
@@ -600,14 +600,7 @@ const showBiometricActivationPrompt = computed(
           </template>
 
           <template #content>
-            <Button
-              label="Zurück"
-              icon="pi pi-arrow-left"
-              text
-              class="mb-2 pl-0"
-              type="button"
-              @click="showAccess"
-            />
+            <Button label="Zurück" icon="pi pi-arrow-left" text class="mb-2 pl-0" type="button" @click="showAccess" />
 
             <Message severity="info" :closable="false" class="mb-4">
               {{ loginCardInfoMessage }}
@@ -746,14 +739,7 @@ const showBiometricActivationPrompt = computed(
           </template>
 
           <template #content>
-            <Button
-              label="Zurück"
-              icon="pi pi-arrow-left"
-              text
-              class="mb-2 pl-0"
-              type="button"
-              @click="showAccess"
-            />
+            <Button label="Zurück" icon="pi pi-arrow-left" text class="mb-2 pl-0" type="button" @click="showAccess" />
 
             <Message severity="info" :closable="false" class="mb-4">
               Die Anwendung speichert keine biometrischen Daten. Die Verifikation
@@ -889,12 +875,13 @@ const showBiometricActivationPrompt = computed(
 
 <style scoped>
 .access-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.5rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 55%, #ecfdf5 100%);
+  overflow-x: hidden;
 }
 
 .brand-badge {
@@ -928,8 +915,12 @@ const showBiometricActivationPrompt = computed(
 
 @media (max-width: 760px) {
   .access-page {
-    align-items: flex-start;
-    padding: 1.5rem 1rem;
+    align-items: center;
+    padding: 0.75rem;
+  }
+
+  .access-card {
+    border-radius: 14px !important;
   }
 }
 </style>

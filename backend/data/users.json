@@ -83,12 +83,12 @@
     "id": "bf1f66f8-6360-494b-bd73-bf4eda04b9e1",
     "email": "Karam@gmail.com",
     "name": "Karam",
-    "currentChallenge": "aFjt95yE6y-6-Vgb9v84ybbD8H_RaHCPjkcOT2gWY3o",
+    "currentChallenge": null,
     "credentials": [
       {
         "id": "16iIwQ5Qu1S64xFbqsPcEiODDcEDQdIPu9SJD75fOD8",
         "publicKey": "pQECAyYgASFYIP8WxtDSbCwYhti8rK9deJACtSE4hutv6LNQBbC1frvAIlggd23_-IA-Z0S-3bJEzkDH7RdUpfnOVuTDHpejoMxCVTc",
-        "counter": 2,
+        "counter": 4,
         "transports": [
           "internal"
         ]

@@ -1,13 +1,13 @@
 /**
  * notificationService.ts
  *
- * Push Notification service for Smart Grocery Assistant – Web variant.
+ * Browser notification service for Smart Grocery Assistant – Web variant.
  *
  * ── Architecture ───────────────────────────────────────────────────────────────
  * This file implements the WEB variant using:
  *   - Browser Notification API
  *   - Service Worker API  (public/sw.js)
- *   - Web Push API        (PushManager + VAPID)
+ *   - Push API            (optional future backend integration)
  *
  * The INotificationProvider interface is defined here so that a future
  * MobileNotificationProvider can implement the same contract without
@@ -99,7 +99,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) {
-    throw new Error('Dieser Browser unterstützt keine Push-Benachrichtigungen.')
+    throw new Error('Dieser Browser unterstützt keine Browser-Benachrichtigungen.')
   }
 
   if (Notification.permission === 'granted') return 'granted'
@@ -110,7 +110,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 // ── subscribeToPush ───────────────────────────────────────────────────────────
 /**
- * Subscribes the browser to Web Push via the registered Service Worker.
+ * Subscribes the browser to notification delivery via the registered Service Worker.
  *
  * After a successful subscription the endpoint + keys should be sent to
  * your backend so it can later push messages via the web-push library.
@@ -356,7 +356,7 @@ export function notifyExpiringProducts(products: ExpiringProduct[]): ExpiryCheck
 /**
  * Web implementation of INotificationProvider.
  *
- * Uses: Service Worker + Browser Notification API + Web Push API (VAPID).
+ * Uses: Service Worker + Browser Notification API.
  *
  * MOBILE (future):
  *   Do NOT add Capacitor/FCM imports here.

@@ -177,20 +177,15 @@ function saveEditedItem() {
     <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div>
         <h1 class="m-0 text-4xl font-bold text-color">Inventar</h1>
-        <p class="m-0 mt-1 text-muted-color">Alle gespeicherten Lebensmittel im Überblick.</p>
       </div>
 
-      <Button
-  label="Neues Produkt"
-  icon="pi pi-plus"
-  @click="showAddDialog = true"
-/>
+      <Button label="Neues Produkt" icon="pi pi-plus" @click="showAddDialog = true" />
     </section>
 
     <section class="mb-6">
       <IconField class="w-full max-w-[500px]">
        <InputIcon class="pi pi-search" />
-       <InputText v-model="searchTerm" placeholder="Nach Name oder Kategorie suchen..." />
+       <InputText v-model="searchTerm" placeholder="suchen..." />
        </IconField>
     </section>
 
@@ -286,10 +281,10 @@ function saveEditedItem() {
                 disabled
               />
               <Button
-                label="Entfernen"
                 icon="pi pi-times"
                 severity="secondary"
                 text
+                aria-label="Aus Einkaufsliste entfernen"
                 @click="groceryStore.removeFromShoppingList(item.id)"
               />
             </template>

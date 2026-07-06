@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import { Capacitor } from '@capacitor/core'
 import { useGroceryStore } from '@/stores/groceryStore'
@@ -14,6 +14,30 @@ const router = useRouter()
 const groceryStore = useGroceryStore()
 
 const currentUser = ref<{ email: string; name: string; loginMethod?: string } | null>(null)
+const canShowSidebarCollapse = ref(false)
+const isDesktopSidebarCollapsed = ref(false)
+
+let desktopCollapseMediaQueryList: MediaQueryList | null = null
+let landscapeCollapseMediaQueryList: MediaQueryList | null = null
+
+function syncSidebarCollapseState(): void {
+  const matchesDesktop = desktopCollapseMediaQueryList?.matches ?? false
+  const matchesLandscapeWide = landscapeCollapseMediaQueryList?.matches ?? false
+
+  canShowSidebarCollapse.value = matchesDesktop || matchesLandscapeWide
+
+  if (!canShowSidebarCollapse.value) {
+    isDesktopSidebarCollapsed.value = false
+  }
+}
+
+function toggleDesktopSidebar(): void {
+  if (!canShowSidebarCollapse.value) {
+    return
+  }
+
+  isDesktopSidebarCollapsed.value = !isDesktopSidebarCollapsed.value
+}
 
 function loadCurrentUser(): void {
   try {
@@ -31,6 +55,16 @@ function logout(): void {
 }
 
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    desktopCollapseMediaQueryList = window.matchMedia('(min-width: 1024px)')
+    landscapeCollapseMediaQueryList = window.matchMedia('(orientation: landscape) and (min-width: 768px)')
+
+    desktopCollapseMediaQueryList.addEventListener('change', syncSidebarCollapseState)
+    landscapeCollapseMediaQueryList.addEventListener('change', syncSidebarCollapseState)
+  }
+
+  syncSidebarCollapseState()
+  window.addEventListener('resize', syncSidebarCollapseState)
   groceryStore.loadItems()
 
   if (Capacitor.getPlatform() === 'android') {
@@ -48,6 +82,13 @@ onMounted(() => {
   ) {
     checkExpiringProducts(groceryStore.items)
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', syncSidebarCollapseState)
+
+  desktopCollapseMediaQueryList?.removeEventListener('change', syncSidebarCollapseState)
+  landscapeCollapseMediaQueryList?.removeEventListener('change', syncSidebarCollapseState)
 })
 
 watch(
@@ -97,22 +138,41 @@ const isAndroidNative = computed(
   <div v-else class="min-h-screen flex flex-col md:flex-row bg-[var(--sg-background)]">
 
     <!-- ── Sidebar (Desktop) ────────────────────────────────── -->
-    <aside class="hidden md:flex flex-col w-60 shrink-0 sticky top-0 h-screen overflow-y-auto bg-[var(--sg-surface)] border-r border-[var(--sg-border)] [box-shadow:var(--sg-shadow-sm)]">
-      <div class="flex flex-col gap-[0.2rem] px-5 py-6 border-b border-[var(--sg-border)]">
-        <span class="text-[1.1rem] font-bold text-[var(--sg-primary)] tracking-[-0.01em]">FreshFlow</span>
-        <span class="text-[0.7rem] text-[var(--sg-muted)] uppercase tracking-[0.08em]">Smart Grocery Assistant</span>
+    <aside
+      class="hidden md:flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto bg-[var(--sg-surface)] border-r border-[var(--sg-border)] [box-shadow:var(--sg-shadow-sm)] transition-[width] duration-200 ease-out"
+      :class="canShowSidebarCollapse && isDesktopSidebarCollapsed ? 'lg:w-20' : 'w-60 lg:w-60'"
+    >
+      <div class="flex items-center justify-between gap-3 px-5 py-6 border-b border-[var(--sg-border)]" :class="canShowSidebarCollapse && isDesktopSidebarCollapsed ? 'lg:px-3' : ''">
+        <div class="min-w-0" :class="canShowSidebarCollapse && isDesktopSidebarCollapsed ? 'lg:hidden' : ''">
+          <span class="text-[1.1rem] font-bold text-[var(--sg-primary)] tracking-[-0.01em]">FreshFlow</span>
+          <span class="block text-[0.7rem] text-[var(--sg-muted)] uppercase tracking-[0.08em]">Smart Grocery Assistant</span>
+        </div>
+
+        <Button
+          v-if="canShowSidebarCollapse"
+          :icon="isDesktopSidebarCollapsed ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+          text
+          rounded
+          size="small"
+          class="shrink-0"
+          aria-label="Sidebar einklappen oder ausklappen"
+          @click="toggleDesktopSidebar"
+        />
       </div>
 
-      <nav class="p-3 flex flex-col gap-1">
+      <nav class="p-3 flex flex-col gap-1" :class="canShowSidebarCollapse && isDesktopSidebarCollapsed ? 'lg:px-2' : ''">
         <RouterLink
           v-for="item in navItems"
           :key="item.path"
           :to="item.path"
-          class="flex items-center gap-3 px-[0.9rem] py-[0.65rem] rounded-[var(--sg-radius-md)] no-underline text-[var(--sg-text)] text-[0.9rem] transition-[background,color] duration-150 hover:bg-[var(--sg-primary-soft)] hover:text-[var(--sg-primary)]"
-          :class="{ 'bg-[var(--sg-primary-soft)] text-[var(--sg-primary)] font-semibold': isActive(item.path) }"
+          class="flex items-center rounded-[var(--sg-radius-md)] no-underline text-[var(--sg-text)] text-[0.9rem] transition-[background,color] duration-150 hover:bg-[var(--sg-primary-soft)] hover:text-[var(--sg-primary)]"
+          :class="[
+            { 'bg-[var(--sg-primary-soft)] text-[var(--sg-primary)] font-semibold': isActive(item.path) },
+            canShowSidebarCollapse && isDesktopSidebarCollapsed ? 'lg:justify-center lg:px-3 lg:py-[0.8rem]' : 'gap-3 px-[0.9rem] py-[0.65rem]'
+          ]"
         >
           <i :class="item.icon" class="text-base w-[1.1rem] text-center shrink-0"></i>
-          <span>{{ item.label }}</span>
+          <span v-if="!(canShowSidebarCollapse && isDesktopSidebarCollapsed)">{{ item.label }}</span>
         </RouterLink>
       </nav>
     </aside>
@@ -126,12 +186,6 @@ const isAndroidNative = computed(
 
         <div class="flex items-center gap-2 flex-wrap">
           <template v-if="currentUser">
-            <Button
-              icon="pi pi-user"
-              :label="isAndroidNative ? 'Angemeldet' : currentUser.name"
-              text
-              disabled
-            />
             <Button
               label="Logout"
               icon="pi pi-sign-out"
