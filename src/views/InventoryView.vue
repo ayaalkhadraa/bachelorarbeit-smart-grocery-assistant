@@ -263,31 +263,13 @@ function saveEditedItem() {
               @click="groceryStore.deleteItem(item.id)"
             />
 
-            <template v-if="!item.inShoppingList">
-              <Button
-                label="Zur Liste"
-                icon="pi pi-shopping-cart"
-                severity="success"
-                outlined
-                @click="groceryStore.addToShoppingList(item.id)"
-              />
-            </template>
-
-            <template v-else>
-              <Button
-                label="In Liste"
-                icon="pi pi-check"
-                severity="success"
-                disabled
-              />
-              <Button
-                icon="pi pi-times"
-                severity="secondary"
-                text
-                aria-label="Aus Einkaufsliste entfernen"
-                @click="groceryStore.removeFromShoppingList(item.id)"
-              />
-            </template>
+            <Button
+              label="Zur Einkaufsliste"
+              icon="pi pi-shopping-cart"
+              :severity="item.inShoppingList ? 'success' : 'secondary'"
+              :outlined="!item.inShoppingList"
+              @click="groceryStore.toggleInShoppingList(item.id)"
+            />
           </div>
         </template>
       </Card>

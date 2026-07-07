@@ -88,7 +88,7 @@
       {
         "id": "16iIwQ5Qu1S64xFbqsPcEiODDcEDQdIPu9SJD75fOD8",
         "publicKey": "pQECAyYgASFYIP8WxtDSbCwYhti8rK9deJACtSE4hutv6LNQBbC1frvAIlggd23_-IA-Z0S-3bJEzkDH7RdUpfnOVuTDHpejoMxCVTc",
-        "counter": 4,
+        "counter": 5,
         "transports": [
           "internal"
         ]
