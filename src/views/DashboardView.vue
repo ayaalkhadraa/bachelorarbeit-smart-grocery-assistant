@@ -107,6 +107,16 @@ const shoppingWeather = {
   <main class="w-full">
     <section class="mb-6">
       <h1 class="m-0 text-4xl font-bold text-color">Dashboard</h1>
+      <!-- Temporary comparison access for Ionic dashboard testing -->
+      <RouterLink to="/ionic-dashboard" class="inline-flex no-underline mt-3">
+        <Button
+          label="Ionic-Vergleich öffnen"
+          size="small"
+          severity="secondary"
+          outlined
+          class="px-3 py-2"
+        />
+      </RouterLink>
     </section>
 
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -179,7 +180,20 @@ function saveEditedItem() {
         <h1 class="m-0 text-4xl font-bold text-color">Inventar</h1>
       </div>
 
-      <Button label="Neues Produkt" icon="pi pi-plus" @click="showAddDialog = true" />
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Temporary comparison access for Ionic inventory testing -->
+        <RouterLink to="/ionic-inventory" class="no-underline">
+          <Button
+            label="Ionic-Inventar öffnen"
+            size="small"
+            severity="secondary"
+            outlined
+            class="px-3 py-2"
+          />
+        </RouterLink>
+
+        <Button label="Neues Produkt" icon="pi pi-plus" @click="showAddDialog = true" />
+      </div>
     </section>
 
     <section class="mb-6">

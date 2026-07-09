@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import DashboardView from '@/views/DashboardView.vue'
+import IonicDashboardView from '@/views/IonicDashboardView.vue'
+import IonicInventoryView from '@/views/IonicInventoryView.vue'
 import InventoryView from '@/views/InventoryView.vue'
 import ShoppingListView from '@/views/ShoppingListView.vue'
 import ScannerView from '@/views/ScannerView.vue'
@@ -14,12 +16,23 @@ const router = createRouter({
     {
       path: '/',
       name: 'dashboard',
+      alias: '/dashboard',
       component: DashboardView
+    },
+    {
+      path: '/ionic-dashboard',
+      name: 'ionic-dashboard',
+      component: IonicDashboardView
     },
     {
       path: '/inventory',
       name: 'inventory',
       component: InventoryView
+    },
+    {
+      path: '/ionic-inventory',
+      name: 'ionic-inventory',
+      component: IonicInventoryView
     },
     {
       path: '/shopping-list',

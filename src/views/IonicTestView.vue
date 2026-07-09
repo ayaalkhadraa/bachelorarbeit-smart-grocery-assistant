@@ -16,6 +16,10 @@
     <ion-button>
       Ionic Button
     </ion-button>
+
+    <ion-button router-link="/ionic-dashboard" fill="outline" class="mt-3">
+      Zur Ionic Dashboard-Version
+    </ion-button>
   </div>
 </template>
 
