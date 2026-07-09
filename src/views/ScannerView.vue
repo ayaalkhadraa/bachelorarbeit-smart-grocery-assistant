@@ -325,6 +325,14 @@ function clearScanHistory() {
     <div>
       <h1 class="m-0 mb-1 text-[1.75rem] font-bold">Scanner</h1>
       <p class="m-0 text-muted-color">Produkte per Barcode erfassen und zum Inventar hinzufügen.</p>
+      <div class="mt-3">
+        <RouterLink
+          to="/ionic-scanner"
+          class="inline-flex items-center rounded-[var(--sg-radius-md)] border border-[var(--sg-border)] bg-[var(--sg-surface)] px-4 py-2 text-sm font-semibold text-[var(--sg-primary)] transition-colors hover:bg-[var(--sg-primary-soft)]"
+        >
+          Ionic-Scanner öffnen
+        </RouterLink>
+      </div>
     </div>
 
     <!-- Scan-Bereich -->
