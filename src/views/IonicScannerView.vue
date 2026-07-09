@@ -30,6 +30,7 @@ import {
 import { useGroceryStore } from '@/stores/groceryStore'
 
 const groceryStore = useGroceryStore()
+type AddItemPayload = Parameters<typeof groceryStore.addItem>[0]
 
 interface SimulatedProduct {
   barcode: string
@@ -102,6 +103,44 @@ function setToast(color: 'success' | 'warning' | 'danger' | 'medium', message: s
   toastColor.value = color
   toastMessage.value = message
   showToast.value = true
+}
+
+function buildInventoryAddPayload(
+  product: SimulatedProduct,
+  barcode: string,
+  quantity: number,
+  expiryDate: string
+): AddItemPayload {
+  return {
+    name: product.name.trim(),
+    category: product.category,
+    quantity: Math.max(1, Number(quantity) || 1),
+    unit: 'Stück',
+    expiryDate: expiryDate.trim(),
+    location: 'Küche',
+    favorite: false,
+    inShoppingList: false,
+    bought: false,
+    barcode
+  }
+}
+
+function buildShoppingListAddPayload(
+  product: SimulatedProduct,
+  barcode: string
+): AddItemPayload {
+  return {
+    name: product.name.trim(),
+    category: product.category,
+    quantity: 1,
+    unit: 'Stück',
+    expiryDate: '',
+    location: '',
+    favorite: false,
+    inShoppingList: true,
+    bought: false,
+    barcode
+  }
 }
 
 function getSimulatedProduct(barcode: string): SimulatedProduct | null {
@@ -276,18 +315,29 @@ function addProductToInventory(
     return false
   }
 
-  groceryStore.addItem({
-    name: product.name,
-    category: product.category,
-    quantity,
-    unit: 'Stück',
-    expiryDate,
-    location: 'Küche',
-    favorite: false,
-    inShoppingList: false,
-    bought: false,
-    barcode
-  })
+  const safeQuantity = Math.max(1, Number(quantity) || 0)
+  const safeExpiryDate = expiryDate.trim()
+
+  if (!safeQuantity) {
+    setToast('warning', 'Bitte eine gültige Menge angeben.')
+    return false
+  }
+
+  if (!safeExpiryDate) {
+    setToast('warning', 'Bitte ein Ablaufdatum angeben, bevor du das Produkt speicherst.')
+    return false
+  }
+
+  const beforeCount = groceryStore.items.length
+  groceryStore.addItem(
+    buildInventoryAddPayload(product, barcode, safeQuantity, safeExpiryDate)
+  )
+  const added = groceryStore.items.length > beforeCount
+
+  if (!added) {
+    setToast('danger', 'Das Produkt konnte nicht im Inventar gespeichert werden.')
+    return false
+  }
 
   updateHistoryTarget(barcode, 'Inventar')
   setToast('success', 'Produkt wurde dem Inventar hinzugefügt.')
@@ -304,18 +354,14 @@ function addProductToShoppingList(product: SimulatedProduct, barcode: string): b
     return false
   }
 
-  groceryStore.addItem({
-    name: product.name,
-    category: product.category,
-    quantity: 1,
-    unit: 'Stück',
-    expiryDate: '',
-    location: '',
-    favorite: false,
-    inShoppingList: true,
-    bought: false,
-    barcode
-  })
+  const beforeCount = groceryStore.items.length
+  groceryStore.addItem(buildShoppingListAddPayload(product, barcode))
+  const added = groceryStore.items.length > beforeCount
+
+  if (!added) {
+    setToast('danger', 'Das Produkt konnte nicht zur Einkaufsliste hinzugefügt werden.')
+    return false
+  }
 
   updateHistoryTarget(barcode, 'Einkaufsliste')
   setToast('success', 'Produkt wurde zur Einkaufsliste hinzugefügt.')
@@ -327,6 +373,16 @@ function confirmAddToInventory(): void {
 
   const quantity = Math.max(1, Number(dialogQuantityInput.value) || 1)
   const expiryDate = dialogExpiryDateInput.value.trim().split('T')[0] ?? ''
+  if (!quantity) {
+    setToast('warning', 'Bitte eine gültige Menge angeben.')
+    return
+  }
+
+  if (!expiryDate) {
+    setToast('warning', 'Bitte ein Ablaufdatum angeben.')
+    return
+  }
+
   const wasAdded = addProductToInventory(
     scannedProduct.value,
     scannedBarcode.value,
@@ -401,7 +457,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="p-6 flex flex-col gap-6">
+  <main class="p-6 flex flex-col gap-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <div class="flex flex-col gap-2">
       <div class="flex flex-wrap items-center gap-3">
         <h1 class="m-0 text-[1.75rem] font-bold">Ionic-Scanner</h1>
@@ -432,7 +488,7 @@ onBeforeUnmount(() => {
               <p class="m-0 text-sm text-muted-color">Barcode-Kamera bereit</p>
             </div>
 
-            <IonBadge v-if="isWebSimulation" color="medium" class="scan-preview-badge">Web-Simulation aktiv</IonBadge>
+            <IonBadge v-if="isWebSimulation" class="scan-preview-badge soft-status-badge soft-status-badge--neutral">Web-Simulation aktiv</IonBadge>
           </div>
 
           <IonText v-if="cameraError" color="warning">
@@ -458,7 +514,7 @@ onBeforeUnmount(() => {
         <IonCardHeader class="px-4 pt-4 pb-3">
           <div class="flex flex-wrap items-center gap-3">
             <IonCardTitle class="text-lg">Erkannter Barcode</IonCardTitle>
-            <IonBadge color="success">Scan erfolgreich</IonBadge>
+            <IonBadge class="soft-status-badge soft-status-badge--success">Scan erfolgreich</IonBadge>
           </div>
         </IonCardHeader>
         <IonCardContent class="px-4 pt-0 pb-4">
@@ -471,33 +527,33 @@ onBeforeUnmount(() => {
           <IonCardTitle class="text-lg">Produktdaten</IonCardTitle>
           <IonCardSubtitle>Produktdaten werden im Web-Prototyp simuliert.</IonCardSubtitle>
         </IonCardHeader>
-        <IonCardContent class="px-4 pt-0 pb-4">
+        <IonCardContent class="px-4 pt-0 pb-4 md:pb-5">
           <template v-if="scannedProduct">
-            <IonList lines="none" class="bg-transparent p-0">
-              <IonItem lines="none" class="px-0">
-                <IonLabel>
-                  <p class="text-xs uppercase tracking-[0.08em] text-muted-color">Produkt</p>
-                  <h3 class="m-0 text-base font-semibold text-color">{{ scannedProduct.name }}</h3>
-                </IonLabel>
-                <IonChip class="m-0" color="success">
+            <div class="product-data-grid">
+              <div class="product-data-row">
+                <span class="product-data-label">Produkt</span>
+                <span class="product-data-value">{{ scannedProduct.name }}</span>
+              </div>
+
+              <div class="product-data-row">
+                <span class="product-data-label">Kategorie</span>
+                <IonChip class="m-0 history-chip history-chip--category">
                   <IonLabel>{{ scannedProduct.category }}</IonLabel>
                 </IonChip>
-              </IonItem>
+              </div>
 
-              <IonItem v-if="scannedProduct.expiryDate" lines="none" class="px-0">
-                <IonLabel>
-                  <p class="text-xs uppercase tracking-[0.08em] text-muted-color">Ablaufdatum</p>
-                  <h3 class="m-0 text-base font-semibold text-color">{{ scannedProduct.expiryDate }}</h3>
-                </IonLabel>
-                <IonBadge color="medium">Simuliert</IonBadge>
-              </IonItem>
-            </IonList>
+              <div v-if="scannedProduct.expiryDate" class="product-data-row">
+                <span class="product-data-label">Ablaufdatum</span>
+                <span class="product-data-value">{{ scannedProduct.expiryDate }}</span>
+                <IonBadge class="soft-status-badge soft-status-badge--neutral">Simuliert</IonBadge>
+              </div>
+            </div>
 
-            <div class="mt-4 flex flex-wrap gap-3">
-              <IonButton class="freshflow-scan-button" color="success" @click="openAddToInventoryDialog">
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+              <IonButton class="freshflow-scan-button flex-1" color="success" @click="openAddToInventoryDialog">
                 Zum Inventar hinzufügen
               </IonButton>
-              <IonButton fill="outline" color="medium" @click="addScannedProductToShoppingList">
+              <IonButton class="flex-1" fill="outline" color="medium" @click="addScannedProductToShoppingList">
                 Zur Einkaufsliste hinzufügen
               </IonButton>
             </div>
@@ -721,9 +777,61 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
+.product-data-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.product-data-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.product-data-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-muted, #6b7280);
+}
+
+.product-data-value {
+  min-width: 0;
+  flex: 1;
+  text-align: right;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--sg-text, #1f2937);
+}
+
 :deep(ion-badge[color='success']) {
   --background: var(--freshflow-green);
   --color: #ffffff;
+}
+
+:deep(.soft-status-badge) {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: none;
+  --padding-start: 0.55rem;
+  --padding-end: 0.55rem;
+  --padding-top: 0.28rem;
+  --padding-bottom: 0.28rem;
+}
+
+:deep(.soft-status-badge--success) {
+  --background: rgba(22, 163, 74, 0.12);
+  --color: var(--freshflow-green-strong);
+}
+
+:deep(.soft-status-badge--neutral) {
+  --background: rgba(107, 114, 128, 0.12);
+  --color: #4b5563;
 }
 
 :deep(ion-button[color='success']) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { NativeBiometric } from '@capgo/capacitor-native-biometric'
@@ -526,6 +526,16 @@ const showBiometricActivationPrompt = computed(
 
       <!-- ── Card column ────────────────────────────────── -->
       <div class="w-full">
+        <!-- Temporary comparison access for Ionic login testing -->
+        <div class="mb-3 flex justify-end md:justify-start">
+          <RouterLink
+            to="/ionic-login"
+            class="inline-flex items-center rounded-full border border-[#bbf7d0] bg-white/85 px-3 py-1.5 text-[0.72rem] font-semibold text-[#166534] no-underline shadow-sm transition hover:bg-[#f0fdf4]"
+          >
+            Ionic-Anmeldung öffnen
+          </RouterLink>
+        </div>
+
         <!-- ═══ ACCESS MODE ═══ -->
         <Card v-if="mode === 'access'" class="access-card">
           <template #title>

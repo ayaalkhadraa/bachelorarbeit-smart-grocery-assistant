@@ -10,6 +10,7 @@ import IonicScannerView from '@/views/IonicScannerView.vue'
 import StoresView from '@/views/StoresView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import LoginView from '@/views/LoginView.vue'
+import IonicLoginView from '@/views/IonicLoginView.vue'
 import IonicTestView from '@/views/IonicTestView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,6 +67,11 @@ const router = createRouter({
       component: LoginView
     },
     {
+      path: '/ionic-login',
+      name: 'ionic-login',
+      component: IonicLoginView
+    },
+    {
       path: '/ionic-test',
       name: 'ionic-test',
       component: IonicTestView
@@ -82,7 +88,7 @@ function hasDemoUser(): boolean {
 }
 
 router.beforeEach((to) => {
-  const isPublicRoute = to.path === '/login'
+  const isPublicRoute = to.path === '/login' || to.path === '/ionic-login'
 
   if (!isPublicRoute && !hasDemoUser()) {
     return '/login'

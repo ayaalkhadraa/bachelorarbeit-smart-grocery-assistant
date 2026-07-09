@@ -18,6 +18,13 @@ const rpName = "FreshFlow";
 const rpID = "localhost";
 const expectedOrigin = "http://localhost:5173";
 
+// This prototype relaxes user verification because browser and device behavior can differ.
+// The app still verifies the challenge, RP ID, origin, credential id, public key, and counter.
+
+function normalizeEmail(email) {
+  return String(email).trim().toLowerCase();
+}
+
 function logRequest(label, req) {
   console.log(`[WebAuthn] ${label}`, {
     body: req.body,
@@ -31,17 +38,18 @@ router.post("/register/options", async (req, res) => {
     logRequest("POST /api/webauthn/register/options", req);
 
     const { email, name } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email) {
+    if (!normalizedEmail) {
       return res.status(400).json({
         error: "Email is required",
       });
     }
 
-    let user = await findUserByEmail(email);
+    let user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
-      user = await createUser(email, name);
+      user = await createUser(normalizedEmail, name);
       console.log("[WebAuthn] created user for registration", {
         id: user.id,
         email: user.email,
@@ -58,7 +66,7 @@ router.post("/register/options", async (req, res) => {
       authenticatorSelection: {
         authenticatorAttachment: "platform",
         residentKey: "preferred",
-        userVerification: "required",
+        userVerification: "preferred",
       },
     });
 
@@ -86,19 +94,20 @@ router.post("/register/verify", async (req, res) => {
     logRequest("POST /api/webauthn/register/verify", req);
 
     const { email, response } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
     console.log("[WebAuthn] /register/verify request", {
       email,
       responseId: response?.id,
     });
 
-    if (!email || !response) {
+    if (!normalizedEmail || !response) {
       return res.status(400).json({
         error: "Email and response are required",
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({
@@ -117,6 +126,7 @@ router.post("/register/verify", async (req, res) => {
       expectedChallenge: user.currentChallenge,
       expectedOrigin,
       expectedRPID: rpID,
+      requireUserVerification: false,
     });
 
     const { verified, registrationInfo } = verification;
@@ -172,16 +182,17 @@ router.post("/login/options", async (req, res) => {
     logRequest("POST /api/webauthn/login/options", req);
 
     const { email } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    console.log("[WebAuthn] /login/options request", { email });
+    console.log("[WebAuthn] /login/options request", { email: normalizedEmail });
 
-    if (!email) {
+    if (!normalizedEmail) {
       return res.status(400).json({
         error: "Email is required",
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user || !user.credentials || user.credentials.length === 0) {
       return res.status(404).json({
@@ -217,19 +228,20 @@ router.post("/login/verify", async (req, res) => {
     logRequest("POST /api/webauthn/login/verify", req);
 
     const { email, response } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
     console.log("[WebAuthn] /login/verify request", {
       email,
       responseId: response?.id,
     });
 
-    if (!email || !response) {
+    if (!normalizedEmail || !response) {
       return res.status(400).json({
         error: "Email and response are required",
       });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({
@@ -258,6 +270,7 @@ router.post("/login/verify", async (req, res) => {
       expectedChallenge: user.currentChallenge,
       expectedOrigin,
       expectedRPID: rpID,
+      requireUserVerification: false,
       credential: {
         id: storedCredential.id,
         publicKey: Buffer.from(storedCredential.publicKey, "base64url"),
@@ -297,10 +310,21 @@ router.post("/login/verify", async (req, res) => {
   } catch (error) {
     console.error("[WebAuthn] /login/verify error:", error);
 
+    const errorMessage = error instanceof Error ? error.message : "Could not verify login response";
+    const isVerificationFailure = errorMessage.toLowerCase().includes("verification") || errorMessage.toLowerCase().includes("user verification");
+
+    if (isVerificationFailure) {
+      return res.status(400).json({
+        verified: false,
+        error: "Login verification failed",
+        details: errorMessage,
+      });
+    }
+
     res.status(500).json({
       verified: false,
       error: "Could not verify login response",
-      details: error.message,
+      details: errorMessage,
     });
   }
 });

@@ -8,6 +8,10 @@ import {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   console.log('[WebAuthn] POST', url, body)
 
@@ -57,12 +61,14 @@ export async function registerPasskey(
   email: string,
   name = '',
 ): Promise<{ verified: boolean }> {
-  console.log('[WebAuthn] registerPasskey started', { email, name })
+  const normalizedEmail = normalizeEmail(email)
+
+  console.log('[WebAuthn] registerPasskey started', { email: normalizedEmail, name })
 
   type RegistrationOptionsJSON = Parameters<typeof startRegistration>[0]['optionsJSON']
 
   const optionsJSON = await postJson<RegistrationOptionsJSON>('/api/webauthn/register/options', {
-    email,
+    email: normalizedEmail,
     name,
   })
 
@@ -87,7 +93,7 @@ export async function registerPasskey(
     const verificationResult = await postJson<{ verified: boolean }>(
       '/api/webauthn/register/verify',
       {
-        email,
+        email: normalizedEmail,
         response: registrationResponse,
       },
     )
@@ -109,10 +115,12 @@ export async function loginWithPasskey(
     name: string
   }
 }> {
+  const normalizedEmail = normalizeEmail(email)
+
   type AuthenticationOptionsJSON = Parameters<typeof startAuthentication>[0]['optionsJSON']
 
   const optionsJSON = await postJson<AuthenticationOptionsJSON>('/api/webauthn/login/options', {
-    email,
+    email: normalizedEmail,
   })
 
   const authenticationResponse = await startAuthentication({
@@ -129,7 +137,7 @@ export async function loginWithPasskey(
       name: string
     }
   }>('/api/webauthn/login/verify', {
-    email,
+    email: normalizedEmail,
     response: authenticationResponse,
   })
 

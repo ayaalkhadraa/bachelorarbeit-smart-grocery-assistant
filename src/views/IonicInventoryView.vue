@@ -231,10 +231,10 @@ function saveProduct(): void {
 </script>
 
 <template>
-  <main class="w-full">
+  <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <section class="mb-4 flex flex-col gap-3">
       <div class="flex flex-col gap-1">
-        <h1 class="m-0 text-3xl font-bold text-color">Inventar</h1>
+        <h1 class="m-0 text-3xl font-bold text-color">Ionic-Inventar</h1>
         <p class="m-0 text-sm text-muted-color">
         </p>
       </div>
@@ -266,7 +266,7 @@ function saveProduct(): void {
     </section>
 
     <section class="mb-24">
-      <IonList v-if="filteredItems.length > 0" lines="none" class="bg-transparent p-0">
+      <IonList v-if="filteredItems.length > 0" lines="none" class="bg-transparent p-0 inventory-list-shell">
         <IonItemSliding
           v-for="item in filteredItems"
           :key="item.id"
@@ -311,7 +311,7 @@ function saveProduct(): void {
                   <span>{{ getExpiryShortLabel(item) }}</span>
                 </div>
 
-                <div v-if="item.inShoppingList" class="inline-flex items-center gap-1 text-[0.7rem] font-medium text-muted-color">
+                <div v-if="item.inShoppingList" class="inline-flex items-center gap-1 rounded-full bg-[rgba(22,163,74,0.12)] px-2 py-1 text-[0.72rem] font-semibold text-[var(--sg-primary)] inventory-in-list-chip">
                   <IonIcon :icon="cartOutline" class="text-[0.85rem]" />
                   <span>In Liste</span>
                 </div>
@@ -350,8 +350,7 @@ function saveProduct(): void {
     </section>
 
     <IonFab
-      class="fixed right-4 z-20"
-      style="bottom: calc(6.5rem + env(safe-area-inset-bottom));"
+      class="fixed right-4 z-20 inventory-fab"
     >
       <IonFabButton aria-label="Neues Produkt" color="success" @click="openCreateModal">
         <IonIcon :icon="addOutline" color="light" />
@@ -593,15 +592,18 @@ function saveProduct(): void {
 }
 
 :deep(.status-pill--fresh) {
-  background: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
 }
 
 :deep(.status-pill--soon) {
-  background: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
 }
 
 :deep(.status-pill--expired) {
-  background: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
 }
 
 :deep(.freshflow-segment ion-segment-button::part(native)) {
@@ -610,6 +612,19 @@ function saveProduct(): void {
 
 :deep(.freshflow-segment ion-segment-button.segment-button-checked::part(native)) {
   background: rgba(22, 163, 74, 0.08);
+}
+
+.inventory-list-shell {
+  padding-bottom: 0.5rem;
+}
+
+.inventory-fab {
+  bottom: calc(6.75rem + env(safe-area-inset-bottom));
+}
+
+.inventory-in-list-chip {
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .freshflow-native-select {

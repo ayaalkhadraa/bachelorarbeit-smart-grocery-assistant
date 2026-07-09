@@ -8,6 +8,10 @@ const __dirname = path.dirname(__filename);
 
 const usersFilePath = path.join(__dirname, "../data/users.json");
 
+function normalizeEmail(email) {
+  return String(email).trim().toLowerCase();
+}
+
 /**
  * Reads all users from the local JSON file.
  * This is only prototype storage and not production-ready.
@@ -44,8 +48,9 @@ export async function saveUsers(users) {
  */
 export async function findUserByEmail(email) {
   const users = await getUsers();
+  const normalizedEmail = normalizeEmail(email);
   return users.find(
-    (user) => user.email.toLowerCase() === email.toLowerCase()
+    (user) => normalizeEmail(user.email) === normalizedEmail
   );
 }
 
@@ -62,10 +67,11 @@ export async function findUserById(id) {
  */
 export async function createUser(email, name = "") {
   const users = await getUsers();
+  const normalizedEmail = normalizeEmail(email);
 
   const newUser = {
     id: crypto.randomUUID(),
-    email,
+    email: normalizedEmail,
     name,
     currentChallenge: null,
     credentials: [],
