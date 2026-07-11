@@ -4,6 +4,8 @@ import { getExpiryInfo } from '@/utils/expiryUtils'
 
 type GroceryStatus = 'fresh' | 'soon' | 'critical'
 
+const INITIAL_INVENTORY_ITEM_IDS = new Set(groceryItems.map((item) => item.id))
+
 export interface GroceryItem {
   id: number
   name: string
@@ -17,6 +19,7 @@ export interface GroceryItem {
   inShoppingList: boolean
   bought: boolean
   barcode?: string
+  sourceInventoryItemId?: number
 }
 
 const STORAGE_KEY = 'smart-grocery-items'
@@ -95,7 +98,10 @@ export const useGroceryStore = defineStore('groceryStore', {
           ...item,
           inShoppingList: (item as GroceryItem).inShoppingList ?? true,
           bought: (item as GroceryItem).bought ?? false,
-          barcode: (item as GroceryItem).barcode ?? undefined
+          barcode: (item as GroceryItem).barcode ?? undefined,
+          sourceInventoryItemId:
+            (item as GroceryItem).sourceInventoryItemId ??
+            (INITIAL_INVENTORY_ITEM_IDS.has(item.id) ? item.id : undefined)
         }))
       } else {
         this.items = (groceryItems as Omit<GroceryItem, 'inShoppingList' | 'bought'>[]).map(
@@ -103,7 +109,8 @@ export const useGroceryStore = defineStore('groceryStore', {
             ...item,
             inShoppingList: true,
             bought: false,
-            barcode: (item as GroceryItem).barcode ?? undefined
+            barcode: (item as GroceryItem).barcode ?? undefined,
+            sourceInventoryItemId: item.id
           })
         )
         this.saveItems()
@@ -120,6 +127,7 @@ export const useGroceryStore = defineStore('groceryStore', {
         inShoppingList?: boolean
         bought?: boolean
         barcode?: string
+        sourceInventoryItemId?: number
       }
     ) {
       const expiryDate = newItem.expiryDate ?? ''
@@ -132,10 +140,37 @@ export const useGroceryStore = defineStore('groceryStore', {
         status,
         inShoppingList: newItem.inShoppingList ?? false,
         bought: newItem.bought ?? false,
-        favorite: newItem.favorite ?? false
+        favorite: newItem.favorite ?? false,
+        sourceInventoryItemId: newItem.sourceInventoryItemId
       })
 
       this.saveItems()
+    },
+
+    addManualShoppingListItem(newItem: {
+      name: string
+      category: string
+      quantity: number
+    }): boolean {
+      const trimmedName = newItem.name.trim()
+
+      if (!trimmedName) {
+        return false
+      }
+
+      this.addItem({
+        name: trimmedName,
+        category: newItem.category,
+        quantity: Math.max(1, Number(newItem.quantity) || 1),
+        unit: 'Stück',
+        expiryDate: '',
+        location: 'Küche',
+        favorite: false,
+        inShoppingList: true,
+        bought: false
+      })
+
+      return true
     },
 
     deleteItem(id: number) {
@@ -175,6 +210,9 @@ export const useGroceryStore = defineStore('groceryStore', {
 
       if (item) {
         item.inShoppingList = !item.inShoppingList
+        if (item.inShoppingList) {
+          item.sourceInventoryItemId = item.sourceInventoryItemId ?? item.id
+        }
         this.saveItems()
       }
     },
@@ -195,6 +233,7 @@ export const useGroceryStore = defineStore('groceryStore', {
       if (item) {
         item.inShoppingList = true
         item.bought = false
+        item.sourceInventoryItemId = item.sourceInventoryItemId ?? item.id
         this.saveItems()
       }
     },
@@ -216,7 +255,35 @@ export const useGroceryStore = defineStore('groceryStore', {
       const safeQuantity = Math.max(1, Number(quantity) || 1)
       const isoDate = normalizePurchasedExpiryDate(expiryDate)
 
-      item.quantity = Math.max(0, Number(item.quantity) || 0) + safeQuantity
+      const sourceItem =
+        item.sourceInventoryItemId !== undefined
+          ? this.items.find((candidate) => candidate.id === item.sourceInventoryItemId)
+          : null
+
+      if (sourceItem && sourceItem.id !== item.id) {
+        sourceItem.quantity = Math.max(0, Number(sourceItem.quantity) || 0) + safeQuantity
+        sourceItem.expiryDate = isoDate
+        sourceItem.status = isoDate ? calculateStatus(isoDate) : 'fresh'
+        sourceItem.inShoppingList = false
+        sourceItem.bought = false
+
+        this.items = this.items.filter((candidate) => candidate.id !== item.id)
+        this.saveItems()
+        return
+      }
+
+      if (sourceItem && sourceItem.id === item.id) {
+        item.quantity = Math.max(0, Number(item.quantity) || 0) + safeQuantity
+        item.expiryDate = isoDate
+        item.status = isoDate ? calculateStatus(isoDate) : 'fresh'
+        item.inShoppingList = false
+        item.bought = false
+
+        this.saveItems()
+        return
+      }
+
+      item.quantity = safeQuantity
       item.expiryDate = isoDate
       item.status = isoDate ? calculateStatus(isoDate) : 'fresh'
       item.inShoppingList = false

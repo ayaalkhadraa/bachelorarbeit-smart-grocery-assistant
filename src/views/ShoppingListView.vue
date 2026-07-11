@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
@@ -15,11 +18,16 @@ const groceryStore = useGroceryStore()
 
 const filter = ref<'open' | 'bought' | 'all'>('open')
 const showAddArticleDialog = ref(false)
+const manualName = ref('')
+const manualQuantity = ref(1)
+const manualCategory = ref('Sonstiges')
 
 const selectedBoughtItem = ref<GroceryItem | null>(null)
 const showBoughtDialog = ref(false)
 const boughtQuantity = ref(1)
 const boughtExpiryDate = ref<Date | null>(null)
+
+const categories = ['Obst', 'Gemüse', 'Milchprodukte', 'Getränke', 'Backwaren', 'Sonstiges']
 
 const visibleItems = computed(() => {
   if (filter.value === 'open') return groceryStore.openShoppingItems
@@ -48,13 +56,32 @@ function confirmOnlyMarkBought() {
 }
 
 function confirmAddToInventory() {
-  if (!selectedBoughtItem.value || !boughtExpiryDate.value) return
+  if (!selectedBoughtItem.value) return
   groceryStore.markShoppingItemAsPurchased(
     selectedBoughtItem.value.id,
     boughtQuantity.value,
     boughtExpiryDate.value
   )
   closeBoughtDialog()
+}
+
+function resetManualItem() {
+  manualName.value = ''
+  manualQuantity.value = 1
+  manualCategory.value = 'Sonstiges'
+}
+
+function addManualShoppingItem() {
+  const created = groceryStore.addManualShoppingListItem({
+    name: manualName.value,
+    category: manualCategory.value,
+    quantity: manualQuantity.value
+  })
+
+  if (!created) return
+
+  resetManualItem()
+  showAddArticleDialog.value = false
 }
 </script>
 
@@ -177,31 +204,79 @@ function confirmAddToInventory() {
       :style="{ width: '36rem' }"
       :breakpoints="{ '640px': '95vw' }"
     >
-      <div
-        v-if="groceryStore.availableForShoppingList.length === 0"
-        class="text-center py-12 px-4 text-muted-color"
-      >
-        <i class="pi pi-check-circle text-[3rem] mb-4 block" />
-        <p>Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
-      </div>
+      <div class="flex flex-col gap-4">
+        <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] p-4">
+          <p class="m-0 mb-3 text-sm font-semibold uppercase tracking-[0.07em] text-muted-color">
+            Manueller Artikel
+          </p>
+          <div class="grid gap-3">
+            <div class="flex flex-col gap-[0.35rem]">
+              <label for="manual-shopping-name" class="text-sm font-semibold">Name</label>
+              <InputText
+                id="manual-shopping-name"
+                v-model="manualName"
+                placeholder="z. B. Haferflocken"
+              />
+            </div>
 
-      <div v-else class="flex flex-col gap-3">
-        <div
-          v-for="item in groceryStore.availableForShoppingList"
-          :key="item.id"
-          class="flex items-center justify-between gap-4 py-2 border-b border-surface last:border-b-0"
-        >
-          <div class="flex flex-col gap-[0.2rem] min-w-0">
-            <span class="font-semibold text-[0.95rem]">{{ item.name }}</span>
-            <span class="text-[0.8rem] text-muted-color">{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex flex-col gap-[0.35rem]">
+                <label for="manual-shopping-quantity" class="text-sm font-semibold">Menge</label>
+                <InputNumber
+                  id="manual-shopping-quantity"
+                  v-model="manualQuantity"
+                  :min="1"
+                  showButtons
+                  class="w-full"
+                />
+              </div>
+
+              <div class="flex flex-col gap-[0.35rem]">
+                <label for="manual-shopping-category" class="text-sm font-semibold">Kategorie</label>
+                <Dropdown
+                  id="manual-shopping-category"
+                  v-model="manualCategory"
+                  :options="categories"
+                  placeholder="Kategorie wählen"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <Button
+                label="Manuell hinzufügen"
+                icon="pi pi-plus"
+                severity="success"
+                :disabled="!manualName.trim()"
+                @click="addManualShoppingItem"
+              />
+            </div>
           </div>
-          <Button
-            label="Hinzufügen"
-            icon="pi pi-plus"
-            severity="success"
-            outlined
-            @click="groceryStore.addToShoppingList(item.id)"
-          />
+        </div>
+
+        <div v-if="groceryStore.availableForShoppingList.length === 0" class="text-center py-8 px-4 text-muted-color">
+          <i class="pi pi-check-circle text-[3rem] mb-4 block" />
+          <p>Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
+        </div>
+
+        <div v-else class="flex flex-col gap-3">
+          <div
+            v-for="item in groceryStore.availableForShoppingList"
+            :key="item.id"
+            class="flex items-center justify-between gap-4 py-2 border-b border-surface last:border-b-0"
+          >
+            <div class="flex flex-col gap-[0.2rem] min-w-0">
+              <span class="font-semibold text-[0.95rem]">{{ item.name }}</span>
+              <span class="text-[0.8rem] text-muted-color">{{ item.category }} &middot; {{ item.quantity }} {{ item.unit }}</span>
+            </div>
+            <Button
+              label="Hinzufügen"
+              icon="pi pi-plus"
+              severity="success"
+              outlined
+              @click="groceryStore.addToShoppingList(item.id)"
+            />
+          </div>
         </div>
       </div>
     </Dialog>
@@ -288,7 +363,6 @@ function confirmAddToInventory() {
         <Button
           label="In Vorrat übernehmen"
           icon="pi pi-box"
-          :disabled="!boughtExpiryDate"
           @click="confirmAddToInventory"
         />
       </template>

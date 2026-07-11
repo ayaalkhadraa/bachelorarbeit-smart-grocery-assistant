@@ -18,7 +18,9 @@ import {
   IonModal,
   IonSegment,
   IonSegmentButton,
-  IonText
+  IonText,
+  IonSelect,
+IonSelectOption,
 } from '@ionic/vue'
 import {
   addOutline,
@@ -35,12 +37,17 @@ type ShoppingFilter = 'open' | 'bought' | 'all'
 
 const groceryStore = useGroceryStore()
 
+const categories = ['Obst', 'Gemüse', 'Milchprodukte', 'Getränke', 'Backwaren', 'Sonstiges']
+
 const filter = ref<ShoppingFilter>('open')
 const showAddModal = ref(false)
 const showBoughtModal = ref(false)
 const selectedBoughtItem = ref<GroceryItem | null>(null)
 const boughtQuantity = ref(1)
 const boughtExpiryDate = ref('')
+const manualName = ref('')
+const manualQuantity = ref(1)
+const manualCategory = ref('Sonstiges')
 
 function parseBoughtExpiryDate(value: string): Date | undefined {
   const trimmedValue = value.trim()
@@ -98,6 +105,25 @@ function addAvailableItem(itemId: number): void {
 
 function removeFromList(itemId: number): void {
   groceryStore.removeFromShoppingList(itemId)
+}
+
+function resetManualItem(): void {
+  manualName.value = ''
+  manualQuantity.value = 1
+  manualCategory.value = 'Sonstiges'
+}
+
+function addManualShoppingItem(): void {
+  const created = groceryStore.addManualShoppingListItem({
+    name: manualName.value,
+    category: manualCategory.value,
+    quantity: manualQuantity.value
+  })
+
+  if (!created) return
+
+  resetManualItem()
+  showAddModal.value = false
 }
 </script>
 
@@ -234,35 +260,92 @@ function removeFromList(itemId: number): void {
           </IonButton>
         </div>
 
-        <div
-          v-if="groceryStore.availableForShoppingList.length === 0"
-          class="rounded-2xl border border-dashed border-[var(--sg-border)] bg-[var(--sg-surface)] px-5 py-10 text-center text-muted-color"
-        >
-          <IonIcon :icon="checkmarkOutline" class="mb-3 text-[2.5rem] text-[var(--sg-primary)]" />
-          <p class="m-0">Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
-        </div>
+        <div class="flex flex-col gap-4">
+          <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-4 py-4 shadow-sm">
+            <div class="mb-3 text-sm font-semibold uppercase tracking-[0.07em] text-muted-color">
+              Manueller Artikel
+            </div>
 
-        <IonList v-else lines="none" class="bg-transparent p-0">
-          <IonItem
-            v-for="item in groceryStore.availableForShoppingList"
-            :key="item.id"
-            lines="none"
-            class="mb-2 overflow-hidden rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] shadow-sm"
-          >
-            <div class="flex w-full items-center justify-between gap-3 py-1">
-              <div class="min-w-0">
-                <div class="truncate font-semibold text-color">{{ item.name }}</div>
-                <div class="mt-1 text-sm text-muted-color">
-                  {{ item.category }} · {{ item.quantity }} {{ item.unit }}
+            <div class="grid gap-3">
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-color">Name</label>
+                <IonInput
+                  v-model="manualName"
+                  fill="outline"
+                  placeholder="z. B. Haferflocken"
+                />
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-medium text-color">Menge</label>
+                  <IonInput
+                    v-model="manualQuantity"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    fill="outline"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-medium text-color">Kategorie</label>
+                  <IonSelect
+  v-model="manualCategory"
+  label="Kategorie"
+  interface="action-sheet"
+  cancel-text="Abbrechen"
+>
+                    <IonSelectOption
+                      v-for="category in categories"
+                      :key="category"
+                      :value="category"
+                    >
+                      {{ category }}
+                    </IonSelectOption>
+                  </IonSelect>
                 </div>
               </div>
-              <IonButton size="small" color="success" @click="addAvailableItem(item.id)">
-                <IonIcon :icon="addOutline" slot="start" />
-                Hinzufügen
-              </IonButton>
+
+              <div class="flex justify-end">
+                <IonButton color="success" :disabled="!manualName.trim()" @click="addManualShoppingItem">
+                  <IonIcon :icon="addOutline" slot="start" />
+                   hinzufügen
+                </IonButton>
+              </div>
             </div>
-          </IonItem>
-        </IonList>
+          </div>
+
+          <div
+            v-if="groceryStore.availableForShoppingList.length === 0"
+            class="rounded-2xl border border-dashed border-[var(--sg-border)] bg-[var(--sg-surface)] px-5 py-10 text-center text-muted-color"
+          >
+            <IonIcon :icon="checkmarkOutline" class="mb-3 text-[2.5rem] text-[var(--sg-primary)]" />
+            <p class="m-0">Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
+          </div>
+
+          <IonList v-else lines="none" class="bg-transparent p-0">
+            <IonItem
+              v-for="item in groceryStore.availableForShoppingList"
+              :key="item.id"
+              lines="none"
+              class="mb-2 overflow-hidden rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] shadow-sm"
+            >
+              <div class="flex w-full items-center justify-between gap-3 py-1">
+                <div class="min-w-0">
+                  <div class="truncate font-semibold text-color">{{ item.name }}</div>
+                  <div class="mt-1 text-sm text-muted-color">
+                    {{ item.category }} · {{ item.quantity }} {{ item.unit }}
+                  </div>
+                </div>
+                <IonButton size="small" color="success" @click="addAvailableItem(item.id)">
+                  <IonIcon :icon="addOutline" slot="start" />
+                  Hinzufügen
+                </IonButton>
+              </div>
+            </IonItem>
+          </IonList>
+        </div>
       </div>
     </IonModal>
 

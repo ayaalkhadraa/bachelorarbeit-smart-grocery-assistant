@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { NativeBiometric } from '@capgo/capacitor-native-biometric'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
+import Divider from 'primevue/divider'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
@@ -252,6 +253,12 @@ function resetPrototypeData(): void {
     <div class="mb-6">
       <h1 class="text-[1.75rem] font-bold m-0 mb-1">Einstellungen</h1>
       <p class="text-muted-color m-0">Verwaltung einfacher Prototyp-Einstellungen.</p>
+      <RouterLink
+        to="/ionic-settings"
+        class="mt-2 inline-flex text-sm font-medium text-[var(--sg-primary)] underline underline-offset-4"
+      >
+        Ionic-Version
+      </RouterLink>
     </div>
 
     <Message severity="info" :closable="false">

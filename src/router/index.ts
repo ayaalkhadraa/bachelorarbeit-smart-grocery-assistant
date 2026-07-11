@@ -11,6 +11,7 @@ import IonicScannerView from '@/views/IonicScannerView.vue'
 import StoresView from '@/views/StoresView.vue'
 import IonicStoresView from '@/views/IonicStoresView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import IonicSettingsView from '@/views/IonicSettingsView.vue'
 import LoginView from '@/views/LoginView.vue'
 import IonicLoginView from '@/views/IonicLoginView.vue'
 import IonicTestView from '@/views/IonicTestView.vue'
@@ -72,6 +73,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView
+    },
+    {
+      path: '/ionic-settings',
+      name: 'ionic-settings',
+      component: IonicSettingsView
     },
     {
       path: '/login',
