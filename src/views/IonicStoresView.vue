@@ -310,7 +310,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="w-full pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-7">
+  <main class="w-full pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-7">
     <section class="mb-4 flex flex-col gap-3">
       <div class="flex flex-col gap-1">
         <h1 class="m-0 text-3xl font-bold text-color">Ionic-Stores</h1>
@@ -338,34 +338,23 @@ onBeforeUnmount(() => {
               />
             </div>
 
-            <IonGrid class="m-0 p-0">
-              <IonRow>
-                <IonCol size="12" size-md="4" class="p-0">
-                  <IonChip color="success" class="m-0 status-chip">
-                    <IonIcon :icon="locationEnabled ? locateOutline : searchOutline" />
-                    <IonLabel>{{ locationEnabled ? 'Standort aktiv' : 'Standort inaktiv' }}</IonLabel>
-                  </IonChip>
-                </IonCol>
-                <IonCol size="12" size-md="4" class="p-0">
-                  <IonChip v-if="locationEnabled && userCoords" color="primary" class="m-0 status-chip">
-                    <IonIcon :icon="compassOutline" />
-                    <IonLabel>{{ userCoords.accuracy.toFixed(0) }} m Genauigkeit</IonLabel>
-                  </IonChip>
-                  <IonChip v-else color="medium" class="m-0 status-chip">
-                    <IonIcon :icon="storefrontOutline" />
-                    <IonLabel>Keine Standortdaten</IonLabel>
-                  </IonChip>
-                </IonCol>
-                <IonCol size="12" size-md="4" class="p-0">
-                  <IonButton expand="block" color="success" class="m-0 ion-activate-button" :disabled="locationLoading" @click="requestLocation">
-                    <IonIcon :icon="locateOutline" slot="start" />
-                    Standort laden
-                  </IonButton>
-                </IonCol>
-              </IonRow>
-            </IonGrid>
+            <div class="flex flex-wrap items-center gap-2">
+              <IonChip
+                class="m-0 status-chip"
+                :class="locationEnabled ? 'status-chip--active' : 'status-chip--inactive'"
+              >
+                <IonIcon :icon="locationEnabled ? locateOutline : searchOutline" />
+                <IonLabel>{{ locationEnabled ? 'Standort aktiv' : 'Standort inaktiv' }}</IonLabel>
+              </IonChip>
+              <IonChip v-if="locationEnabled && userCoords" class="m-0 status-chip status-chip--accuracy">
+                <IonIcon :icon="compassOutline" />
+                <IonLabel>Genauigkeit: {{ userCoords.accuracy.toFixed(0) }} m</IonLabel>
+              </IonChip>
+            </div>
 
-            <IonNote v-if="locationError" color="danger" class="ion-text-wrap">{{ locationError }}</IonNote>
+            <IonNote v-if="locationError" color="danger" class="ion-text-wrap location-error-note">
+              {{ locationError.toLowerCase().includes('abgelehnt') ? 'Standortzugriff abgelehnt.' : locationError }}
+            </IonNote>
           </div>
         </IonCardContent>
       </IonCard>
@@ -420,42 +409,28 @@ onBeforeUnmount(() => {
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <IonCardTitle class="text-lg leading-tight">{{ store.name }}</IonCardTitle>
-                <IonCardSubtitle class="mt-1">{{ store.type }}</IonCardSubtitle>
+                <IonCardSubtitle class="mt-1 text-sm">{{ store.type }}</IonCardSubtitle>
+                <IonText color="medium" class="store-address text-xs">
+                  <p class="m-0 mt-1">{{ store.address }}</p>
+                </IonText>
               </div>
-              <IonChip v-if="store.id === nearestStore?.id" color="warning" class="m-0">
+              <IonChip v-if="store.id === nearestStore?.id" class="m-0 store-chip store-chip--nearest">
                 <IonLabel>Nächster</IonLabel>
               </IonChip>
             </div>
           </IonCardHeader>
           <IonCardContent class="px-4 pt-0 pb-4">
-            <IonGrid class="m-0 p-0">
-              <IonRow>
-                <IonCol size="12" class="p-0">
-                  <IonItem lines="none" class="store-meta-item" :detail="false">
-                    <IonIcon :icon="storefrontOutline" slot="start" />
-                    <IonLabel class="ion-text-wrap">
-                      <h3 class="font-medium text-color">{{ store.address }}</h3>
-                      <p class="m-0 text-sm text-muted-color">{{ getStatusText(store) }}</p>
-                    </IonLabel>
-                  </IonItem>
-                </IonCol>
-                <IonCol size="12" size-sm="6" class="p-0">
-                  <IonBadge :color="getStatusColor(store)" class="store-open-badge">{{ store.open ? 'Geöffnet' : 'Geschlossen' }}</IonBadge>
-                </IonCol>
-                <IonCol size="12" size-sm="6" class="p-0">
-                  <IonText color="medium" class="text-sm">
-                    {{ store.distance !== null ? `${store.distance.toFixed(2)} km entfernt` : 'Distanz nach Standortfreigabe' }}
-                  </IonText>
-                </IonCol>
-              </IonRow>
-            </IonGrid>
+            <div class="flex flex-wrap items-center gap-2">
+              <IonChip class="m-0 store-chip" :class="store.open ? 'store-chip--open' : 'store-chip--closed'">
+                <IonLabel>{{ store.open ? 'Geöffnet' : 'Geschlossen' }}</IonLabel>
+              </IonChip>
+              <IonText color="medium" class="text-sm store-distance">
+                {{ store.distance !== null ? `${store.distance.toFixed(2)} km entfernt` : 'Distanz nach Standortfreigabe' }}
+              </IonText>
+            </div>
 
-            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-              <IonButton expand="block" fill="outline" color="success" class="m-0 flex-1" @click="openRoute(store)">
-                <IonIcon :icon="navigateOutline" slot="start" />
-                Navigation öffnen
-              </IonButton>
-              <IonButton expand="block" color="success" class="m-0 flex-1" @click="openRoute(store)">
+            <div class="mt-3">
+              <IonButton expand="block" fill="outline" color="success" class="m-0 route-button" @click="openRoute(store)">
                 <IonIcon :icon="navigateOutline" slot="start" />
                 Route anzeigen
               </IonButton>
@@ -479,13 +454,83 @@ onBeforeUnmount(() => {
 }
 
 .status-chip {
-  width: 100%;
-  justify-content: flex-start;
+  --border-radius: 999px;
+  --background: rgba(100, 116, 139, 0.08);
+  --color: rgb(71, 85, 105);
+  height: 30px;
+  font-size: 0.875rem;
 }
 
-.ion-activate-button {
-  min-height: 48px;
+.status-chip--active {
+  --background: rgba(16, 185, 129, 0.12);
+  --color: rgb(15, 118, 110);
+}
+
+.status-chip--inactive {
+  --background: rgba(148, 163, 184, 0.12);
+  --color: rgb(51, 65, 85);
+}
+
+.status-chip--accuracy {
+  --background: rgba(37, 99, 235, 0.08);
+  --color: rgb(30, 64, 175);
+}
+
+.location-error-note {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.store-card {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.nearest-card {
+  outline: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.store-chip {
+  --border-radius: 999px;
+  height: 28px;
+  font-size: 0.8125rem;
+}
+
+.store-chip--open {
+  --background: rgba(16, 185, 129, 0.12);
+  --color: rgb(15, 118, 110);
+}
+
+.store-chip--closed {
+  --background: rgba(148, 163, 184, 0.12);
+  --color: rgb(71, 85, 105);
+}
+
+.store-chip--nearest {
+  --background: rgba(245, 158, 11, 0.14);
+  --color: rgb(146, 64, 14);
+}
+
+.store-address,
+.store-distance {
+  line-height: 1.35;
+}
+
+.route-button {
   --border-radius: 14px;
+  min-height: 44px;
+}
+
+:deep(.searchbar-input) {
+  --border-radius: 16px;
+}
+
+:deep(.searchbar-input-container) {
+  border-radius: 16px;
+}
+
+:deep(.ion-color-success) {
+  --ion-color-base: #16a34a;
+  --ion-color-base-rgb: 22, 163, 74;
 }
 
 .leaflet-map-container {
@@ -512,38 +557,5 @@ onBeforeUnmount(() => {
 .stores-list {
   display: grid;
   gap: 0.875rem;
-}
-
-.store-card {
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.08);
-}
-
-.nearest-card {
-  outline: 1px solid rgba(22, 163, 74, 0.28);
-}
-
-.store-meta-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-}
-
-.store-open-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  border-radius: 999px;
-}
-
-:deep(.searchbar-input) {
-  --border-radius: 16px;
-}
-
-:deep(.searchbar-input-container) {
-  border-radius: 16px;
-}
-
-:deep(.ion-color-success) {
-  --ion-color-base: #16a34a;
-  --ion-color-base-rgb: 22, 163, 74;
 }
 </style>

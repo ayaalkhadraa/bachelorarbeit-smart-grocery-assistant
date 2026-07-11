@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { RouterLink } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
 import L from 'leaflet'
@@ -273,6 +274,9 @@ function openRoute(store: { lat: number; lng: number; name: string }) {
     <!-- Header -->
     <div class="stores-header">
       <h1>Supermärkte</h1>
+      <RouterLink to="/ionic-stores" class="ionic-compare-link">
+        Ionic-Version vergleichen
+      </RouterLink>
     </div>
 
     <!-- Location Card -->
