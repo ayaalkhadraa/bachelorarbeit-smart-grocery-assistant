@@ -21,6 +21,22 @@ export interface GroceryItem {
 
 const STORAGE_KEY = 'smart-grocery-items'
 
+function normalizePurchasedExpiryDate(expiryDate: Date | string | null | undefined): string {
+  if (!expiryDate) return ''
+
+  if (expiryDate instanceof Date) {
+    return Number.isNaN(expiryDate.getTime()) ? '' : expiryDate.toISOString().split('T')[0] ?? ''
+  }
+
+  const trimmedValue = expiryDate.trim()
+  if (!trimmedValue) return ''
+
+  const normalizedValue = trimmedValue.length === 10 ? `${trimmedValue}T12:00:00` : trimmedValue
+  const parsedDate = new Date(normalizedValue)
+
+  return Number.isNaN(parsedDate.getTime()) ? '' : parsedDate.toISOString().split('T')[0] ?? ''
+}
+
 function calculateStatus(isoDate: string): GroceryStatus {
   const { status } = getExpiryInfo(isoDate)
   if (status === 'expired' || status === 'today') return 'critical'
@@ -193,16 +209,16 @@ export const useGroceryStore = defineStore('groceryStore', {
       }
     },
 
-    markShoppingItemAsPurchased(id: number, quantity: number, expiryDate: Date) {
+    markShoppingItemAsPurchased(id: number, quantity: number, expiryDate?: Date | string | null) {
       const item = this.items.find((item) => item.id === id)
       if (!item) return
 
       const safeQuantity = Math.max(1, Number(quantity) || 1)
-      const isoDate = expiryDate.toISOString().split('T')[0] ?? ''
+      const isoDate = normalizePurchasedExpiryDate(expiryDate)
 
       item.quantity = Math.max(0, Number(item.quantity) || 0) + safeQuantity
       item.expiryDate = isoDate
-      item.status = calculateStatus(isoDate)
+      item.status = isoDate ? calculateStatus(isoDate) : 'fresh'
       item.inShoppingList = false
       item.bought = false
 

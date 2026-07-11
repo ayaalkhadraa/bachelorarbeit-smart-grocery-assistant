@@ -5,6 +5,7 @@ import IonicDashboardView from '@/views/IonicDashboardView.vue'
 import IonicInventoryView from '@/views/IonicInventoryView.vue'
 import InventoryView from '@/views/InventoryView.vue'
 import ShoppingListView from '@/views/ShoppingListView.vue'
+import IonicShoppingListView from '@/views/IonicShoppingListView.vue'
 import ScannerView from '@/views/ScannerView.vue'
 import IonicScannerView from '@/views/IonicScannerView.vue'
 import StoresView from '@/views/StoresView.vue'
@@ -41,6 +42,11 @@ const router = createRouter({
       path: '/shopping-list',
       name: 'shopping-list',
       component: ShoppingListView
+    },
+    {
+      path: '/ionic-shopping-list',
+      name: 'ionic-shopping-list',
+      component: IonicShoppingListView
     },
     {
       path: '/scanner',

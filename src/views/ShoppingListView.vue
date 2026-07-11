@@ -79,6 +79,12 @@ function confirmAddToInventory() {
           :disabled="groceryStore.boughtShoppingItems.length === 0"
           @click="groceryStore.clearBoughtItems()"
         />
+        <RouterLink
+          to="/ionic-shopping-list"
+          class="text-sm font-medium text-[var(--sg-primary)] underline underline-offset-4"
+        >
+          Ionic-Version
+        </RouterLink>
       </div>
     </div>
 
