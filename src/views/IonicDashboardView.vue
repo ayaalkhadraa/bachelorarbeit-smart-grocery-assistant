@@ -9,11 +9,13 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonChip,
+  IonContent,
   IonItem,
   IonLabel,
   IonList,
   IonNote,
   IonProgressBar,
+  IonPage,
   IonText
 } from '@ionic/vue'
 import { useGroceryStore } from '@/stores/groceryStore'
@@ -116,7 +118,9 @@ function getMixBarColor(index: number): string {
 </script>
 
 <template>
-  <main class="w-full">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="w-full">
     <section class="mb-6">
         <!-- عنوان الصفحة خارج الكارد -->
       <div class="mb-4">
@@ -354,7 +358,9 @@ function getMixBarColor(index: number): string {
       </IonCard>
     </section>
 
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

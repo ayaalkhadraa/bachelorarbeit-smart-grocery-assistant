@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import {
   IonButton,
   IonChip,
+  IonContent,
   IonDatetime,
   IonFab,
   IonFabButton,
@@ -19,6 +20,7 @@ import {
   IonSegment,
   IonSegmentButton,
   IonText,
+  IonPage,
   IonToggle
 } from '@ionic/vue'
 import {
@@ -231,7 +233,9 @@ function saveProduct(): void {
 </script>
 
 <template>
-  <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <section class="mb-4 flex flex-col gap-3">
       <div class="flex flex-col gap-1">
         <h1 class="m-0 text-3xl font-bold text-color">Inventar</h1>
@@ -527,7 +531,9 @@ function saveProduct(): void {
         </div>
       </div>
     </IonModal>
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

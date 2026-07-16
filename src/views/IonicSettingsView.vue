@@ -11,6 +11,7 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonChip,
+  IonContent,
   IonIcon,
   IonInput,
   IonItem,
@@ -20,6 +21,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonToggle,
+  IonPage,
 } from '@ionic/vue'
 import {
   languageOutline,
@@ -457,7 +459,9 @@ function resetPrototypeData(): void {
 </script>
 
 <template>
-  <main class="w-full px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-4">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="w-full px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-4">
     <section class="mb-4">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
@@ -723,7 +727,9 @@ function resetPrototypeData(): void {
         </IonCardContent>
       </IonCard>
     </div>
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

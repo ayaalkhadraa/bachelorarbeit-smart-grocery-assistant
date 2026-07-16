@@ -1,36 +1,66 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from '@ionic/vue-router'
 
+import IonicTabsLayout from '@/layouts/IonicTabsLayout.vue'
+import IonicLoginView from '@/views/IonicLoginView.vue'
+import IonicTestView from '@/views/IonicTestView.vue'
 import IonicDashboardView from '@/views/IonicDashboardView.vue'
 import IonicInventoryView from '@/views/IonicInventoryView.vue'
 import IonicShoppingListView from '@/views/IonicShoppingListView.vue'
 import IonicScannerView from '@/views/IonicScannerView.vue'
+import IonicMoreView from '@/views/IonicMoreView.vue'
 import IonicStoresView from '@/views/IonicStoresView.vue'
 import IonicSettingsView from '@/views/IonicSettingsView.vue'
-import IonicLoginView from '@/views/IonicLoginView.vue'
-import IonicTestView from '@/views/IonicTestView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/tabs',
+      component: IonicTabsLayout,
+      children: [
+        {
+          path: '',
+          redirect: '/dashboard'
+        },
+        {
+          path: 'dashboard',
+          name: 'dashboard',
+          alias: '/dashboard',
+          component: IonicDashboardView
+        },
+        {
+          path: 'inventory',
+          name: 'inventory',
+          alias: '/inventory',
+          component: IonicInventoryView
+        },
+        {
+          path: 'shopping-list',
+          name: 'shopping-list',
+          alias: '/shopping-list',
+          component: IonicShoppingListView
+        },
+        {
+          path: 'scanner',
+          name: 'scanner',
+          alias: '/scanner',
+          component: IonicScannerView
+        },
+        {
+          path: 'more',
+          name: 'more',
+          alias: '/more',
+          component: IonicMoreView
+        },
+      ]
+    },
+    {
       path: '/',
-      name: 'dashboard',
-      alias: '/dashboard',
-      component: IonicDashboardView
+      redirect: '/dashboard'
     },
     {
-      path: '/inventory',
-      name: 'inventory',
-      component: IonicInventoryView
-    },
-    {
-      path: '/shopping-list',
-      name: 'shopping-list',
-      component: IonicShoppingListView
-    },
-    {
-      path: '/scanner',
-      name: 'scanner',
-      component: IonicScannerView
+      path: '/login',
+      name: 'login',
+      component: IonicLoginView
     },
     {
       path: '/stores',
@@ -41,11 +71,6 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: IonicSettingsView
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: IonicLoginView
     },
     {
       path: '/ionic-login',

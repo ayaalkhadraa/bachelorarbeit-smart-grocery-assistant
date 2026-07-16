@@ -10,6 +10,7 @@ import {
   IonAlert,
   IonBadge,
   IonButton,
+  IonContent,
   IonInput,
   IonItem,
   IonItemOption,
@@ -18,6 +19,7 @@ import {
   IonLabel,
   IonList,
   IonModal,
+  IonPage,
   IonText,
   IonToast
 } from '@ionic/vue'
@@ -451,7 +453,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="scanner-page">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="scanner-page">
     <header class="scanner-heading">
       <h1>Scanner</h1>
       <p>Produkte per Barcode erfassen</p>
@@ -781,7 +785,9 @@ onBeforeUnmount(() => {
       position="top"
       @didDismiss="showToast = false"
     />
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

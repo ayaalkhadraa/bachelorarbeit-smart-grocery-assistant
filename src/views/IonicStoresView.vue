@@ -14,6 +14,7 @@ import {
   IonCardTitle,
   IonChip,
   IonCol,
+  IonContent,
   IonGrid,
   IonIcon,
   IonItem,
@@ -23,6 +24,7 @@ import {
   IonRow,
   IonSearchbar,
   IonText,
+  IonPage,
   IonToggle,
 } from '@ionic/vue'
 import { compassOutline, locateOutline, mapOutline, navigateOutline, searchOutline, storefrontOutline } from 'ionicons/icons'
@@ -310,8 +312,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="w-full pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-7">
-    <section class="mb-4 flex flex-col gap-3">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="w-full pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-7">
+      <section class="mb-4 flex flex-col gap-3">
       <div class="flex flex-col gap-1">
         <h1 class="m-0 text-3xl font-bold text-color">Ionic-Stores</h1>
         <p class="m-0 text-sm text-muted-color">Mobile Vergleichsansicht für Standorte, Karte und Navigation.</p>
@@ -443,7 +447,9 @@ onBeforeUnmount(() => {
         <IonText color="medium">Keine Supermärkte gefunden.</IonText>
       </div>
     </section>
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

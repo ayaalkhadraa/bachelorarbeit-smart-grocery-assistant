@@ -29,6 +29,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonText,
+  IonPage,
   IonTitle,
   IonToolbar,
 } from '@ionic/vue'
@@ -138,8 +139,10 @@ function addManualShoppingItem(): void {
 </script>
 
 <template>
-  <main class="shopping-page">
-    <section class="shopping-header">
+  <IonPage>
+    <IonContent :fullscreen="true">
+      <main class="shopping-page">
+      <section class="shopping-header">
       <div class="page-heading">
         <h1>Einkaufsliste</h1>
         <p>Mobile Vergleichsansicht für die bestehende Einkaufsliste.</p>
@@ -473,7 +476,9 @@ function addManualShoppingItem(): void {
         </div>
       </div>
     </IonModal>
-  </main>
+      </main>
+    </IonContent>
+  </IonPage>
 </template>
 
 <style scoped>

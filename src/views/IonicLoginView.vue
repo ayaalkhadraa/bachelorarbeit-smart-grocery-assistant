@@ -14,6 +14,7 @@ import {
   IonIcon,
   IonInput,
   IonNote,
+  IonPage,
   IonToast,
 } from '@ionic/vue'
 import {
@@ -450,7 +451,8 @@ const showBiometricActivationPrompt = computed(
 </script>
 
 <template>
-  <main class="fixed inset-0 z-[1200] flex items-start justify-center overflow-y-auto bg-[linear-gradient(135deg,#f0fdf4_0%,#f8fafc_56%,#ecfdf5_100%)] px-4 py-4 md:items-center md:px-6 md:py-6">
+  <IonPage>
+    <main class="fixed inset-0 z-[1200] flex items-start justify-center overflow-y-auto bg-[linear-gradient(135deg,#f0fdf4_0%,#f8fafc_56%,#ecfdf5_100%)] px-4 py-4 md:items-center md:px-6 md:py-6">
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <div class="absolute -top-24 right-[-4rem] h-56 w-56 rounded-full bg-[#16a34a]/10 blur-3xl"></div>
       <div class="absolute bottom-[-5rem] left-[-3rem] h-64 w-64 rounded-full bg-[#22c55e]/10 blur-3xl"></div>
@@ -708,7 +710,8 @@ const showBiometricActivationPrompt = computed(
         @didDismiss="comparisonAlertOpen = false"
       />
     </section>
-  </main>
+    </main>
+  </IonPage>
 </template>
 
 <style scoped>
