@@ -196,5 +196,22 @@
         ]
       }
     ]
+  },
+  {
+    "id": "4df540a0-9f12-4ff6-b7d5-664e60b6c683",
+    "email": "nina@gmail.com",
+    "name": "Nina",
+    "currentChallenge": null,
+    "credentials": [
+      {
+        "id": "XHyBZN4Q7T2zTsim1j0hdQ",
+        "publicKey": "pQECAyYgASFYIO35nAy19voHVvGI61KZwU3BKBZy36_eLAYrcUsqTn6OIlggODV3-jknLnhd-byO7wGrsdTMCxDPHN13E0F477UtNOk",
+        "counter": 0,
+        "transports": [
+          "hybrid",
+          "internal"
+        ]
+      }
+    ]
   }
 ]

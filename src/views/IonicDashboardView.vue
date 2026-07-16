@@ -118,12 +118,16 @@ function getMixBarColor(index: number): string {
 <template>
   <main class="w-full">
     <section class="mb-6">
+        <!-- عنوان الصفحة خارج الكارد -->
+      <div class="mb-4">
+        <IonText color="dark">
+          <h1 class="m-0 text-2xl font-semibold">
+            Dashboard
+          </h1>
+        </IonText>
+      </div>
+      
       <IonCard class="m-0">
-        <IonCardHeader class="px-4 pt-4 pb-3">
-          <IonCardTitle class="text-xl"> Dashboard</IonCardTitle>
-          <IonCardSubtitle>
-          </IonCardSubtitle>
-        </IonCardHeader>
         <IonCardContent class="px-4 pt-0 pb-4">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <IonCard class="text-center m-0 shadow-none stat-card">
@@ -181,6 +185,7 @@ function getMixBarColor(index: number): string {
         </IonCardContent>
       </IonCard>
     </section>
+    
 
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       <IonCard class="m-0">

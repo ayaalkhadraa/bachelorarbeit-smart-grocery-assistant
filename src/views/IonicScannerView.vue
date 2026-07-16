@@ -4,18 +4,12 @@ import { Capacitor } from '@capacitor/core'
 import {
   CapacitorBarcodeScanner,
   CapacitorBarcodeScannerAndroidScanningLibrary,
-  CapacitorBarcodeScannerTypeHint
+  CapacitorBarcodeScannerTypeHintALLOption
 } from '@capacitor/barcode-scanner'
 import {
   IonAlert,
   IonBadge,
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonChip,
   IonInput,
   IonItem,
   IonItemOption,
@@ -23,9 +17,9 @@ import {
   IonItemSliding,
   IonLabel,
   IonList,
+  IonModal,
   IonText,
-  IonToast,
-  IonModal
+  IonToast
 } from '@ionic/vue'
 import { useGroceryStore } from '@/stores/groceryStore'
 
@@ -192,7 +186,7 @@ async function startScan(): Promise<void> {
   if (Capacitor.getPlatform() === 'android') {
     try {
       const result = await CapacitorBarcodeScanner.scanBarcode({
-        hint: CapacitorBarcodeScannerTypeHint.ALL,
+        hint: CapacitorBarcodeScannerTypeHintALLOption.ALL,
         scanButton: true,
         scanText: 'Barcode scannen',
         scanInstructions: 'Barcode vor die Kamera halten',
@@ -457,191 +451,239 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="p-6 flex flex-col gap-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
-    <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap items-center gap-3">
-        <h1 class="m-0 text-[1.75rem] font-bold">Scanner</h1>
+  <main class="scanner-page">
+    <header class="scanner-heading">
+      <h1>Scanner</h1>
+      <p>Produkte per Barcode erfassen</p>
+    </header>
+
+    <section class="scanner-area" aria-labelledby="scanner-area-title">
+      <h2 id="scanner-area-title" class="sr-only">Barcode- und Kamerabereich</h2>
+
+      <div class="scan-frame" :class="{ 'scan-frame--camera-active': cameraActive }">
+        <video
+          v-if="cameraActive"
+          ref="videoRef"
+          class="camera-preview"
+          autoplay
+          playsinline
+          muted
+        ></video>
+
+        <div v-else class="scan-frame-placeholder">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span>Barcode in den Rahmen halten</span>
+        </div>
+
+        <span class="scan-corner scan-corner--top-left" aria-hidden="true"></span>
+        <span class="scan-corner scan-corner--top-right" aria-hidden="true"></span>
+        <span class="scan-corner scan-corner--bottom-left" aria-hidden="true"></span>
+        <span class="scan-corner scan-corner--bottom-right" aria-hidden="true"></span>
+
+        <IonBadge
+          v-if="isWebSimulation && !cameraActive"
+          class="simulation-badge"
+          color="medium"
+        >
+         
+        </IonBadge>
       </div>
-      <p class="m-0 text-muted-color">Barcode scannen, Ergebnis prüfen und Produkte direkt zu Inventar oder Einkaufsliste hinzufügen.</p>
-    </div>
 
-    <IonCard class="m-0">
-      <IonCardHeader class="px-4 pt-4 pb-3">
-        <IonCardTitle class="text-lg">Scan-Bereich</IonCardTitle>
-        <IonCardSubtitle>Auf Android wird der native Barcode-Scanner verwendet. Im Web bleibt die bestehende Simulation aktiv.</IonCardSubtitle>
-      </IonCardHeader>
-      <IonCardContent class="px-4 pt-0 pb-4">
-        <div class="flex flex-col gap-4">
-          <div class="scan-preview-box">
-            <div class="flex flex-col gap-1">
-              <IonText color="medium">
-                <p class="m-0 text-xs font-semibold uppercase tracking-[0.12em]">Barcode-Vorschau</p>
-              </IonText>
-              <h2 class="m-0 text-[1.15rem] font-bold text-color">Halte den Barcode vor die Kamera.</h2>
+      <p class="scanner-hint">
+        Kamera öffnen – Erkennung wird im Web simuliert.
+      </p>
+
+      <IonText v-if="cameraError" color="warning">
+        <p class="camera-error">{{ cameraError }}</p>
+      </IonText>
+
+      <div class="scanner-actions">
+        <IonButton
+          expand="block"
+          color="success"
+          class="scan-action-button scan-action-button--primary"
+          :disabled="isScanning"
+          @click="startScan"
+        >
+          {{ isScanning ? 'Scan läuft …' : 'Scan starten' }}
+        </IonButton>
+
+        <IonButton
+          expand="block"
+          :fill="cameraActive ? 'solid' : 'outline'"
+          :color="cameraActive ? 'medium' : 'success'"
+          class="scan-action-button"
+          @click="cameraActive ? stopCamera() : startCamera()"
+        >
+          {{ cameraActive ? 'Kamera schließen' : 'Kamera öffnen' }}
+        </IonButton>
+      </div>
+    </section>
+
+    <section v-if="scanCompleted" class="scan-result-section">
+      <div class="compact-panel">
+        <div class="compact-panel-heading">
+          <span>Erkannter Barcode</span>
+          <IonBadge color="success">Scan erfolgreich</IonBadge>
+        </div>
+
+        <p class="barcode-value">{{ scannedBarcode }}</p>
+      </div>
+
+      <div class="compact-panel">
+        <div class="compact-panel-heading">
+          <span>Produktdaten</span>
+        </div>
+
+        <template v-if="scannedProduct">
+          <div class="product-result">
+            <div class="product-result-main">
+              <strong>{{ scannedProduct.name }}</strong>
+              <span>
+                {{ scannedProduct.category }}
+                <template v-if="scannedProduct.expiryDate">
+                  · MHD {{ scannedProduct.expiryDate }}
+                </template>
+              </span>
             </div>
 
-            <div v-if="cameraActive" class="scan-preview-video-wrap">
-              <video ref="videoRef" class="camera-preview" autoplay playsinline muted></video>
-            </div>
-            <div v-else class="scan-preview-placeholder">
-              <span class="scan-preview-icon">▣</span>
-              <p class="m-0 text-sm text-muted-color">Barcode-Kamera bereit</p>
-            </div>
-
-            <IonBadge v-if="isWebSimulation" class="scan-preview-badge soft-status-badge soft-status-badge--neutral">Web-Simulation aktiv</IonBadge>
+            <IonBadge color="medium">Simuliert</IonBadge>
           </div>
 
-          <IonText v-if="cameraError" color="warning">
-            <p class="m-0 text-sm">{{ cameraError }}</p>
+          <div class="result-actions">
+            <IonButton
+              expand="block"
+              color="success"
+              @click="openAddToInventoryDialog"
+            >
+              Zum Inventar
+            </IonButton>
+
+            <IonButton
+              expand="block"
+              fill="outline"
+              color="success"
+              @click="addScannedProductToShoppingList"
+            >
+              Einkaufsliste
+            </IonButton>
+          </div>
+        </template>
+
+        <template v-else>
+          <IonText color="warning">
+            <p class="result-warning">
+              Für diesen Barcode wurden keine Produktdaten gefunden.
+            </p>
           </IonText>
 
           <IonButton
             expand="block"
-            fill="solid"
-            color="success"
-            class="freshflow-scan-button scan-primary-button"
-            :disabled="isScanning"
-            @click="startScan"
-          >
-            Barcode scannen
-          </IonButton>
-        </div>
-      </IonCardContent>
-    </IonCard>
-
-    <div v-if="scanCompleted" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <IonCard class="w-full m-0">
-        <IonCardHeader class="px-4 pt-4 pb-3">
-          <div class="flex flex-wrap items-center gap-3">
-            <IonCardTitle class="text-lg">Erkannter Barcode</IonCardTitle>
-            <IonBadge class="soft-status-badge soft-status-badge--success">Scan erfolgreich</IonBadge>
-          </div>
-        </IonCardHeader>
-        <IonCardContent class="px-4 pt-0 pb-4">
-          <p class="barcode-value">{{ scannedBarcode }}</p>
-        </IonCardContent>
-      </IonCard>
-
-      <IonCard class="w-full m-0">
-        <IonCardHeader class="px-4 pt-4 pb-3">
-          <IonCardTitle class="text-lg">Produktdaten</IonCardTitle>
-          <IonCardSubtitle>Produktdaten werden im Web-Prototyp simuliert.</IonCardSubtitle>
-        </IonCardHeader>
-        <IonCardContent class="px-4 pt-0 pb-4 md:pb-5">
-          <template v-if="scannedProduct">
-            <div class="product-data-grid">
-              <div class="product-data-row">
-                <span class="product-data-label">Produkt</span>
-                <span class="product-data-value">{{ scannedProduct.name }}</span>
-              </div>
-
-              <div class="product-data-row">
-                <span class="product-data-label">Kategorie</span>
-                <IonChip class="m-0 history-chip history-chip--category">
-                  <IonLabel>{{ scannedProduct.category }}</IonLabel>
-                </IonChip>
-              </div>
-
-              <div v-if="scannedProduct.expiryDate" class="product-data-row">
-                <span class="product-data-label">Ablaufdatum</span>
-                <span class="product-data-value">{{ scannedProduct.expiryDate }}</span>
-                <IonBadge class="soft-status-badge soft-status-badge--neutral">Simuliert</IonBadge>
-              </div>
-            </div>
-
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row">
-              <IonButton class="freshflow-scan-button flex-1" color="success" @click="openAddToInventoryDialog">
-                Zum Inventar hinzufügen
-              </IonButton>
-              <IonButton class="flex-1" fill="outline" color="medium" @click="addScannedProductToShoppingList">
-                Zur Einkaufsliste hinzufügen
-              </IonButton>
-            </div>
-          </template>
-
-          <template v-else>
-            <IonText color="warning">
-              <p class="m-0">Für diesen Barcode wurden keine Produktdaten gefunden.</p>
-            </IonText>
-            <IonButton class="mt-4" fill="outline" color="medium" @click="resetScan">
-              Manuell zurücksetzen
-            </IonButton>
-          </template>
-        </IonCardContent>
-      </IonCard>
-    </div>
-
-    <IonCard class="m-0">
-      <IonCardHeader class="px-4 pt-4 pb-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <IonCardTitle class="text-lg">Scan-Historie</IonCardTitle>
-          <IonButton
-            v-if="scanHistory.length"
             fill="outline"
             color="medium"
-            size="small"
-            @click="showClearHistoryAlert = true"
+            @click="resetScan"
           >
-            Historie leeren
+            Manuell zurücksetzen
           </IonButton>
-        </div>
-      </IonCardHeader>
-      <IonCardContent class="px-4 pt-0 pb-4">
-        <IonList v-if="scanHistory.length" lines="none" class="bg-transparent p-0">
-          <IonItemSliding
-            v-for="entry in scanHistory"
-            :key="entry.id"
-            class="mb-3 overflow-hidden rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] shadow-sm"
+        </template>
+      </div>
+    </section>
+
+    <section class="history-section">
+      <div class="history-heading">
+        <h2>Scan-Historie</h2>
+
+        <IonButton
+          v-if="scanHistory.length"
+          fill="clear"
+          color="medium"
+          size="small"
+          class="clear-history-button"
+          @click="showClearHistoryAlert = true"
+        >
+          Historie leeren
+        </IonButton>
+      </div>
+
+      <IonList
+        v-if="scanHistory.length"
+        lines="none"
+        class="history-list"
+      >
+        <IonItemSliding
+          v-for="entry in scanHistory"
+          :key="entry.id"
+          class="history-sliding-item"
+        >
+          <IonItem
+            lines="none"
+            class="history-item"
+            :detail="false"
           >
-            <IonItem lines="none" class="min-h-[92px] scan-history-item" :detail="false">
-              <IonLabel class="ion-text-wrap">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <h3 class="m-0 text-base font-semibold text-color">{{ entry.productName }}</h3>
-                    <p class="m-0 mt-1 text-sm text-muted-color">Barcode: {{ entry.barcode }}</p>
-                    <p class="m-0 mt-1 text-sm text-muted-color">Zeit: {{ entry.scannedAt }}</p>
-                  </div>
+            <IonLabel class="history-label ion-text-wrap">
+              <div class="history-row">
+                <div class="history-product">
+                  <h3>{{ entry.productName }}</h3>
 
-                  <div class="flex shrink-0 flex-col items-end gap-2">
-                    <IonChip class="m-0 history-chip history-chip--result">
-                      <IonLabel>{{ entry.result }}</IonLabel>
-                    </IonChip>
-                    <IonChip v-if="entry.target !== 'Noch nicht übernommen'" class="m-0 history-chip history-chip--target">
-                      <IonLabel>{{ entry.target }}</IonLabel>
-                    </IonChip>
-                  </div>
+                  <p>
+                    {{ entry.barcode }} · {{ entry.category }} · {{ entry.scannedAt }}
+                  </p>
                 </div>
 
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <IonChip class="m-0 history-chip history-chip--category">
-                    <IonLabel>{{ entry.category }}</IonLabel>
-                  </IonChip>
+                <div class="history-statuses">
+                  <IonBadge
+                    :color="getResultBadgeColor(entry.result)"
+                    class="history-badge history-badge--result"
+                  >
+                    {{ entry.result }}
+                  </IonBadge>
+
+                  <IonBadge
+                    :color="getTargetBadgeColor(entry.target)"
+                    class="history-badge history-badge--target"
+                  >
+                    {{
+                      entry.target === 'Noch nicht übernommen'
+                        ? 'Nicht übernommen'
+                        : entry.target
+                    }}
+                  </IonBadge>
                 </div>
-              </IonLabel>
-            </IonItem>
+              </div>
+            </IonLabel>
+          </IonItem>
 
-            <IonItemOptions side="start">
-              <IonItemOption color="success" @click="addHistoryEntryToInventory(entry)">
-                Zum Inventar
-              </IonItemOption>
-              <IonItemOption color="medium" @click="addHistoryEntryToShoppingList(entry)">
-                Einkaufsliste
-              </IonItemOption>
-            </IonItemOptions>
+          <IonItemOptions side="start">
+            <IonItemOption
+              color="success"
+              @click="addHistoryEntryToInventory(entry)"
+            >
+              Zum Inventar
+            </IonItemOption>
 
-            <IonItemOptions side="end">
-              <IonItemOption color="danger" @click="removeHistoryEntry(entry.id)">
-                Löschen
-              </IonItemOption>
-            </IonItemOptions>
-          </IonItemSliding>
-        </IonList>
+            <IonItemOption
+              color="medium"
+              @click="addHistoryEntryToShoppingList(entry)"
+            >
+              Einkaufsliste
+            </IonItemOption>
+          </IonItemOptions>
 
-        <IonText v-else color="medium">
-          <p class="m-0">Noch keine Scans vorhanden.</p>
-        </IonText>
-      </IonCardContent>
-    </IonCard>
+          <IonItemOptions side="end">
+            <IonItemOption
+              color="danger"
+              @click="removeHistoryEntry(entry.id)"
+            >
+              Löschen
+            </IonItemOption>
+          </IonItemOptions>
+        </IonItemSliding>
+      </IonList>
+
+      <div v-else class="empty-history">
+        Noch keine Scans vorhanden.
+      </div>
+    </section>
 
     <IonModal
       :is-open="showAddInventoryModal"
@@ -650,37 +692,70 @@ onBeforeUnmount(() => {
       :handle="true"
       @didDismiss="showAddInventoryModal = false"
     >
-      <div class="flex max-h-[86vh] flex-col gap-4 overflow-y-auto p-4 pt-2">
-        <div class="flex items-start justify-between gap-3">
+      <div class="inventory-modal-content">
+        <div class="inventory-modal-heading">
           <div>
-            <h2 class="m-0 text-lg font-bold text-color">
-              {{ scannedProduct ? `${scannedProduct.name} zum Inventar hinzufügen` : 'Zum Inventar hinzufügen' }}
+            <h2>
+              {{
+                scannedProduct
+                  ? `${scannedProduct.name} zum Inventar hinzufügen`
+                  : 'Zum Inventar hinzufügen'
+              }}
             </h2>
-            <p class="m-0 mt-1 text-sm text-muted-color">Menge und optionales Ablaufdatum festlegen.</p>
+
+            <p>Menge und optionales Ablaufdatum festlegen.</p>
           </div>
 
-          <IonButton fill="clear" color="medium" size="small" @click="showAddInventoryModal = false">
+          <IonButton
+            fill="clear"
+            color="medium"
+            size="small"
+            @click="showAddInventoryModal = false"
+          >
             Schließen
           </IonButton>
         </div>
 
-        <IonList inset lines="full" class="bg-transparent p-0">
+        <IonList inset lines="full" class="inventory-modal-list">
           <IonItem>
             <IonLabel position="stacked">Menge</IonLabel>
-            <IonInput v-model="dialogQuantityInput" type="number" inputmode="numeric" min="1" max="999" />
+            <IonInput
+              v-model="dialogQuantityInput"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="999"
+            />
           </IonItem>
 
           <IonItem>
-            <IonLabel position="stacked">Ablaufdatum <span class="text-muted-color">(optional)</span></IonLabel>
-            <IonInput v-model="dialogExpiryDateInput" type="date" />
+            <IonLabel position="stacked">
+              Ablaufdatum
+              <span class="optional-label">(optional)</span>
+            </IonLabel>
+
+            <IonInput
+              v-model="dialogExpiryDateInput"
+              type="date"
+            />
           </IonItem>
         </IonList>
 
-        <div class="flex gap-3 pt-2">
-          <IonButton expand="block" fill="outline" color="medium" class="flex-1" @click="showAddInventoryModal = false">
+        <div class="inventory-modal-actions">
+          <IonButton
+            expand="block"
+            fill="outline"
+            color="medium"
+            @click="showAddInventoryModal = false"
+          >
             Abbrechen
           </IonButton>
-          <IonButton expand="block" color="success" class="flex-1" @click="confirmAddToInventory">
+
+          <IonButton
+            expand="block"
+            color="success"
+            @click="confirmAddToInventory"
+          >
             Hinzufügen
           </IonButton>
         </div>
@@ -714,124 +789,452 @@ onBeforeUnmount(() => {
   --freshflow-green: var(--sg-primary, #16a34a);
   --freshflow-green-strong: #15803d;
   --freshflow-green-soft: rgba(22, 163, 74, 0.12);
+  --scanner-surface: var(--sg-surface, #ffffff);
+  --scanner-border: var(--sg-border, #dde3df);
+  --scanner-text: var(--sg-text, #1f2937);
+  --scanner-muted: var(--sg-muted, #6b7280);
 }
 
-.scan-preview-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: 1rem;
-  border-radius: 1.25rem;
-  border: 1px solid var(--sg-border, #d1d5db);
-  background: linear-gradient(180deg, var(--p-surface-0, #ffffff) 0%, var(--sg-surface-2, #f8faf9) 100%);
+.scanner-page {
+  width: min(100%, 42rem);
+  margin: 0 auto;
+  padding:
+    1rem
+    0.875rem
+    calc(7rem + env(safe-area-inset-bottom));
 }
 
-.scan-preview-video-wrap {
+.scanner-heading h1 {
+  margin: 0;
+  color: var(--scanner-text);
+  font-size: clamp(1.8rem, 7vw, 2.1rem);
+  font-weight: 780;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.scanner-heading p {
+  margin: 0.45rem 0 0;
+  color: var(--scanner-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.scanner-area {
+  margin-top: 1rem;
+}
+
+.scan-frame {
+  position: relative;
+  display: grid;
+  min-height: 9.75rem;
+  place-items: center;
   overflow: hidden;
   border-radius: 1rem;
+  background: #07150e;
+  box-shadow: 0 0.3rem 1rem rgba(7, 21, 14, 0.14);
 }
 
-.scan-preview-placeholder {
+.scan-frame-placeholder {
   display: flex;
-  min-height: 140px;
+  width: 100%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  border-radius: 1rem;
-  border: 2px dashed var(--sg-border, #d1d5db);
-  background: rgba(22, 163, 74, 0.04);
+  gap: 0.8rem;
+  padding: 2rem 1rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+  text-align: center;
 }
 
-.scan-preview-icon {
-  font-size: 2.75rem;
-  line-height: 1;
-  color: var(--freshflow-green);
+.scan-line {
+  display: block;
+  width: min(78%, 19rem);
+  height: 0.18rem;
+  border-radius: 999px;
+  background: var(--freshflow-green);
+  box-shadow: 0 0 0.55rem rgba(22, 163, 74, 0.5);
 }
 
-.scan-preview-badge {
-  align-self: flex-start;
+.camera-preview {
+  width: 100%;
+  height: 100%;
+  min-height: 9.75rem;
+  max-height: 17rem;
+  object-fit: cover;
 }
 
-:deep(.freshflow-scan-button) {
+.scan-frame--camera-active::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.08),
+    transparent 30%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.12)
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.scan-corner {
+  position: absolute;
+  z-index: 2;
+  width: 1.7rem;
+  height: 1.7rem;
+  pointer-events: none;
+}
+
+.scan-corner--top-left {
+  top: 0.85rem;
+  left: 0.85rem;
+  border-top: 0.22rem solid var(--freshflow-green);
+  border-left: 0.22rem solid var(--freshflow-green);
+}
+
+.scan-corner--top-right {
+  top: 0.85rem;
+  right: 0.85rem;
+  border-top: 0.22rem solid var(--freshflow-green);
+  border-right: 0.22rem solid var(--freshflow-green);
+}
+
+.scan-corner--bottom-left {
+  bottom: 0.85rem;
+  left: 0.85rem;
+  border-bottom: 0.22rem solid var(--freshflow-green);
+  border-left: 0.22rem solid var(--freshflow-green);
+}
+
+.scan-corner--bottom-right {
+  right: 0.85rem;
+  bottom: 0.85rem;
+  border-right: 0.22rem solid var(--freshflow-green);
+  border-bottom: 0.22rem solid var(--freshflow-green);
+}
+
+.simulation-badge {
+  position: absolute;
+  z-index: 3;
+  top: 0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.82;
+}
+
+.scanner-hint {
+  margin: 0.65rem 0 0;
+  color: var(--scanner-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.camera-error {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.scanner-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.scan-action-button {
+  min-width: 0;
+  min-height: 2.8rem;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: none;
+  --border-radius: 999px;
+  --box-shadow: none;
+}
+
+.scan-action-button--primary {
   --background: var(--freshflow-green);
   --background-hover: var(--freshflow-green-strong);
   --background-activated: var(--freshflow-green-strong);
   --color: #ffffff;
-  min-height: 56px;
-  font-weight: 700;
 }
 
-:deep(.scan-primary-button) {
-  width: 100%;
-}
-
-:deep(.freshflow-scan-button.button-disabled) {
-  opacity: 0.85;
-}
-
-:deep(.scan-primary-button::part(native)) {
-  min-height: 56px;
-  font-size: 1rem;
-  font-weight: 700;
-  justify-content: center;
-}
-
-.product-data-grid {
+.scan-result-section {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.7rem;
+  margin-top: 1.1rem;
 }
 
-.product-data-row {
+.compact-panel {
+  padding: 0.9rem;
+  border: 1px solid var(--scanner-border);
+  border-radius: 1rem;
+  background: var(--scanner-surface);
+  box-shadow: 0 0.15rem 0.6rem rgba(15, 23, 42, 0.05);
+}
+
+.compact-panel-heading {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.product-data-label {
-  font-size: 0.75rem;
+  gap: 0.75rem;
+  color: var(--scanner-text);
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sg-muted, #6b7280);
 }
 
-.product-data-value {
+.barcode-value {
+  margin: 0.7rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--scanner-text);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+}
+
+.product-result {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.product-result-main {
+  display: flex;
   min-width: 0;
-  flex: 1;
-  text-align: right;
-  font-size: 0.98rem;
-  font-weight: 600;
-  color: var(--sg-text, #1f2937);
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-:deep(ion-badge[color='success']) {
-  --background: var(--freshflow-green);
-  --color: #ffffff;
+.product-result-main strong {
+  color: var(--scanner-text);
+  font-size: 0.95rem;
 }
 
-:deep(.soft-status-badge) {
-  border-radius: 999px;
+.product-result-main span {
+  color: var(--scanner-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.result-actions IonButton {
+  min-width: 0;
+  margin: 0;
   font-size: 0.72rem;
-  font-weight: 700;
   text-transform: none;
+  --border-radius: 999px;
+}
+
+.result-warning {
+  margin: 0.75rem 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.history-section {
+  margin-top: 1.15rem;
+}
+
+.history-heading {
+  display: flex;
+  min-height: 2.2rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.history-heading h2 {
+  margin: 0;
+  color: var(--scanner-text);
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.clear-history-button {
+  height: auto;
+  margin: 0;
+  font-size: 0.68rem;
+  text-transform: none;
+}
+
+.history-list {
+  margin-top: 0.4rem;
+  padding: 0;
+  background: transparent;
+}
+
+.history-sliding-item {
+  margin-bottom: 0.55rem;
+  overflow: hidden;
+  border: 1px solid var(--scanner-border);
+  border-radius: 0.85rem;
+  background: var(--scanner-surface);
+  box-shadow: 0 0.12rem 0.45rem rgba(15, 23, 42, 0.055);
+}
+
+.history-item {
+  --min-height: auto;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --inner-padding-top: 0;
+  --inner-padding-bottom: 0;
+  --background: var(--scanner-surface);
+}
+
+.history-label {
+  margin: 0;
+}
+
+.history-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  padding: 0.72rem 0.75rem;
+}
+
+.history-product {
+  min-width: 0;
+}
+
+.history-product h3 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--scanner-text);
+  font-size: 0.88rem;
+  font-weight: 720;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-product p {
+  margin: 0.35rem 0 0;
+  overflow: hidden;
+  color: var(--scanner-muted);
+  font-size: 0.64rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-statuses {
+  display: flex;
+  max-width: 7.8rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.history-badge {
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  font-size: 0.59rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
   --padding-start: 0.55rem;
   --padding-end: 0.55rem;
-  --padding-top: 0.28rem;
-  --padding-bottom: 0.28rem;
+  --padding-top: 0.26rem;
+  --padding-bottom: 0.26rem;
 }
 
-:deep(.soft-status-badge--success) {
+.history-badge--result {
   --background: rgba(22, 163, 74, 0.12);
   --color: var(--freshflow-green-strong);
 }
 
-:deep(.soft-status-badge--neutral) {
-  --background: rgba(107, 114, 128, 0.12);
-  --color: #4b5563;
+.history-badge--target {
+  --background: rgba(37, 99, 235, 0.1);
+  --color: #1d4ed8;
+}
+
+.empty-history {
+  margin-top: 0.4rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--scanner-border);
+  border-radius: 0.85rem;
+  background: var(--scanner-surface);
+  color: var(--scanner-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.inventory-modal-content {
+  display: flex;
+  max-height: 86vh;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.inventory-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.inventory-modal-heading h2 {
+  margin: 0;
+  color: var(--scanner-text);
+  font-size: 1.05rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.inventory-modal-heading p {
+  margin: 0.35rem 0 0;
+  color: var(--scanner-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.inventory-modal-list {
+  padding: 0;
+  background: transparent;
+}
+
+.optional-label {
+  color: var(--scanner-muted);
+}
+
+.inventory-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.inventory-modal-actions IonButton {
+  margin: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  margin: -1px;
+  white-space: nowrap;
 }
 
 :deep(ion-button[color='success']) {
@@ -842,66 +1245,32 @@ onBeforeUnmount(() => {
 }
 
 :deep(ion-button[color='success'].button-outline) {
+  --background: transparent;
   --border-color: var(--freshflow-green);
   --color: var(--freshflow-green);
 }
 
-:deep(.history-chip) {
-  margin: 0;
-  height: auto;
-  border-radius: 999px;
-  background: var(--p-surface-100, #f3f4f6);
-  color: var(--sg-text, #1f2937);
+@media (min-width: 40rem) {
+  .scanner-page {
+    padding-inline: 1rem;
+  }
 }
 
-:deep(.history-chip ion-label) {
-  margin: 0;
-  padding: 0;
-  font-size: 0.74rem;
-  font-weight: 600;
-}
+@media (max-width: 22rem) {
+  .scanner-actions,
+  .result-actions,
+  .inventory-modal-actions {
+    grid-template-columns: 1fr;
+  }
 
-:deep(.history-chip--result) {
-  background: rgba(22, 163, 74, 0.12);
-  color: var(--freshflow-green-strong);
-}
+  .history-row {
+    grid-template-columns: 1fr;
+  }
 
-:deep(.history-chip--target) {
-  background: rgba(37, 99, 235, 0.1);
-  color: #1d4ed8;
-}
-
-:deep(.history-chip--category) {
-  background: rgba(107, 114, 128, 0.12);
-  color: #4b5563;
-}
-
-:deep(.camera-preview) {
-  width: 100%;
-  max-height: 260px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid var(--sg-border, #d1d5db);
-  background: #000;
-}
-
-:deep(.scan-history-item) {
-  --padding-start: 0.9rem;
-  --inner-padding-end: 0.9rem;
-  --min-height: 92px;
-}
-
-.barcode-value {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 1.4rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--p-text-color, #1f2937);
-  margin: 0;
-  padding: 0.75rem 1rem;
-  background-color: var(--p-surface-100, #f3f4f6);
-  border-radius: 6px;
-  border: 1px solid var(--p-surface-200, #e5e7eb);
-  word-break: break-all;
+  .history-statuses {
+    max-width: none;
+    flex-direction: row;
+    align-items: center;
+  }
 }
 </style>

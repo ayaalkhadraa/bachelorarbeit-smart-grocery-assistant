@@ -2,11 +2,18 @@
 import { computed, ref } from 'vue'
 import {
   IonButton,
+  IonButtons,
+  IonCard,
+  IonCardContent,
   IonCheckbox,
   IonChip,
+  IonCol,
+  IonContent,
   IonDatetime,
   IonFab,
   IonFabButton,
+  IonGrid,
+  IonHeader,
   IonIcon,
   IonInput,
   IonItem,
@@ -16,11 +23,14 @@ import {
   IonLabel,
   IonList,
   IonModal,
+  IonRow,
   IonSegment,
   IonSegmentButton,
-  IonText,
   IonSelect,
-IonSelectOption,
+  IonSelectOption,
+  IonText,
+  IonTitle,
+  IonToolbar,
 } from '@ionic/vue'
 import {
   addOutline,
@@ -128,52 +138,63 @@ function addManualShoppingItem(): void {
 </script>
 
 <template>
-  <main class="w-full px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-4">
-    <section class="mb-3 space-y-3">
-      <div class="flex items-start gap-3">
-        <div class="min-w-0">
-          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Einkaufsliste</h1>
-          <p class="m-0 mt-1 text-sm text-muted-color">
-            Mobile Vergleichsansicht für die bestehende Einkaufsliste.
-          </p>
-        </div>
+  <main class="shopping-page">
+    <section class="shopping-header">
+      <div class="page-heading">
+        <h1>Einkaufsliste</h1>
+        <p>Mobile Vergleichsansicht für die bestehende Einkaufsliste.</p>
       </div>
 
-      <div class="grid grid-cols-3 gap-2">
-        <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-3 py-2 shadow-sm">
-          <div class="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-color">Offen</div>
-          <div class="mt-1 text-lg font-bold text-color">{{ groceryStore.openShoppingItems.length }}</div>
-        </div>
-        <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-3 py-2 shadow-sm">
-          <div class="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-color">Erledigt</div>
-          <div class="mt-1 text-lg font-bold text-color">{{ groceryStore.boughtShoppingItems.length }}</div>
-        </div>
-        <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-3 py-2 shadow-sm">
-          <div class="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-color">Gesamt</div>
-          <div class="mt-1 text-lg font-bold text-color">{{ groceryStore.shoppingListItems.length }}</div>
-        </div>
-      </div>
+      <IonCard class="summary-card">
+        <IonCardContent>
+          <IonGrid class="ion-no-padding">
+            <IonRow>
+              <IonCol size="4" class="summary-cell">
+                <span class="summary-label">Offen</span>
+                <strong class="summary-value">
+                  {{ groceryStore.openShoppingItems.length }}
+                </strong>
+              </IonCol>
 
-      <div class="space-y-2">
+              <IonCol size="4" class="summary-cell summary-cell--divided">
+                <span class="summary-label">Erledigt</span>
+                <strong class="summary-value">
+                  {{ groceryStore.boughtShoppingItems.length }}
+                </strong>
+              </IonCol>
+
+              <IonCol size="4" class="summary-cell summary-cell--divided">
+                <span class="summary-label">Gesamt</span>
+                <strong class="summary-value">
+                  {{ groceryStore.shoppingListItems.length }}
+                </strong>
+              </IonCol>
+            </IonRow>
+          </IonGrid>
+        </IonCardContent>
+      </IonCard>
+
+      <div class="filter-area">
         <IonSegment v-model="filter" class="freshflow-segment">
           <IonSegmentButton value="open">
             <IonLabel>Offen</IonLabel>
           </IonSegmentButton>
+
           <IonSegmentButton value="bought">
             <IonLabel>Erledigt</IonLabel>
           </IonSegmentButton>
+
           <IonSegmentButton value="all">
             <IonLabel>Alle</IonLabel>
           </IonSegmentButton>
         </IonSegment>
 
-        <div class="flex justify-end">
+        <div class="clear-action">
           <IonButton
             v-if="groceryStore.boughtShoppingItems.length > 0"
             fill="clear"
             color="medium"
             size="small"
-            class="h-auto px-0 text-[0.8rem] font-medium text-[var(--sg-muted)]"
             @click="groceryStore.clearBoughtItems()"
           >
             <IonIcon :icon="trashOutline" slot="start" />
@@ -183,43 +204,45 @@ function addManualShoppingItem(): void {
       </div>
     </section>
 
-    <section>
-      <IonList v-if="visibleItems.length > 0" lines="none" class="bg-transparent p-0">
+    <section class="shopping-list-section">
+      <IonList
+        v-if="visibleItems.length > 0"
+        lines="none"
+        class="shopping-list"
+      >
         <IonItemSliding
           v-for="item in visibleItems"
           :key="item.id"
-          class="mb-2.5 overflow-hidden rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] shadow-sm"
+          class="shopping-sliding-item"
         >
           <IonItem lines="none" class="shopping-item-shell">
-            <div class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 py-1.5">
+            <div class="shopping-item-layout">
               <IonCheckbox
                 :checked="item.bought"
-                class="mt-0.5 shrink-0"
+                class="shopping-checkbox"
                 aria-label="Produkt als erledigt markieren"
                 @click.stop.prevent="openBoughtDialog(item)"
               />
 
-              <div class="min-w-0">
-                <h2 class="m-0 text-left text-[1rem] font-semibold leading-tight text-color">
-                  {{ item.name }}
-                </h2>
-                <p class="m-0 mt-1 text-left text-[0.8rem] leading-snug text-muted-color">
+              <div class="shopping-item-content">
+                <h2>{{ item.name }}</h2>
+
+                <p>
                   {{ item.category }} · {{ item.quantity }} {{ item.unit }}
                 </p>
-                <p class="m-0 mt-1 text-left text-[0.8rem] leading-snug text-muted-color">
+
+                <p>
                   MHD: {{ item.expiryDate || 'Kein Datum' }}
                 </p>
               </div>
 
-              <div class="pt-0.5">
-                <IonChip
-                  :color="item.bought ? 'success' : 'warning'"
-                  class="m-0 shrink-0"
-                >
-                  {{ item.bought ? 'Erledigt' : 'Offen' }}
-                </IonChip>
-              </div>
-                </div>
+              <IonChip
+                :color="item.bought ? 'success' : 'warning'"
+                class="status-chip"
+              >
+                {{ item.bought ? 'Erledigt' : 'Offen' }}
+              </IonChip>
+            </div>
           </IonItem>
 
           <IonItemOptions side="end">
@@ -231,133 +254,163 @@ function addManualShoppingItem(): void {
         </IonItemSliding>
       </IonList>
 
-      <div
-        v-else
-        class="rounded-2xl border border-dashed border-[var(--sg-border)] bg-[var(--sg-surface)] px-5 py-10 text-center text-muted-color"
-      >
-        <IonIcon :icon="cartOutline" class="mb-3 text-[2.5rem] text-[var(--sg-primary)]" />
-        <p class="m-0">Keine Produkte in dieser Ansicht vorhanden.</p>
+      <div v-else class="empty-state">
+        <IonIcon :icon="cartOutline" />
+        <p>Keine Produkte in dieser Ansicht vorhanden.</p>
       </div>
     </section>
 
-    <IonFab vertical="bottom" horizontal="end" class="fixed bottom-[92px] right-4 z-30">
+    <IonFab
+      vertical="bottom"
+      horizontal="end"
+      class="shopping-fab"
+    >
       <IonFabButton color="success" @click="showAddModal = true">
         <IonIcon :icon="addOutline" />
       </IonFabButton>
     </IonFab>
 
-    <IonModal :is-open="showAddModal" @didDismiss="showAddModal = false">
-      <div class="mx-auto w-full max-w-[34rem] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div class="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h2 class="m-0 text-xl font-bold text-color">Artikel hinzufügen</h2>
-            <p class="m-0 mt-1 text-sm text-muted-color">
-              Produkte aus dem Bestand zur Einkaufsliste verschieben.
-            </p>
-          </div>
-          <IonButton fill="clear" color="medium" @click="showAddModal = false">
-            <IonIcon :icon="closeOutline" slot="icon-only" />
-          </IonButton>
-        </div>
+    <IonModal
+      :is-open="showAddModal"
+      class="add-item-modal"
+      @didDismiss="showAddModal = false"
+    >
+      <IonHeader class="ion-no-border">
+        <IonToolbar>
+          <IonTitle>Artikel hinzufügen</IonTitle>
 
-        <div class="flex flex-col gap-4">
-          <div class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-4 py-4 shadow-sm">
-            <div class="mb-3 text-sm font-semibold uppercase tracking-[0.07em] text-muted-color">
-              Manueller Artikel
-            </div>
+          <IonButtons slot="end">
+            <IonButton
+              color="medium"
+              aria-label="Dialog schließen"
+              @click="showAddModal = false"
+            >
+              <IonIcon :icon="closeOutline" slot="icon-only" />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
 
-            <div class="grid gap-3">
-              <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium text-color">Name</label>
-                <IonInput
-                  v-model="manualName"
-                  fill="outline"
-                  placeholder="z. B. Haferflocken"
-                />
+      <IonContent
+        :scroll-y="true"
+        class="add-item-content"
+      >
+        <div class="modal-content add-item-modal-content">
+          <p class="add-item-description">
+            Produkte aus dem Bestand zur Einkaufsliste verschieben.
+          </p>
+
+          <div class="modal-stack">
+            <div class="modal-card">
+              <div class="modal-section-label">
+                Manueller Artikel
               </div>
 
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div class="flex flex-col gap-2">
-                  <label class="text-sm font-medium text-color">Menge</label>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Name</label>
                   <IonInput
-                    v-model="manualQuantity"
-                    type="number"
-                    inputmode="numeric"
-                    min="1"
+                    v-model="manualName"
                     fill="outline"
+                    placeholder="z. B. Haferflocken"
                   />
                 </div>
 
-                <div class="flex flex-col gap-2">
-                  <label class="text-sm font-medium text-color">Kategorie</label>
-                  <IonSelect
-  v-model="manualCategory"
-  label="Kategorie"
-  interface="action-sheet"
-  cancel-text="Abbrechen"
->
-                    <IonSelectOption
-                      v-for="category in categories"
-                      :key="category"
-                      :value="category"
+                <div class="two-column-fields">
+                  <div class="form-field">
+                    <label>Menge</label>
+                    <IonInput
+                      v-model="manualQuantity"
+                      type="number"
+                      inputmode="numeric"
+                      min="1"
+                      fill="outline"
+                    />
+                  </div>
+
+                  <div class="form-field">
+                   
+                    <IonSelect
+                      v-model="manualCategory"
+                      label="Kategorie"
+                      interface="action-sheet"
+                      cancel-text="Abbrechen"
                     >
-                      {{ category }}
-                    </IonSelectOption>
-                  </IonSelect>
-                </div>
-              </div>
-
-              <div class="flex justify-end">
-                <IonButton color="success" :disabled="!manualName.trim()" @click="addManualShoppingItem">
-                  <IonIcon :icon="addOutline" slot="start" />
-                   hinzufügen
-                </IonButton>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="groceryStore.availableForShoppingList.length === 0"
-            class="rounded-2xl border border-dashed border-[var(--sg-border)] bg-[var(--sg-surface)] px-5 py-10 text-center text-muted-color"
-          >
-            <IonIcon :icon="checkmarkOutline" class="mb-3 text-[2.5rem] text-[var(--sg-primary)]" />
-            <p class="m-0">Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.</p>
-          </div>
-
-          <IonList v-else lines="none" class="bg-transparent p-0">
-            <IonItem
-              v-for="item in groceryStore.availableForShoppingList"
-              :key="item.id"
-              lines="none"
-              class="mb-2 overflow-hidden rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] shadow-sm"
-            >
-              <div class="flex w-full items-center justify-between gap-3 py-1">
-                <div class="min-w-0">
-                  <div class="truncate font-semibold text-color">{{ item.name }}</div>
-                  <div class="mt-1 text-sm text-muted-color">
-                    {{ item.category }} · {{ item.quantity }} {{ item.unit }}
+                      <IonSelectOption
+                        v-for="category in categories"
+                        :key="category"
+                        :value="category"
+                      >
+                        {{ category }}
+                      </IonSelectOption>
+                    </IonSelect>
                   </div>
                 </div>
-                <IonButton size="small" color="success" @click="addAvailableItem(item.id)">
-                  <IonIcon :icon="addOutline" slot="start" />
-                  Hinzufügen
-                </IonButton>
+
+                <div class="modal-primary-action">
+                  <IonButton
+                    color="success"
+                    :disabled="!manualName.trim()"
+                    @click="addManualShoppingItem"
+                  >
+                    <IonIcon :icon="addOutline" slot="start" />
+                    Hinzufügen
+                  </IonButton>
+                </div>
               </div>
-            </IonItem>
-          </IonList>
+            </div>
+
+            <div
+              v-if="groceryStore.availableForShoppingList.length === 0"
+              class="empty-state modal-empty-state"
+            >
+              <IonIcon :icon="checkmarkOutline" />
+              <p>
+                Alle verfügbaren Produkte befinden sich bereits in der Einkaufsliste.
+              </p>
+            </div>
+
+            <IonList v-else lines="none" class="available-list">
+              <IonItem
+                v-for="item in groceryStore.availableForShoppingList"
+                :key="item.id"
+                lines="none"
+                class="available-item"
+              >
+                <div class="available-item-layout">
+                  <div class="available-item-content">
+                    <strong>{{ item.name }}</strong>
+                    <span>
+                      {{ item.category }} · {{ item.quantity }} {{ item.unit }}
+                    </span>
+                  </div>
+
+                  <IonButton
+                    size="small"
+                    color="success"
+                    @click="addAvailableItem(item.id)"
+                  >
+                    <IonIcon :icon="addOutline" slot="start" />
+                    Hinzufügen
+                  </IonButton>
+                </div>
+              </IonItem>
+            </IonList>
+
+            <div class="modal-scroll-spacer" aria-hidden="true" />
+          </div>
         </div>
-      </div>
+      </IonContent>
     </IonModal>
 
     <IonModal :is-open="showBoughtModal" @didDismiss="closeBoughtDialog">
-      <div class="mx-auto w-full max-w-[34rem] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="modal-content">
+        <div class="modal-header">
           <div>
-            <h2 class="m-0 text-xl font-bold text-color">Produkt gekauft</h2>
-            <p class="m-0 mt-1 text-sm text-muted-color">
-              Als erledigt markieren oder in den Vorrat übernehmen.
-            </p>
+            <h2>Produkt gekauft</h2>
+            <p>Als erledigt markieren oder in den Vorrat übernehmen.</p>
           </div>
+
           <IonButton fill="clear" color="medium" @click="closeBoughtDialog">
             <IonIcon :icon="closeOutline" slot="icon-only" />
           </IonButton>
@@ -365,51 +418,54 @@ function addManualShoppingItem(): void {
 
         <div
           v-if="selectedBoughtItem"
-          class="rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-4 py-3 shadow-sm"
+          class="selected-product-card"
         >
-          <div class="font-semibold text-color">{{ selectedBoughtItem.name }}</div>
-          <div class="mt-1 text-sm text-muted-color">
-            {{ selectedBoughtItem.category }} · {{ selectedBoughtItem.quantity }} {{ selectedBoughtItem.unit }}
-          </div>
+          <strong>{{ selectedBoughtItem.name }}</strong>
+          <span>
+            {{ selectedBoughtItem.category }} ·
+            {{ selectedBoughtItem.quantity }} {{ selectedBoughtItem.unit }}
+          </span>
         </div>
 
-        <div class="mt-4 rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-surface)] px-4 py-4 shadow-sm">
-          <div class="mb-3 text-sm font-semibold text-color">In Vorrat übernehmen</div>
+        <div class="modal-card inventory-card">
+          <div class="inventory-title">
+            In Vorrat übernehmen
+          </div>
 
-          <div class="space-y-3">
-            <label class="block text-sm font-medium text-color">
-              Menge
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Menge</span>
               <IonInput
                 v-model="boughtQuantity"
                 type="number"
                 inputmode="numeric"
                 min="1"
                 fill="outline"
-                class="mt-2"
               />
             </label>
 
-            <label class="block text-sm font-medium text-color">
-              Neues Ablaufdatum
+            <label class="form-field">
+              <span>Neues Ablaufdatum</span>
               <IonDatetime
                 v-model="boughtExpiryDate"
                 presentation="date"
-                class="mt-2 rounded-2xl border border-[var(--sg-border)] bg-[var(--sg-background)]"
+                class="expiry-picker"
               />
             </label>
 
             <IonText color="medium">
-              <p class="m-0 text-sm leading-snug">
+              <p class="modal-note">
                 Wenn du den Artikel übernimmst, werden Menge und Ablaufdatum im Inventar aktualisiert.
               </p>
             </IonText>
           </div>
         </div>
 
-        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <div class="modal-footer-actions">
           <IonButton fill="outline" color="medium" @click="markOnlyAsBought">
             Nur erledigt
           </IonButton>
+
           <IonButton color="success" @click="addToInventory">
             <IonIcon :icon="bagCheckOutline" slot="start" />
             In Vorrat übernehmen
@@ -421,6 +477,135 @@ function addManualShoppingItem(): void {
 </template>
 
 <style scoped>
+.shopping-page {
+  width: min(100%, 48rem);
+  margin: 0 auto;
+  padding:
+    1rem
+    0.875rem
+    calc(7.5rem + env(safe-area-inset-bottom));
+}
+
+.shopping-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: clamp(1.75rem, 7vw, 2rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.page-heading p {
+  margin: 0.35rem 0 0;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.summary-card {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-surface);
+  box-shadow: 0 0.15rem 0.55rem rgba(15, 23, 42, 0.07);
+}
+
+.summary-card IonCardContent {
+  padding: 0.8rem 0.35rem;
+}
+
+.summary-cell {
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  text-align: center;
+}
+
+.summary-cell--divided {
+  border-inline-start: 1px solid var(--sg-border);
+}
+
+.summary-label {
+  display: block;
+  overflow: hidden;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.summary-value {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.filter-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.freshflow-segment {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.2rem;
+  border-radius: 0.9rem;
+  background: var(--sg-surface);
+}
+
+.freshflow-segment IonSegmentButton {
+  min-height: 2.45rem;
+  --border-radius: 0.7rem;
+  --indicator-color: var(--ion-color-primary);
+  --color: var(--ion-color-medium);
+  --color-checked: var(--ion-color-primary);
+}
+
+.clear-action {
+  min-height: 2rem;
+  text-align: end;
+}
+
+.clear-action IonButton {
+  height: auto;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.shopping-list-section {
+  margin-top: 0.15rem;
+}
+
+.shopping-list {
+  padding: 0;
+  background: transparent;
+}
+
+.shopping-sliding-item {
+  margin-bottom: 0.7rem;
+  overflow: hidden;
+  border: 1px solid var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-surface);
+  box-shadow: 0 0.15rem 0.55rem rgba(15, 23, 42, 0.06);
+}
+
 .shopping-item-shell {
   --padding-start: 0;
   --inner-padding-end: 0;
@@ -428,5 +613,340 @@ function addManualShoppingItem(): void {
   --inner-padding-bottom: 0;
   --background: transparent;
   --min-height: auto;
+}
+
+.shopping-item-layout {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.7rem;
+  padding: 0.85rem 0.85rem 0.85rem 0.75rem;
+}
+
+.shopping-checkbox {
+  margin: 0.15rem 0 0;
+  flex-shrink: 0;
+}
+
+.shopping-item-content {
+  min-width: 0;
+}
+
+.shopping-item-content h2 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shopping-item-content p {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.79rem;
+  line-height: 1.3;
+  text-align: start;
+}
+
+.status-chip {
+  height: 1.8rem;
+  margin: 0;
+  align-self: start;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 2.25rem 1.25rem;
+  border: 1px dashed var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-surface);
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  text-align: center;
+}
+
+.empty-state IonIcon {
+  margin-bottom: 0.65rem;
+  color: var(--sg-primary);
+  font-size: 2.4rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.shopping-fab {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  z-index: 30;
+}
+
+
+.add-item-modal {
+  --width: 100%;
+  --height: 100%;
+}
+
+.add-item-content {
+  --background: var(--sg-background);
+  --padding-top: 0;
+  --padding-bottom: env(safe-area-inset-bottom);
+}
+
+.add-item-content::part(scroll) {
+  overscroll-behavior-y: contain;
+}
+
+.add-item-modal-content {
+  min-height: 100%;
+}
+
+.add-item-description {
+  margin: 0 0 1rem;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.modal-scroll-spacer {
+  height: calc(1rem + env(safe-area-inset-bottom));
+  flex: 0 0 auto;
+}
+
+.modal-content {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+  padding:
+    1rem
+    1rem
+    calc(1rem + env(safe-area-inset-bottom));
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+
+.modal-header p {
+  margin: 0.3rem 0 0;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.modal-header IonButton {
+  margin: -0.4rem -0.5rem 0 0;
+}
+
+.modal-stack,
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.modal-card,
+.selected-product-card {
+  padding: 1rem;
+  border: 1px solid var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-surface);
+  box-shadow: 0 0.15rem 0.55rem rgba(15, 23, 42, 0.06);
+}
+
+.modal-section-label {
+  margin-bottom: 0.8rem;
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.two-column-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.modal-primary-action {
+  display: flex;
+  justify-content: stretch;
+}
+
+.modal-primary-action IonButton {
+  width: 100%;
+  margin: 0;
+}
+
+.available-list {
+  padding: 0;
+  background: transparent;
+}
+
+.available-item {
+  margin-bottom: 0.65rem;
+  overflow: hidden;
+  border: 1px solid var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-surface);
+  box-shadow: 0 0.15rem 0.55rem rgba(15, 23, 42, 0.05);
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+.available-item-layout {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+}
+
+.available-item-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.available-item-content strong {
+  overflow: hidden;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.available-item-content span,
+.selected-product-card span {
+  color: var(--ion-color-medium, var(--p-text-muted-color));
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.available-item IonButton {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.modal-empty-state {
+  padding-block: 2rem;
+}
+
+.selected-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inventory-card {
+  margin-top: 1rem;
+}
+
+.inventory-title {
+  margin-bottom: 0.8rem;
+  color: var(--ion-text-color, var(--p-text-color));
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.expiry-picker {
+  border: 1px solid var(--sg-border);
+  border-radius: 1rem;
+  background: var(--sg-background);
+}
+
+.modal-note {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+
+.modal-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.modal-footer-actions IonButton {
+  width: 100%;
+  margin: 0;
+}
+
+@media (min-width: 36rem) {
+
+  .add-item-modal {
+    --width: min(34rem, calc(100vw - 2rem));
+    --height: min(48rem, calc(100vh - 2rem));
+    --border-radius: 1rem;
+  }
+
+  .shopping-page {
+    padding-inline: 1rem;
+  }
+
+  .two-column-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal-primary-action {
+    justify-content: flex-end;
+  }
+
+  .modal-primary-action IonButton {
+    width: auto;
+  }
+
+  .modal-footer-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .modal-footer-actions IonButton {
+    width: auto;
+  }
+}
+
+@media (max-width: 24rem) {
+  .shopping-item-layout {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .status-chip {
+    grid-column: 2;
+    justify-self: start;
+  }
 }
 </style>
