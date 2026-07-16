@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   IonButton,
   IonButtons,
@@ -43,10 +44,13 @@ import {
 } from 'ionicons/icons'
 
 import { useGroceryStore, type GroceryItem } from '@/stores/groceryStore'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 type ShoppingFilter = 'open' | 'bought' | 'all'
 
 const groceryStore = useGroceryStore()
+const router = useRouter()
 
 const categories = ['Obst', 'Gemüse', 'Milchprodukte', 'Getränke', 'Backwaren', 'Sonstiges']
 
@@ -136,18 +140,18 @@ function addManualShoppingItem(): void {
   resetManualItem()
   showAddModal.value = false
 }
+
+function handleLogout(): void {
+  logout(router)
+}
 </script>
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Einkaufsliste" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="shopping-page">
       <section class="shopping-header">
-      <div class="page-heading">
-        <h1>Einkaufsliste</h1>
-        <p>Mobile Vergleichsansicht für die bestehende Einkaufsliste.</p>
-      </div>
-
       <IonCard class="summary-card">
         <IonCardContent>
           <IonGrid class="ion-no-padding">

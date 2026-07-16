@@ -23,6 +23,7 @@ import Button from 'primevue/button'
 import { checkExpiringProducts } from '@/services/notificationService'
 import { scheduleStartupExpiryReminderNotification } from '@/services/localNotificationService'
 import { useGroceryStore } from '@/stores/groceryStore'
+import { logout as performLogout } from '@/utils/logout'
 
 const route = useRoute()
 const router = useRouter()
@@ -64,9 +65,8 @@ function loadCurrentUser(): void {
 }
 
 function logout(): void {
-  localStorage.removeItem('smart-grocery-demo-user')
+  performLogout(router)
   currentUser.value = null
-  router.push('/login')
 }
 
 onMounted(() => {

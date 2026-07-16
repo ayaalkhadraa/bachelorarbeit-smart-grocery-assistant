@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
 import L from 'leaflet'
@@ -32,6 +33,8 @@ import { compassOutline, locateOutline, mapOutline, navigateOutline, searchOutli
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -68,6 +71,7 @@ const locationLoading = ref(false)
 const locationError = ref('')
 const mapContainer = ref<HTMLElement | null>(null)
 let leafletMap: L.Map | null = null
+const router = useRouter()
 
 const userCoords = ref<{
   lat: number
@@ -82,6 +86,10 @@ const stores: Store[] = [
   { id: 4, name: 'Aldi Nord', address: 'Schönhauser Allee 79, Berlin', open: true, type: 'Discounter', lat: 52.536, lng: 13.412 },
   { id: 5, name: 'Kaufland', address: 'Tempelhof Damm 14, Berlin', open: true, type: 'Supermarkt', lat: 52.467, lng: 13.382 },
 ]
+
+function handleLogout(): void {
+  logout(router)
+}
 
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371
@@ -313,14 +321,10 @@ onBeforeUnmount(() => {
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Supermärkte" showBackButton default-back-href="/dashboard" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="w-full pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-7">
       <section class="mb-4 flex flex-col gap-3">
-      <div class="flex flex-col gap-1">
-        <h1 class="m-0 text-3xl font-bold text-color">Ionic-Stores</h1>
-        <p class="m-0 text-sm text-muted-color">Mobile Vergleichsansicht für Standorte, Karte und Navigation.</p>
-      </div>
-
       <IonCard class="m-0 store-status-card">
         <IonCardHeader class="px-4 pt-4 pb-3">
           <IonCardTitle class="text-lg">Standort</IonCardTitle>

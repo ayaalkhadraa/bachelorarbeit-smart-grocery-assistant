@@ -7,7 +7,6 @@ import IonicDashboardView from '@/views/IonicDashboardView.vue'
 import IonicInventoryView from '@/views/IonicInventoryView.vue'
 import IonicShoppingListView from '@/views/IonicShoppingListView.vue'
 import IonicScannerView from '@/views/IonicScannerView.vue'
-import IonicMoreView from '@/views/IonicMoreView.vue'
 import IonicStoresView from '@/views/IonicStoresView.vue'
 import IonicSettingsView from '@/views/IonicSettingsView.vue'
 const router = createRouter({
@@ -46,10 +45,21 @@ const router = createRouter({
           component: IonicScannerView
         },
         {
+          path: 'stores',
+          name: 'stores',
+          alias: '/stores',
+          component: IonicStoresView
+        },
+        {
+          path: 'settings',
+          name: 'settings',
+          alias: '/settings',
+          component: IonicSettingsView
+        },
+        {
           path: 'more',
-          name: 'more',
           alias: '/more',
-          component: IonicMoreView
+          redirect: '/dashboard'
         },
       ]
     },
@@ -61,16 +71,6 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: IonicLoginView
-    },
-    {
-      path: '/stores',
-      name: 'stores',
-      component: IonicStoresView
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: IonicSettingsView
     },
     {
       path: '/ionic-login',

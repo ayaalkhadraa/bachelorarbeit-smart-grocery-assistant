@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import {
   CapacitorBarcodeScanner,
@@ -24,8 +25,11 @@ import {
   IonToast
 } from '@ionic/vue'
 import { useGroceryStore } from '@/stores/groceryStore'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 const groceryStore = useGroceryStore()
+const router = useRouter()
 type AddItemPayload = Parameters<typeof groceryStore.addItem>[0]
 
 interface SimulatedProduct {
@@ -79,6 +83,10 @@ const simulatedProducts: SimulatedProduct[] = [
 ]
 
 const UNKNOWN_BARCODE = '9999999999999'
+
+function handleLogout(): void {
+  logout(router)
+}
 
 function loadScanHistory(): void {
   try {
@@ -454,10 +462,10 @@ onBeforeUnmount(() => {
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Scanner" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="scanner-page">
     <header class="scanner-heading">
-      <h1>Scanner</h1>
       <p>Produkte per Barcode erfassen</p>
     </header>
 

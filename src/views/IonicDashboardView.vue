@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   IonBadge,
   IonButton,
@@ -22,11 +23,18 @@ import { useGroceryStore } from '@/stores/groceryStore'
 import type { GroceryItem } from '@/stores/groceryStore'
 import { getExpiryInfo, getProductExpiryDate } from '@/utils/expiryUtils'
 import type { ExpiryInfo } from '@/utils/expiryUtils'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 const groceryStore = useGroceryStore()
+const router = useRouter()
 
 function getItemExpiry(item: GroceryItem): ExpiryInfo {
   return getExpiryInfo(getProductExpiryDate(item as unknown as Record<string, unknown>))
+}
+
+function handleLogout(): void {
+  logout(router)
 }
 
 const productsWithExpiry = computed(() =>
@@ -119,18 +127,10 @@ function getMixBarColor(index: number): string {
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Dashboard" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="w-full">
     <section class="mb-6">
-        <!-- عنوان الصفحة خارج الكارد -->
-      <div class="mb-4">
-        <IonText color="dark">
-          <h1 class="m-0 text-2xl font-semibold">
-            Dashboard
-          </h1>
-        </IonText>
-      </div>
-      
       <IonCard class="m-0">
         <IonCardContent class="px-4 pt-0 pb-4">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

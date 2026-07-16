@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
 import { NativeBiometric } from '@capgo/capacitor-native-biometric'
@@ -42,8 +43,11 @@ import {
   notifyExpiringProducts,
   type ExpiryCheckResult,
 } from '@/services/notificationService'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 const groceryStore = useGroceryStore()
+const router = useRouter()
 
 onMounted(() => {
   groceryStore.loadItems()
@@ -89,6 +93,10 @@ const BIOMETRIC_ENABLED_KEY = 'smart-grocery-biometric-enabled'
 const BIOMETRIC_STORAGE_KEY = 'smart-grocery-biometric-login'
 
 const languages = ['Deutsch', 'Englisch', 'Arabisch']
+
+function handleLogout(): void {
+  logout(router)
+}
 
 const isNotificationEnabled = computed(() => notificationStatus.value === 'granted')
 const isNotificationSecure = computed(() => typeof window !== 'undefined' && window.isSecureContext)
@@ -460,12 +468,12 @@ function resetPrototypeData(): void {
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Einstellungen" showBackButton default-back-href="/dashboard" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="w-full px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-4">
     <section class="mb-4">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Einstellungen</h1>
           <p class="m-0 mt-1 text-sm text-muted-color">
           </p>
         </div>

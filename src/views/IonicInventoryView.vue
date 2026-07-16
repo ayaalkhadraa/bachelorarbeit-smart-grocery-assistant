@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   IonButton,
   IonChip,
@@ -37,6 +38,8 @@ import {
 import { useGroceryStore, type GroceryItem } from '@/stores/groceryStore'
 import { getExpiryInfo, getProductExpiryDate } from '@/utils/expiryUtils'
 import type { ExpiryInfo } from '@/utils/expiryUtils'
+import IonicPageHeader from '@/components/ionic/IonicPageHeader.vue'
+import { logout } from '@/utils/logout'
 
 type FilterKey = 'all' | 'fresh' | 'soon' | 'expired' | 'favorites'
 
@@ -51,6 +54,7 @@ interface ProductFormState {
 }
 
 const groceryStore = useGroceryStore()
+const router = useRouter()
 
 const categories = ['Obst', 'Gemüse', 'Milchprodukte', 'Getränke', 'Backwaren', 'Sonstiges']
 const locations = ['Kühlschrank', 'Küche', 'Vorratsschrank', 'Gefrierfach']
@@ -106,6 +110,10 @@ function getIonicSeverity(info: ExpiryInfo): 'success' | 'warning' | 'danger' | 
   if (info.severity === 'warn') return 'warning'
   if (info.severity === 'secondary') return 'medium'
   return info.severity
+}
+
+function handleLogout(): void {
+  logout(router)
 }
 
 const filteredItems = computed(() => {
@@ -234,15 +242,10 @@ function saveProduct(): void {
 
 <template>
   <IonPage>
+    <IonicPageHeader title="Inventar" @logout="handleLogout" />
     <IonContent :fullscreen="true">
       <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <section class="mb-4 flex flex-col gap-3">
-      <div class="flex flex-col gap-1">
-        <h1 class="m-0 text-3xl font-bold text-color">Inventar</h1>
-        <p class="m-0 text-sm text-muted-color">
-        </p>
-      </div>
-
       <IonSearchbar
         v-model="searchTerm"
         placeholder="Produkte suchen"
