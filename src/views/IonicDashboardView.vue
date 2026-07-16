@@ -120,7 +120,7 @@ function getMixBarColor(index: number): string {
     <section class="mb-6">
       <IonCard class="m-0">
         <IonCardHeader class="px-4 pt-4 pb-3">
-          <IonCardTitle class="text-xl">Ionic Dashboard</IonCardTitle>
+          <IonCardTitle class="text-xl"> Dashboard</IonCardTitle>
           <IonCardSubtitle>
           </IonCardSubtitle>
         </IonCardHeader>

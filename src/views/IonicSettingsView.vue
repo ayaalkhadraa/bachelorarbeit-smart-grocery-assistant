@@ -461,9 +461,8 @@ function resetPrototypeData(): void {
     <section class="mb-4">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Ionic-Einstellungen</h1>
+          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Einstellungen</h1>
           <p class="m-0 mt-1 text-sm text-muted-color">
-            Mobile Vergleichsansicht für Profil, Benachrichtigungen und Geräteeinstellungen.
           </p>
         </div>
 

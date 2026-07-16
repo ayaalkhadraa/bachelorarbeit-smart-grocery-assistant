@@ -146,6 +146,7 @@ export const useGroceryStore = defineStore('groceryStore', {
 
       this.saveItems()
     },
+    
 
     addManualShoppingListItem(newItem: {
       name: string

@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
   <main class="p-6 flex flex-col gap-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <div class="flex flex-col gap-2">
       <div class="flex flex-wrap items-center gap-3">
-        <h1 class="m-0 text-[1.75rem] font-bold">Ionic-Scanner</h1>
+        <h1 class="m-0 text-[1.75rem] font-bold">Scanner</h1>
       </div>
       <p class="m-0 text-muted-color">Barcode scannen, Ergebnis prüfen und Produkte direkt zu Inventar oder Einkaufsliste hinzufügen.</p>
     </div>

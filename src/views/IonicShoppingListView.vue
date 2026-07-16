@@ -132,7 +132,7 @@ function addManualShoppingItem(): void {
     <section class="mb-3 space-y-3">
       <div class="flex items-start gap-3">
         <div class="min-w-0">
-          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Ionic-Einkaufsliste</h1>
+          <h1 class="m-0 text-3xl font-bold tracking-tight text-color">Einkaufsliste</h1>
           <p class="m-0 mt-1 text-sm text-muted-color">
             Mobile Vergleichsansicht für die bestehende Einkaufsliste.
           </p>

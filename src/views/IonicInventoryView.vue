@@ -234,7 +234,7 @@ function saveProduct(): void {
   <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
     <section class="mb-4 flex flex-col gap-3">
       <div class="flex flex-col gap-1">
-        <h1 class="m-0 text-3xl font-bold text-color">Ionic-Inventar</h1>
+        <h1 class="m-0 text-3xl font-bold text-color">Inventar</h1>
         <p class="m-0 text-sm text-muted-color">
         </p>
       </div>
@@ -488,7 +488,7 @@ function saveProduct(): void {
             :disabled="!productForm.name.trim()"
             @click="saveProduct"
           >
-            <IonIcon :icon="saveOutline" slot="start" />
+            <IonIcon  slot="start" />
             Speichern
           </IonButton>
         </div>
