@@ -1,18 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import DashboardView from '@/views/DashboardView.vue'
 import IonicDashboardView from '@/views/IonicDashboardView.vue'
 import IonicInventoryView from '@/views/IonicInventoryView.vue'
-import InventoryView from '@/views/InventoryView.vue'
-import ShoppingListView from '@/views/ShoppingListView.vue'
 import IonicShoppingListView from '@/views/IonicShoppingListView.vue'
-import ScannerView from '@/views/ScannerView.vue'
 import IonicScannerView from '@/views/IonicScannerView.vue'
-import StoresView from '@/views/StoresView.vue'
 import IonicStoresView from '@/views/IonicStoresView.vue'
-import SettingsView from '@/views/SettingsView.vue'
 import IonicSettingsView from '@/views/IonicSettingsView.vue'
-import LoginView from '@/views/LoginView.vue'
 import IonicLoginView from '@/views/IonicLoginView.vue'
 import IonicTestView from '@/views/IonicTestView.vue'
 const router = createRouter({
@@ -22,67 +15,37 @@ const router = createRouter({
       path: '/',
       name: 'dashboard',
       alias: '/dashboard',
-      component: DashboardView
-    },
-    {
-      path: '/ionic-dashboard',
-      name: 'ionic-dashboard',
       component: IonicDashboardView
     },
     {
       path: '/inventory',
       name: 'inventory',
-      component: InventoryView
-    },
-    {
-      path: '/ionic-inventory',
-      name: 'ionic-inventory',
       component: IonicInventoryView
     },
     {
       path: '/shopping-list',
       name: 'shopping-list',
-      component: ShoppingListView
-    },
-    {
-      path: '/ionic-shopping-list',
-      name: 'ionic-shopping-list',
       component: IonicShoppingListView
     },
     {
       path: '/scanner',
       name: 'scanner',
-      component: ScannerView
-    },
-    {
-      path: '/ionic-scanner',
-      name: 'ionic-scanner',
       component: IonicScannerView
     },
     {
       path: '/stores',
       name: 'stores',
-      component: StoresView
-    },
-    {
-      path: '/ionic-stores',
-      name: 'ionic-stores',
       component: IonicStoresView
     },
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView
-    },
-    {
-      path: '/ionic-settings',
-      name: 'ionic-settings',
       component: IonicSettingsView
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: IonicLoginView
     },
     {
       path: '/ionic-login',

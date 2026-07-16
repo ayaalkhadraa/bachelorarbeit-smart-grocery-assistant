@@ -354,11 +354,6 @@ function getMixBarColor(index: number): string {
       </IonCard>
     </section>
 
-    <section class="mb-6 flex justify-start">
-      <IonButton router-link="/dashboard" fill="outline" color="primary">
-        Zur PrimeVue Dashboard-Version
-      </IonButton>
-    </section>
   </main>
 </template>
 

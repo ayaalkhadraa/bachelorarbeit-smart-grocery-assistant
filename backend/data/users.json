@@ -213,5 +213,22 @@
         ]
       }
     ]
+  },
+  {
+    "id": "3e07c1e9-cfe4-40ae-99e6-9c9c377ff922",
+    "email": "mimo@gmail.com",
+    "name": "Mimo",
+    "currentChallenge": null,
+    "credentials": [
+      {
+        "id": "3p40lahY9rGBZz1pGpX4Dg",
+        "publicKey": "pQECAyYgASFYIIceElvGDcxcMeODYZS2i16qekfGQhmTVsdyuU9ipnfuIlggHZf8BDDz8OolLnGkZ1vwEzexKd2GZDIRrBB4icx1yC8",
+        "counter": 0,
+        "transports": [
+          "hybrid",
+          "internal"
+        ]
+      }
+    ]
   }
 ]
