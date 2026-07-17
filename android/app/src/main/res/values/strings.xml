@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FreshFlow</string>
-    <string name="title_activity_main">FreshFlow</string>
-    <string name="package_name">com.aya.freshflow</string>
-    <string name="custom_url_scheme">com.aya.freshflow</string>
+    <string name="app_name">FreshFlow Cap</string>
+    <string name="title_activity_main">FreshFlow Cap</string>
+    <string name="package_name">com.aya.freshflow.cap</string>
+    <string name="custom_url_scheme">com.aya.freshflow.cap</string>
 </resources>

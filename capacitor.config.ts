@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.aya.freshflow',
-  appName: 'FreshFlow',
+  appId: 'com.aya.freshflow.cap',
+  appName: 'FreshFlow Cap',
   webDir: 'dist'
 };
 

@@ -4,7 +4,7 @@ android {
     namespace = "com.aya.freshflow"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.aya.freshflow"
+        applicationId "com.aya.freshflow.cap"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
