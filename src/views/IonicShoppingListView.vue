@@ -13,6 +13,7 @@ import {
   IonDatetime,
   IonFab,
   IonFabButton,
+  IonFooter,
   IonGrid,
   IonHeader,
   IonIcon,
@@ -410,75 +411,82 @@ function handleLogout(): void {
       </IonContent>
     </IonModal>
 
-    <IonModal :is-open="showBoughtModal" @didDismiss="closeBoughtDialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div>
-            <h2>Produkt gekauft</h2>
-            <p>Als erledigt markieren oder in den Vorrat übernehmen.</p>
+    <IonModal :is-open="showBoughtModal" class="bought-modal" @didDismiss="closeBoughtDialog">
+      <IonHeader class="bought-modal__header ion-no-border">
+        <IonToolbar>
+          <IonTitle>Produkt gekauft</IonTitle>
+
+          <IonButtons slot="end">
+            <IonButton fill="clear" color="medium" aria-label="Dialog schließen" @click="closeBoughtDialog">
+              <IonIcon :icon="closeOutline" slot="icon-only" />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent :scroll-y="true" class="bought-modal__content">
+        <div class="bought-modal__inner">
+          <div
+            v-if="selectedBoughtItem"
+            class="selected-product-card"
+          >
+            <strong>{{ selectedBoughtItem.name }}</strong>
+            <span>
+              {{ selectedBoughtItem.category }} ·
+              {{ selectedBoughtItem.quantity }} {{ selectedBoughtItem.unit }}
+            </span>
           </div>
 
-          <IonButton fill="clear" color="medium" @click="closeBoughtDialog">
-            <IonIcon :icon="closeOutline" slot="icon-only" />
-          </IonButton>
-        </div>
+          <div class="modal-card inventory-card">
+            <div class="inventory-title">
+              In Vorrat übernehmen
+            </div>
 
-        <div
-          v-if="selectedBoughtItem"
-          class="selected-product-card"
-        >
-          <strong>{{ selectedBoughtItem.name }}</strong>
-          <span>
-            {{ selectedBoughtItem.category }} ·
-            {{ selectedBoughtItem.quantity }} {{ selectedBoughtItem.unit }}
-          </span>
-        </div>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Menge</span>
+                <IonInput
+                  v-model="boughtQuantity"
+                  type="number"
+                  inputmode="numeric"
+                  min="1"
+                  fill="outline"
+                />
+              </label>
 
-        <div class="modal-card inventory-card">
-          <div class="inventory-title">
-            In Vorrat übernehmen
-          </div>
+              <label class="form-field">
+                <span>Neues Ablaufdatum</span>
+                <IonDatetime
+                  v-model="boughtExpiryDate"
+                  presentation="date"
+                  class="expiry-picker"
+                />
+              </label>
 
-          <div class="form-grid">
-            <label class="form-field">
-              <span>Menge</span>
-              <IonInput
-                v-model="boughtQuantity"
-                type="number"
-                inputmode="numeric"
-                min="1"
-                fill="outline"
-              />
-            </label>
-
-            <label class="form-field">
-              <span>Neues Ablaufdatum</span>
-              <IonDatetime
-                v-model="boughtExpiryDate"
-                presentation="date"
-                class="expiry-picker"
-              />
-            </label>
-
-            <IonText color="medium">
-              <p class="modal-note">
-                Wenn du den Artikel übernimmst, werden Menge und Ablaufdatum im Inventar aktualisiert.
-              </p>
-            </IonText>
+              <IonText color="medium">
+                <p class="modal-note">
+                  Wenn du den Artikel übernimmst, werden Menge und Ablaufdatum im Inventar aktualisiert.
+                </p>
+              </IonText>
+            </div>
           </div>
         </div>
+      </IonContent>
 
-        <div class="modal-footer-actions">
-          <IonButton fill="outline" color="medium" @click="markOnlyAsBought">
-            Nur erledigt
-          </IonButton>
+      <IonFooter class="bought-modal__footer ion-no-border">
+        <IonToolbar class="bought-modal__footer-toolbar">
+          <div class="modal-footer-actions bought-modal-actions">
+            <IonButton fill="outline" color="medium" @click="markOnlyAsBought">
+              Nur erledigt
+            </IonButton>
 
-          <IonButton color="success" @click="addToInventory">
-            <IonIcon :icon="bagCheckOutline" slot="start" />
-            In Vorrat übernehmen
-          </IonButton>
-        </div>
-      </div>
+            <IonButton color="success" @click="addToInventory">
+              <IonIcon :icon="bagCheckOutline" slot="start" />
+              In Vorrat übernehmen
+            </IonButton>
+          </div>
+        </IonToolbar>
+      </IonFooter>
     </IonModal>
       </main>
     </IonContent>
@@ -912,6 +920,59 @@ function handleLogout(): void {
 .modal-footer-actions IonButton {
   width: 100%;
   margin: 0;
+}
+
+.bought-modal {
+  --width: 100%;
+  --height: 100%;
+}
+
+.bought-modal__header ion-toolbar {
+  --background: var(--sg-surface);
+  --border-color: var(--sg-border);
+}
+
+.bought-modal__content {
+  --background: var(--sg-background);
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.bought-modal__content::part(scroll) {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.bought-modal__inner {
+  width: min(100%, 34rem);
+  margin: 0 auto;
+  padding: 1rem 1rem 0;
+}
+
+.bought-modal__footer {
+  background: var(--sg-surface);
+}
+
+.bought-modal__footer-toolbar {
+  --background: var(--sg-surface);
+  --border-color: var(--sg-border);
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.75rem;
+  --padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.bought-modal-actions {
+  margin-top: 0;
+}
+
+.bought-modal-actions IonButton {
+  flex: 1 1 0;
+}
+
+@media (min-width: 36rem) {
+  .bought-modal-actions {
+    flex-direction: row;
+  }
 }
 
 @media (min-width: 36rem) {
