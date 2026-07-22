@@ -1,0 +1,109 @@
+{
+    "context": {
+        "build": {
+            "brand": "samsung",
+            "device": "b0s",
+            "fingerprint": "samsung/b0sxeea/b0s:13/TP1A.220624.014/S908BXXU2BVJA:user/release-keys",
+            "id": "TP1A.220624.014",
+            "model": "SM-S908B",
+            "type": "user",
+            "version": {
+                "codename": "REL",
+                "sdk": 33
+            }
+        },
+        "cpuCoreCount": 8,
+        "cpuLocked": false,
+        "cpuMaxFreqHz": 2803000000,
+        "memTotalBytes": 7650316288,
+        "sustainedPerformanceModeEnabled": false,
+        "artMainlineVersion": 361501120,
+        "osCodenameAbbreviated": "T",
+        "compilationMode": "run-from-apk",
+        "payload": {}
+    },
+    "benchmarks": [
+        {
+            "name": "startup",
+            "params": {},
+            "className": "com.aya.freshflow.cap.macrobenchmark.ExampleStartupBenchmark",
+            "totalRunTimeNs": 91178841328,
+            "metrics": {
+                "timeToInitialDisplayMs": {
+                    "minimum": 669.992813,
+                    "maximum": 1250.66625,
+                    "median": 760.1789255,
+                    "coefficientOfVariation": 0.24643062743836935,
+                    "runs": [
+                        698.292852,
+                        806.329687,
+                        1250.66625,
+                        935.967579,
+                        1050.578906,
+                        1094.539805,
+                        673.261719,
+                        714.028164,
+                        683.604414,
+                        669.992813
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 0,
+            "repeatIterations": 10,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 0",
+                    "filename": "ExampleStartupBenchmark_startup_iter000_2026-07-19-17-35-36.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 1",
+                    "filename": "ExampleStartupBenchmark_startup_iter001_2026-07-19-17-35-41.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 2",
+                    "filename": "ExampleStartupBenchmark_startup_iter002_2026-07-19-17-35-48.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 3",
+                    "filename": "ExampleStartupBenchmark_startup_iter003_2026-07-19-17-35-55.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 4",
+                    "filename": "ExampleStartupBenchmark_startup_iter004_2026-07-19-17-36-03.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 5",
+                    "filename": "ExampleStartupBenchmark_startup_iter005_2026-07-19-17-36-11.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 6",
+                    "filename": "ExampleStartupBenchmark_startup_iter006_2026-07-19-17-36-18.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 7",
+                    "filename": "ExampleStartupBenchmark_startup_iter007_2026-07-19-17-36-23.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 8",
+                    "filename": "ExampleStartupBenchmark_startup_iter008_2026-07-19-17-36-29.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 9",
+                    "filename": "ExampleStartupBenchmark_startup_iter009_2026-07-19-17-36-35.perfetto-trace"
+                }
+            ]
+        }
+    ]
+}
