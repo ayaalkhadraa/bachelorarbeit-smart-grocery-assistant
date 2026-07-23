@@ -1,0 +1,49 @@
+{
+    "context": {
+        "build": {
+            "brand": "samsung",
+            "device": "b0s",
+            "fingerprint": "samsung/b0sxeea/b0s:13/TP1A.220624.014/S908BXXU2BVJA:user/release-keys",
+            "model": "SM-S908B",
+            "version": {
+                "sdk": 33
+            }
+        },
+        "cpuCoreCount": 8,
+        "cpuLocked": false,
+        "cpuMaxFreqHz": 2803000000,
+        "memTotalBytes": 7650316288,
+        "sustainedPerformanceModeEnabled": false
+    },
+    "benchmarks": [
+        {
+            "name": "startup",
+            "params": {},
+            "className": "com.aya.freshflow.ionic.macrobenchmark.ExampleStartupBenchmark",
+            "totalRunTimeNs": 75333192187,
+            "metrics": {
+                "timeToInitialDisplayMs": {
+                    "minimum": 624.641524,
+                    "maximum": 1403.404727,
+                    "median": 728.533574,
+                    "runs": [
+                        727.667343,
+                        1403.404727,
+                        1006.279023,
+                        677.957422,
+                        729.399805,
+                        676.201289,
+                        689.221993,
+                        624.641524,
+                        736.810742,
+                        729.524844
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 0,
+            "repeatIterations": 10,
+            "thermalThrottleSleepSeconds": 0
+        }
+    ]
+}

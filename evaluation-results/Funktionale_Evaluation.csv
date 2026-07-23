@@ -1,0 +1,39 @@
+Funktionale Evaluation						
+Jeden Testfall fünfmal durchgeführt						
+						
+Datum	Variante	Build-Typ	Testfall	Durchlauf	Status	Beobachtung
+21.07.2026	Ionic-Capacitor	Release	TF-01	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-01	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-01	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-01	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-01	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-02	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-02	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-02	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-02	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-02	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-03	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-03	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-03	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-03	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-03	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-04	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-04	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-04	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-04	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-04	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-05	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-05	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-05	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-05	4	bestanden	Keine Abweichung
+21.07.2026	IonicCapacitor	Release	TF-05	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-06	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-06	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-06	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-06	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-06	5	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-07	1	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-07	2	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-07	3	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-07	4	bestanden	Keine Abweichung
+21.07.2026	Ionic-Capacitor	Release	TF-07	5	bestanden	Keine Abweichung
