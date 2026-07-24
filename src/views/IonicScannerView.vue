@@ -464,7 +464,7 @@ onBeforeUnmount(() => {
   <IonPage>
     <IonicPageHeader title="Scanner" @logout="handleLogout" />
     <IonContent :fullscreen="true">
-      <main class="scanner-page">
+      <main class="scanner-page app-page-shell app-page-stack app-page-shell--compact">
     <header class="scanner-heading">
       <p>Produkte per Barcode erfassen</p>
     </header>
@@ -810,12 +810,7 @@ onBeforeUnmount(() => {
 }
 
 .scanner-page {
-  width: min(100%, 42rem);
-  margin: 0 auto;
-  padding:
-    1rem
-    0.875rem
-    calc(7rem + env(safe-area-inset-bottom));
+  display: block;
 }
 
 .scanner-heading h1 {
@@ -984,7 +979,7 @@ onBeforeUnmount(() => {
 }
 
 .compact-panel {
-  padding: 0.9rem;
+  padding: var(--app-card-padding);
   border: 1px solid var(--scanner-border);
   border-radius: 1rem;
   background: var(--scanner-surface);
@@ -1117,7 +1112,7 @@ onBeforeUnmount(() => {
   width: 100%;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.65rem;
-  padding: 0.72rem 0.75rem;
+  padding: 0.72rem var(--app-card-padding);
 }
 
 .history-product {
@@ -1262,12 +1257,6 @@ onBeforeUnmount(() => {
   --background: transparent;
   --border-color: var(--freshflow-green);
   --color: var(--freshflow-green);
-}
-
-@media (min-width: 40rem) {
-  .scanner-page {
-    padding-inline: 1rem;
-  }
 }
 
 @media (max-width: 22rem) {

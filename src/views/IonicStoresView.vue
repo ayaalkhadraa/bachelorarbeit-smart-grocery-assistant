@@ -323,8 +323,8 @@ onBeforeUnmount(() => {
   <IonPage>
     <IonicPageHeader title="Supermärkte" showBackButton default-back-href="/dashboard" @logout="handleLogout" />
     <IonContent :fullscreen="true">
-      <main class="w-full pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-7">
-      <section class="mb-4 flex flex-col gap-3">
+      <main class="app-page-shell app-page-stack app-page-shell--narrow">
+      <section class="flex flex-col gap-3">
       <IonCard class="m-0 store-status-card">
         <IonCardHeader class="px-4 pt-4 pb-3">
           <IonCardTitle class="text-lg">Standort</IonCardTitle>
@@ -375,7 +375,7 @@ onBeforeUnmount(() => {
       />
     </section>
 
-    <section class="mb-4">
+    <section>
       <IonCard class="m-0 map-card">
         <IonCardHeader class="px-4 pt-4 pb-3">
           <IonCardTitle class="text-lg">Karte</IonCardTitle>
@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
       </IonCard>
     </section>
 
-    <section class="mb-4">
+    <section>
       <IonList lines="none" class="stores-list bg-transparent p-0">
         <IonCard
           v-for="store in filteredStores"
@@ -439,7 +439,9 @@ onBeforeUnmount(() => {
 
             <div class="mt-3">
               <IonButton expand="block" fill="outline" color="success" class="m-0 route-button" @click="openRoute(store)">
-                <IonIcon :icon="navigateOutline" slot="start" />
+                <template v-slot:start>
+<IonIcon :icon="navigateOutline"  />
+</template>
                 Route anzeigen
               </IonButton>
             </div>
@@ -566,6 +568,6 @@ onBeforeUnmount(() => {
 
 .stores-list {
   display: grid;
-  gap: 0.875rem;
+  gap: var(--app-section-gap);
 }
 </style>

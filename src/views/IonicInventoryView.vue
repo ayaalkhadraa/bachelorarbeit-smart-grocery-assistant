@@ -244,8 +244,8 @@ function saveProduct(): void {
   <IonPage>
     <IonicPageHeader title="Inventar" @logout="handleLogout" />
     <IonContent :fullscreen="true">
-      <main class="w-full pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:pb-7">
-    <section class="mb-4 flex flex-col gap-3">
+      <main class="app-page-shell app-page-stack app-page-shell--narrow">
+    <section class="flex flex-col gap-3">
       <IonSearchbar
         v-model="searchTerm"
         placeholder="Produkte suchen"
@@ -272,7 +272,7 @@ function saveProduct(): void {
       </IonSegment>
     </section>
 
-    <section class="mb-24">
+    <section>
       <IonList v-if="filteredItems.length > 0" lines="none" class="bg-transparent p-0 inventory-list-shell">
         <IonItemSliding
           v-for="item in filteredItems"
@@ -356,9 +356,7 @@ function saveProduct(): void {
       </div>
     </section>
 
-    <IonFab
-      class="fixed right-4 z-20 inventory-fab"
-    >
+    <IonFab slot="fixed" class="inventory-fab">
       <IonFabButton aria-label="Neues Produkt" color="success" @click="openCreateModal">
         <IonIcon :icon="addOutline" color="light" />
       </IonFabButton>
@@ -495,7 +493,7 @@ function saveProduct(): void {
             :disabled="!productForm.name.trim()"
             @click="saveProduct"
           >
-            <IonIcon  slot="start" />
+            <IonIcon slot="start" />
             Speichern
           </IonButton>
         </div>
@@ -627,8 +625,20 @@ function saveProduct(): void {
   padding-bottom: 0.5rem;
 }
 
+.inventory-page-shell {
+  display: contents;
+}
+
 .inventory-fab {
-  bottom: calc(6.75rem + env(safe-area-inset-bottom));
+  position: fixed;
+  inset-inline-end: max(
+    var(--app-page-gutter),
+    calc((100vw - var(--app-content-max-width)) / 2 + var(--app-page-gutter))
+  );
+  bottom: calc(
+    var(--app-tab-bar-height) + var(--app-page-gutter) + var(--ion-safe-area-bottom, 0px)
+  );
+  z-index: 30;
 }
 
 .inventory-in-list-chip {

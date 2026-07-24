@@ -80,12 +80,13 @@ async function handleMoreMenuSelect(href: string) {
     <IonTabs>
       <IonRouterOutlet />
 
-      <IonTabBar slot="bottom">
+      <IonTabBar slot="bottom" class="freshflow-tab-bar">
         <IonTabButton
           v-for="item in tabItems"
           :key="item.tab"
           :tab="item.tab"
           :href="item.href"
+          class="freshflow-tab-button"
         >
           <IonIcon :icon="item.icon" />
           <IonLabel>{{ item.label }}</IonLabel>
@@ -154,6 +155,32 @@ async function handleMoreMenuSelect(href: string) {
 .more-menu-icon,
 .more-menu-chevron {
   font-size: 1.05rem;
+}
+
+:deep(ion-tab-bar.freshflow-tab-bar) {
+  width: 100%;
+  padding-inline: var(--app-page-gutter);
+  box-sizing: border-box;
+}
+
+:deep(ion-tab-bar.freshflow-tab-bar ion-tab-button),
+:deep(ion-tab-bar.freshflow-tab-bar .freshflow-more-tab) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (min-width: 48rem) {
+  :deep(ion-tab-bar.freshflow-tab-bar) {
+    padding-inline: max(
+      var(--app-page-gutter),
+      calc((100vw - var(--app-navigation-max-width)) / 2)
+    );
+  }
+
+  :deep(ion-tab-bar.freshflow-tab-bar ion-tab-button),
+  :deep(ion-tab-bar.freshflow-tab-bar .freshflow-more-tab) {
+    max-width: calc(var(--app-navigation-max-width) / 5);
+  }
 }
 
 .freshflow-more-tab {

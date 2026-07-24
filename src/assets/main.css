@@ -2,14 +2,28 @@
 @import "tailwindcss-primeui";
 /* ── Design Tokens ───────────────────────────────────────── */
 :root {
+  /* Shared responsive layout tokens used by tabs, page shells, and fixed actions. */
+  --app-content-max-width: 72rem;
+  --app-navigation-max-width: 72rem;
+  --app-page-gutter: clamp(1rem, 2.5vw, 2rem);
+  --app-page-padding-top: clamp(1rem, 2vw, 2rem);
+  --app-page-padding-bottom: calc(
+    var(--app-tab-bar-height) +
+    var(--app-page-gutter) +
+    var(--ion-safe-area-bottom, 0px)
+  );
+  --app-section-gap: clamp(1rem, 2vw, 1.5rem);
+  --app-card-padding: clamp(1rem, 2vw, 1.5rem);
+  --app-tab-bar-height: 4.75rem;
+
   /* Colors */
   --sg-primary:      #2F855A;
   --sg-primary-soft: #E6F4EA;
   --sg-secondary:    #F6AD55;
-  --sg-background:   #F7FAF8;
-  --sg-surface:      #FFFFFF;
-  --sg-text:         #1F2933;
-  --sg-muted:        #6B7280;
+  --sg-background:   var(--ion-background-color, #F7FAF8);
+  --sg-surface:      var(--ion-background-color, #FFFFFF);
+  --sg-text:         var(--ion-text-color, #1F2933);
+  --sg-muted:        var(--ion-color-medium, #6B7280);
   --sg-border:       #E5E7EB;
   --sg-success:      #2F855A;
   --sg-warning:      #D97706;
@@ -26,6 +40,15 @@
   --sg-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
 }
 
+html,
+body,
+#app,
+ion-app {
+  min-height: 100%;
+  background-color: var(--ion-background-color);
+  color: var(--ion-text-color);
+}
+
 /* ── Base Reset ──────────────────────────────────────────── */
 *,
 *::before,
@@ -36,8 +59,8 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background-color: var(--sg-background);
-  color: var(--sg-text);
+  background-color: var(--ion-background-color);
+  color: var(--ion-text-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -45,6 +68,47 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+.app-page-shell {
+  width: 100%;
+  max-width: var(--app-content-max-width, 72rem);
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding-inline-start: max(
+    var(--app-page-gutter),
+    var(--ion-safe-area-left, 0px)
+  );
+  padding-inline-end: max(
+    var(--app-page-gutter),
+    var(--ion-safe-area-right, 0px)
+  );
+  padding-top: var(--app-page-padding-top);
+  padding-bottom: var(--app-page-padding-bottom);
+}
+
+.app-page-shell--header {
+  max-width: var(--app-content-max-width, 72rem);
+  padding-top: calc(0.6rem + env(safe-area-inset-top));
+  padding-bottom: 0.7rem;
+}
+
+.app-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-section-gap);
+}
+
+.app-page-stack > section {
+  min-width: 0;
+}
+
+.app-page-shell--compact {
+  --app-content-max-width: 42rem;
+}
+
+.app-page-shell--narrow {
+  --app-content-max-width: 48rem;
 }
 
 /* ── Leaflet custom markers (not scoped – injected by JS) ── */

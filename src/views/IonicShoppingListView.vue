@@ -151,7 +151,7 @@ function handleLogout(): void {
   <IonPage>
     <IonicPageHeader title="Einkaufsliste" @logout="handleLogout" />
     <IonContent :fullscreen="true">
-      <main class="shopping-page">
+      <main class="app-page-shell app-page-stack app-page-shell--narrow">
       <section class="shopping-header">
       <IonCard class="summary-card">
         <IonCardContent>
@@ -268,11 +268,7 @@ function handleLogout(): void {
       </div>
     </section>
 
-    <IonFab
-      vertical="bottom"
-      horizontal="end"
-      class="shopping-fab"
-    >
+    <IonFab slot="fixed" class="shopping-fab">
       <IonFabButton color="success" @click="showAddModal = true">
         <IonIcon :icon="addOutline" />
       </IonFabButton>
@@ -494,19 +490,10 @@ function handleLogout(): void {
 </template>
 
 <style scoped>
-.shopping-page {
-  width: min(100%, 48rem);
-  margin: 0 auto;
-  padding:
-    1rem
-    0.875rem
-    calc(7.5rem + env(safe-area-inset-bottom));
-}
-
 .shopping-header {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: var(--app-section-gap);
 }
 
 .page-heading h1 {
@@ -535,7 +522,7 @@ function handleLogout(): void {
 }
 
 .summary-card IonCardContent {
-  padding: 0.8rem 0.35rem;
+  padding: var(--app-card-padding) 0.35rem;
 }
 
 .summary-cell {
@@ -681,7 +668,7 @@ function handleLogout(): void {
 }
 
 .empty-state {
-  padding: 2.25rem 1.25rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem) var(--app-card-padding);
   border: 1px dashed var(--sg-border);
   border-radius: 1rem;
   background: var(--sg-surface);
@@ -703,8 +690,13 @@ function handleLogout(): void {
 
 .shopping-fab {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  inset-inline-end: max(
+    var(--app-page-gutter),
+    calc((100vw - var(--app-content-max-width)) / 2 + var(--app-page-gutter))
+  );
+  bottom: calc(
+    var(--app-tab-bar-height) + var(--app-page-gutter) + var(--ion-safe-area-bottom, 0px)
+  );
   z-index: 30;
 }
 
@@ -717,7 +709,7 @@ function handleLogout(): void {
 .add-item-content {
   --background: var(--sg-background);
   --padding-top: 0;
-  --padding-bottom: env(safe-area-inset-bottom);
+  --padding-bottom: var(--ion-safe-area-bottom, 0px);
 }
 
 .add-item-content::part(scroll) {
@@ -736,7 +728,7 @@ function handleLogout(): void {
 }
 
 .modal-scroll-spacer {
-  height: calc(1rem + env(safe-area-inset-bottom));
+  height: calc(1rem + var(--ion-safe-area-bottom, 0px));
   flex: 0 0 auto;
 }
 
@@ -746,7 +738,7 @@ function handleLogout(): void {
   padding:
     1rem
     1rem
-    calc(1rem + env(safe-area-inset-bottom));
+    calc(1rem + var(--ion-safe-area-bottom, 0px));
 }
 
 .modal-header {
@@ -939,13 +931,13 @@ function handleLogout(): void {
 }
 
 .bought-modal__content::part(scroll) {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(1rem + var(--ion-safe-area-bottom, 0px));
 }
 
 .bought-modal__inner {
   width: min(100%, 34rem);
   margin: 0 auto;
-  padding: 1rem 1rem 0;
+  padding: var(--app-page-gutter) var(--app-page-gutter) 0;
 }
 
 .bought-modal__footer {
@@ -955,10 +947,10 @@ function handleLogout(): void {
 .bought-modal__footer-toolbar {
   --background: var(--sg-surface);
   --border-color: var(--sg-border);
-  --padding-start: 1rem;
-  --padding-end: 1rem;
+  --padding-start: var(--app-page-gutter);
+  --padding-end: var(--app-page-gutter);
   --padding-top: 0.75rem;
-  --padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  --padding-bottom: calc(0.75rem + var(--ion-safe-area-bottom, 0px));
 }
 
 .bought-modal-actions {

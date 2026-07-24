@@ -236,8 +236,9 @@ const currentPageTitle = computed(() => pageTitles[routeName.value] ?? 'Smart Gr
 
         <IonTabs class="flex-1 flex flex-col min-w-0">
           <IonRouterOutlet />
-          <IonTabBar
-            slot="bottom"
+          <template v-slot:bottom>
+<IonTabBar
+            
             class="md:hidden bg-[var(--sg-surface)] border-t border-[var(--sg-border)] [box-shadow:0_-4px_14px_rgba(15,23,42,0.07)] pb-[env(safe-area-inset-bottom)]"
           >
             <IonTabButton
@@ -252,6 +253,7 @@ const currentPageTitle = computed(() => pageTitles[routeName.value] ?? 'Smart Gr
               <IonLabel>{{ item.label }}</IonLabel>
             </IonTabButton>
           </IonTabBar>
+</template>
         </IonTabs>
       </div>
     </div>

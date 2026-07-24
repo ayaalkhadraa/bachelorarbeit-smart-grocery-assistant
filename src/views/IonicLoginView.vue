@@ -480,12 +480,16 @@ const showBiometricActivationPrompt = computed(
 
           <div v-if="mode === 'welcome'" class="flex flex-col gap-4">
             <IonButton expand="block" class="freshflow-primary" type="button" @click="showAccess">
-              <IonIcon slot="start" :icon="logInOutline" />
+              <template v-slot:start>
+<IonIcon  :icon="logInOutline" />
+</template>
               Loslegen
             </IonButton>
 
             <IonButton expand="block" fill="clear" color="success" type="button" @click="showAccess">
-              <IonIcon slot="start" :icon="arrowBackOutline" />
+              <template v-slot:start>
+<IonIcon  :icon="arrowBackOutline" />
+</template>
               Direkt zur Anmeldung
             </IonButton>
           </div>
@@ -493,7 +497,9 @@ const showBiometricActivationPrompt = computed(
           <div v-else class="flex flex-col gap-4">
             <div v-if="mode === 'access'" class="flex flex-col gap-4">
               <IonButton expand="block" class="freshflow-primary" type="button" @click="showLogin">
-                <IonIcon slot="start" :icon="isAndroidNative ? fingerPrintOutline : keyOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="isAndroidNative ? fingerPrintOutline : keyOutline" />
+</template>
                 {{ loginButtonLabel }}
               </IonButton>
 
@@ -505,7 +511,9 @@ const showBiometricActivationPrompt = computed(
                 type="button"
                 @click="showRegister"
               >
-                <IonIcon slot="start" :icon="keyOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="keyOutline" />
+</template>
                 Passkey registrieren
               </IonButton>
 
@@ -516,19 +524,25 @@ const showBiometricActivationPrompt = computed(
               </div>
 
               <IonButton expand="block" fill="clear" color="success" type="button" @click="continueAsGuest">
-                <IonIcon slot="start" :icon="personOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="personOutline" />
+</template>
                 Als Gast fortfahren
               </IonButton>
 
               <IonButton expand="block" fill="clear" color="medium" type="button" @click="showWelcome">
-                <IonIcon slot="start" :icon="arrowBackOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="arrowBackOutline" />
+</template>
                 Zurück zur Startseite
               </IonButton>
             </div>
 
             <div v-else-if="mode === 'login'" class="flex flex-col gap-4">
               <IonButton expand="block" fill="clear" color="success" class="justify-start px-0" type="button" @click="showAccess">
-                <IonIcon slot="start" :icon="arrowBackOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="arrowBackOutline" />
+</template>
                 Zurück
               </IonButton>
 
@@ -568,7 +582,9 @@ const showBiometricActivationPrompt = computed(
                 :loading="primaryLoginLoading"
                 @click="isAndroidNative ? handleBiometricLogin() : handleLoginWithPasskey()"
               >
-                <IonIcon slot="start" :icon="isAndroidNative ? fingerPrintOutline : keyOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="isAndroidNative ? fingerPrintOutline : keyOutline" />
+</template>
                 Mit Passkey anmelden
               </IonButton>
 
@@ -598,7 +614,9 @@ const showBiometricActivationPrompt = computed(
                 </div>
 
                 <IonButton expand="block" class="freshflow-primary" type="button" :loading="biometricActivationLoading" @click="handleEnableBiometricLogin">
-                  <IonIcon slot="start" :icon="fingerPrintOutline" />
+                  <template v-slot:start>
+<IonIcon  :icon="fingerPrintOutline" />
+</template>
                   Biometrie aktivieren
                 </IonButton>
 
@@ -614,7 +632,9 @@ const showBiometricActivationPrompt = computed(
 
             <div v-else-if="!isAndroidNative" class="flex flex-col gap-4">
               <IonButton expand="block" fill="clear" color="success" class="justify-start px-0" type="button" @click="showAccess">
-                <IonIcon slot="start" :icon="arrowBackOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="arrowBackOutline" />
+</template>
                 Zurück
               </IonButton>
 
@@ -657,7 +677,9 @@ const showBiometricActivationPrompt = computed(
                 :loading="passkeyLoading"
                 @click="handleRegisterPasskey"
               >
-                <IonIcon slot="start" :icon="keyOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="keyOutline" />
+</template>
                 Passkey registrieren
               </IonButton>
 
@@ -677,14 +699,18 @@ const showBiometricActivationPrompt = computed(
                 type="button"
                 @click="showLogin"
               >
-                <IonIcon slot="start" :icon="logInOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="logInOutline" />
+</template>
                 Zur Anmeldung wechseln
               </IonButton>
             </div>
 
             <div v-else class="flex flex-col gap-4">
               <IonButton expand="block" class="freshflow-primary" type="button" @click="showLogin">
-                <IonIcon slot="start" :icon="fingerPrintOutline" />
+                <template v-slot:start>
+<IonIcon  :icon="fingerPrintOutline" />
+</template>
                 Zur Anmeldung wechseln
               </IonButton>
             </div>

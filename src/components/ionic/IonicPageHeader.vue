@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 <template>
   <IonHeader class="freshflow-page-header ion-no-border">
-    <IonToolbar class="freshflow-page-header__toolbar">
+    <IonToolbar class="freshflow-page-header__toolbar app-page-shell app-page-shell--header">
       <div class="freshflow-page-header__layout">
         <div class="freshflow-page-header__top-row">
           <IonButtons v-if="showBackButton" slot="start" class="freshflow-page-header__back-buttons">
@@ -35,7 +35,9 @@ const emit = defineEmits<{
               aria-label="Logout"
               @click="emit('logout')"
             >
-              <IonIcon :icon="logOutOutline" slot="start" />
+              <template v-slot:start>
+<IonIcon :icon="logOutOutline"  />
+</template>
               Logout
             </IonButton>
           </IonButtons>
@@ -61,7 +63,7 @@ const emit = defineEmits<{
   --border-color: var(--sg-border, var(--ion-color-step-150, #e5e7eb));
   --padding-start: 0;
   --padding-end: 0;
-  --min-height: calc(58px + env(safe-area-inset-top));
+  --min-height: auto;
   box-shadow: none;
 }
 
@@ -70,7 +72,7 @@ const emit = defineEmits<{
   flex-direction: column;
   gap: 0.35rem;
   width: 100%;
-  padding: calc(0.6rem + env(safe-area-inset-top)) 1rem 0.7rem;
+  padding: 0;
 }
 
 .freshflow-page-header__top-row {
@@ -143,10 +145,6 @@ const emit = defineEmits<{
 }
 
 @media (min-width: 768px) {
-  .freshflow-page-header__layout {
-    padding-inline: 1.25rem;
-  }
-
   .freshflow-page-header__top-row {
     gap: 0.4rem 0.75rem;
   }

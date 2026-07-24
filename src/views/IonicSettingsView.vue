@@ -470,8 +470,8 @@ function resetPrototypeData(): void {
   <IonPage>
     <IonicPageHeader title="Einstellungen" showBackButton default-back-href="/dashboard" @logout="handleLogout" />
     <IonContent :fullscreen="true">
-      <main class="w-full px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-4">
-    <section class="mb-4">
+      <main class="app-page-shell app-page-stack app-page-shell--narrow">
+    <section>
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <p class="m-0 mt-1 text-sm text-muted-color">
@@ -492,13 +492,17 @@ function resetPrototypeData(): void {
         <IonCardContent class="px-4 pt-0 pb-4">
           <IonList lines="full" class="bg-transparent p-0">
             <IonItem class="settings-item">
-              <IonIcon :icon="personOutline" slot="start" class="settings-icon" />
+              <template v-slot:start>
+<IonIcon :icon="personOutline"  class="settings-icon" />
+</template>
               <IonLabel position="stacked">Benutzername</IonLabel>
               <IonInput v-model="username" placeholder="Benutzername eingeben" />
             </IonItem>
 
             <IonItem class="settings-item">
-              <IonIcon :icon="languageOutline" slot="start" class="settings-icon" />
+              <template v-slot:start>
+<IonIcon :icon="languageOutline"  class="settings-icon" />
+</template>
               <IonLabel position="stacked">Sprache</IonLabel>
               <IonSelect v-model="language" interface="popover" placeholder="Sprache wählen">
                 <IonSelectOption v-for="item in languages" :key="item" :value="item">
@@ -510,7 +514,9 @@ function resetPrototypeData(): void {
 
           <div class="mt-3 flex flex-wrap gap-2">
             <IonButton color="success" @click="saveSettings">
-              <IonIcon  slot="start" />
+              <template v-slot:start>
+<IonIcon   />
+</template>
               Einstellungen speichern
             </IonButton>
           </div>
@@ -525,19 +531,23 @@ function resetPrototypeData(): void {
         <IonCardContent class="px-4 pt-0 pb-4">
           <IonList lines="full" class="bg-transparent p-0">
             <IonItem class="settings-item">
-              <IonIcon :icon="notificationsOutline" slot="start" class="settings-icon" />
+              <template v-slot:start>
+<IonIcon :icon="notificationsOutline"  class="settings-icon" />
+</template>
               <IonLabel>
                 <h3 class="m-0 text-[0.98rem] font-semibold text-color">Browser-Benachrichtigungen</h3>
                 <p class="m-0 mt-1 text-sm text-muted-color">
                   Erinnerungen für Produkte und Einkaufslisten direkt im Browser.
                 </p>
               </IonLabel>
-              <IonToggle
-                slot="end"
+              <template v-slot:end>
+<IonToggle
+                
                 :modelValue="isNotificationEnabled"
                 :disabled="notificationLoading || notificationStatus === 'unsupported' || notificationStatus === 'insecure'"
                 @update:modelValue="handleNotificationToggle"
               />
+</template>
             </IonItem>
           </IonList>
 
@@ -574,7 +584,9 @@ function resetPrototypeData(): void {
 
           <div v-if="isNotificationEnabled" class="mt-3 flex flex-wrap gap-2">
             <IonButton color="success" @click="sendTestNotification">
-              <IonIcon :icon="sendOutline" slot="start" />
+              <template v-slot:start>
+<IonIcon :icon="sendOutline"  />
+</template>
               Test-Benachrichtigung senden
             </IonButton>
             <IonButton fill="outline" color="medium" :loading="notificationProductLoading" @click="checkExpiringProducts">
@@ -612,19 +624,23 @@ function resetPrototypeData(): void {
         <IonCardContent class="px-4 pt-0 pb-4">
           <IonList lines="full" class="bg-transparent p-0">
             <IonItem class="settings-item">
-              <IonIcon :icon="locationOutline" slot="start" class="settings-icon" />
+              <template v-slot:start>
+<IonIcon :icon="locationOutline"  class="settings-icon" />
+</template>
               <IonLabel>
                 <h3 class="m-0 text-[0.98rem] font-semibold text-color">Standort freigeben</h3>
                 <p class="m-0 mt-1 text-sm text-muted-color">
                   Für Standortfunktionen und Distanzanzeigen in den mobilen Ansichten.
                 </p>
               </IonLabel>
-              <IonToggle
-                slot="end"
+              <template v-slot:end>
+<IonToggle
+                
                 :modelValue="locationEnabled"
                 :disabled="locationLoading"
                 @update:modelValue="handleLocationToggle"
               />
+</template>
             </IonItem>
           </IonList>
 
@@ -652,19 +668,23 @@ function resetPrototypeData(): void {
           <template v-if="isAndroidNative">
             <IonList lines="full" class="bg-transparent p-0">
               <IonItem class="settings-item">
-                <IonIcon :icon="shieldCheckmarkOutline" slot="start" class="settings-icon" />
+                <template v-slot:start>
+<IonIcon :icon="shieldCheckmarkOutline"  class="settings-icon" />
+</template>
                 <IonLabel>
                   <h3 class="m-0 text-[0.98rem] font-semibold text-color">Biometrische Authentifizierung</h3>
                   <p class="m-0 mt-1 text-sm text-muted-color">
                     Lokale Anmeldung auf diesem Android-Gerät.
                   </p>
                 </IonLabel>
-                <IonToggle
-                  slot="end"
+                <template v-slot:end>
+<IonToggle
+                  
                   :modelValue="biometricEnabled"
                   :disabled="biometricActivationLoading"
                   @update:modelValue="handleBiometricToggle"
                 />
+</template>
               </IonItem>
             </IonList>
 
@@ -708,7 +728,9 @@ function resetPrototypeData(): void {
                   Simuliert die dunkle Darstellung im Prototyp.
                 </p>
               </IonLabel>
-              <IonToggle slot="end" v-model="darkModeSimulation" />
+              <template v-slot:end>
+<IonToggle  v-model="darkModeSimulation" />
+</template>
             </IonItem>
           </IonList>
 
@@ -726,7 +748,9 @@ function resetPrototypeData(): void {
         </IonCardHeader>
         <IonCardContent class="px-4 pt-0 pb-4">
           <IonButton expand="block" color="danger" fill="outline" @click="resetPrototypeData">
-            <IonIcon :icon="trashOutline" slot="start" />
+            <template v-slot:start>
+<IonIcon :icon="trashOutline"  />
+</template>
             Lokale Daten zurücksetzen
           </IonButton>
           <IonNote v-if="resetMessageVisible" color="success" class="ion-text-wrap settings-note mt-3">
@@ -742,14 +766,11 @@ function resetPrototypeData(): void {
 
 <style scoped>
 .settings-card {
-  margin: 0 0 18px 0;
+  margin: 0;
   border-radius: 18px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
-.settings-card:last-child {
-  margin-bottom: 120px;
-}
 .settings-item {
   --padding-start: 0;
   --inner-padding-end: 0;
