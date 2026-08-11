@@ -1,71 +1,99 @@
 # FreshFlow – Smart Grocery Assistant
 
+## Ionic–Capacitor-Version
+
 ## Projektbeschreibung
 
-FreshFlow ist ein Vue-basierter Prototyp zur Verwaltung von Lebensmitteln, Einkaufsliste und Ablaufdaten.
+FreshFlow ist ein mit Vue 3 entwickelter Prototyp zur Verwaltung von Lebensmittelvorräten, Einkaufslisten und Ablaufdaten.
 
-Der Prototyp dient als Grundlage zur Untersuchung der mobilen Übertragbarkeit mit Capacitor.
+Diese Variante verwendet Ionic für die Präsentations- und Navigationsschicht und Capacitor für die Bereitstellung als Android-Anwendung. Geschäftslogik, Pinia-Stores, Datenmodell, lokale Persistenz und native Capacitor-Funktionen wurden soweit möglich aus der PrimeVue–Capacitor-Variante weiterverwendet.
 
 ## Technologien
 
 - Vue 3
-- PrimeVue
-- Tailwind CSS
+- Ionic Vue
+- Ionic Vue Router
 - Pinia
-- LocalStorage
+- `localStorage`
 - Vite
 - Capacitor
 - Android Studio
 
-## Web-Version
+## Installation und Web-Ausführung
 
-Installation:
+Abhängigkeiten installieren:
 
-```sh
+```bash
 npm install
 ```
 
-Start:
+Entwicklungsserver starten:
 
-```sh
+```bash
 npm run dev
 ```
 
-Build:
+Produktions-Build erstellen:
 
-```sh
+```bash
 npm run build
 ```
 
-## Android-Capacitor-Version
+## Ionic–Capacitor-Android-Version
 
-Capacitor nutzt den Vite-Build aus `dist` und führt die Web-App in einem Android-Container aus.
+Capacitor verwendet den von Vite erzeugten Build aus dem Verzeichnis `dist` und führt die Anwendung innerhalb einer nativen Android-WebView aus.
 
-Sync:
+Web-Build mit dem Android-Projekt synchronisieren:
 
-```sh
+```bash
 npx cap sync android
 ```
 
-Android öffnen:
+Android-Projekt in Android Studio öffnen:
 
-```sh
+```bash
 npx cap open android
 ```
 
-Hinweis: Nach Änderungen an der Web-App immer zuerst `npm run build` und danach `npx cap sync android` ausführen.
+Nach Änderungen an der Anwendung müssen zuerst der Web-Build neu erstellt und anschließend das Android-Projekt synchronisiert werden:
 
-## Native Funktionen in der Android-Version
+```bash
+npm run build
+npx cap sync android
+```
 
-- Barcode-Scanner
+## Ionic-Benutzeroberfläche
+
+Die sichtbaren UI-Komponenten sowie die Seiten- und Navigationsstruktur wurden mit Ionic Vue umgesetzt. Verwendet werden unter anderem:
+
+- `IonPage` und `IonContent` für die Seitenstruktur
+- `IonTabs` und `IonRouterOutlet` für die Navigation
+- `IonList` und `IonItem` für listenbasierte Darstellungen
+- `IonItemSliding` für Swipe-Aktionen
+- `IonFab` für mobile Schnellaktionen
+- `IonModal` für modale Inhalte
+- `IonToggle`, `IonSelect` und weitere Ionic-Eingabekomponenten
+
+## Native Funktionen der Android-Version
+
+- Barcode-Erfassung
 - Standortabfrage
-- native biometrische Anmeldung
+- native biometrische Authentifizierung
 - lokale Benachrichtigungen für bald ablaufende Produkte
+
+Die nativen Funktionen werden über Capacitor beziehungsweise Capacitor-kompatible Plugins bereitgestellt.
 
 ## Hinweise und Grenzen
 
-- Die Android-Version ist prototypisch.
-- PrimeVue-Komponenten bleiben Webkomponenten innerhalb der WebView.
-- Local Notifications werden verwendet, keine Firebase- oder Push-Notifications.
-- Keine vollständige Benutzerverwaltung.
-- iOS wurde nicht praktisch getestet, da macOS/Xcode erforderlich ist.
+- Die Android-Version ist ein Prototyp und nicht für den produktiven Einsatz vorgesehen.
+- Die Benutzeroberfläche wird mit Ionic-Komponenten innerhalb der Android-WebView dargestellt.
+- Die Untersuchung bezieht sich auf die konkrete Ionic–Capacitor-Implementierung.
+- Lokale Benachrichtigungen werden direkt auf dem Gerät geplant; Firebase- oder serverbasierte Push-Benachrichtigungen werden nicht verwendet.
+- Es besteht keine vollständige Benutzer- oder Kontoverwaltung.
+- Produkt- und Einkaufsdaten werden lokal gespeichert und nicht zwischen Geräten synchronisiert.
+- iOS wird grundsätzlich von Ionic und Capacitor unterstützt, wurde in diesem Projekt jedoch mangels einer macOS-Umgebung mit Xcode nicht praktisch getestet.
+
+## Dokumentation
+
+- [Ionic Vue – offizielle Dokumentation](https://ionicframework.com/docs/vue/overview)
+- [Capacitor – offizielle Dokumentation](https://capacitorjs.com/docs)
